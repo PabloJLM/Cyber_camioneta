@@ -1,0 +1,48 @@
+#ifndef CONFIG_H
+#define CONFIG_H
+
+#include <Arduino.h>
+
+// ==================== PINES ====================
+#define PIN_SDA         6
+#define PIN_SCL         7
+#define PIN_SELECT      1
+#define PIN_UP          15
+#define PIN_DOWN        23
+#define PIN_BACK        22
+#define PIN_NEOPIXEL    11
+#define PIN_BUZZER      2
+#define PIN_LED1        3
+#define PIN_GPSON       8
+#define PIN_CD          40
+
+// ==================== PANTALLA ====================
+#define SCREEN_W        128
+#define SCREEN_H        64
+
+// ==================== NEOPIXELES ====================
+#define NUM_PIXELS      9
+
+// ==================== ESTADOS ====================
+enum Screen {
+  SCREEN_SPLASH,
+  SCREEN_MENU,
+  SCREEN_APPS,
+  SCREEN_AJUSTES,
+  SCREEN_CREDITOS,
+  SCREEN_AYUDA,
+  SCREEN_RGBNEO,
+  SCREEN_PCMODE,
+  SCREEN_FRASES,
+  SCREEN_DESTINOS,
+  SCREEN_NOMBRES
+};
+
+extern Screen currentScreen;
+
+// ==================== VARIABLES RGB NEOPIXEL ====================
+extern uint8_t neoR;
+extern uint8_t neoG;
+extern uint8_t neoB;
+
+#endif
