@@ -3,14 +3,14 @@
 #include "config.h"
 #include "Drivers/neopixel.h"
 #include "Drivers/buzzer.h"
-#include "screen_splash.h"
+#include "Estaticos/screen_splash.h"
 #include "screen_menu.h"
 #include "screen_apps.h"
-#include "screen_ajustes.h"
-#include "screen_creditos.h"
+#include "Ajustes/screen_ajustes.h"
+#include "Estaticos/screen_creditos.h"
 #include "screen_ayuda.h"
-#include "screen_rgbneo.h"
-#include "screen_pcmode.h"
+#include "Ajustes/screen_rgbneo.h"
+#include "Ajustes/screen_pcmode.h"
 #include "screen_captive.h"  // Nueva pantalla
 
 // Pantalla 
