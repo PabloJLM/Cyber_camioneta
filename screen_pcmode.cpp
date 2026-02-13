@@ -208,6 +208,12 @@ static void processSerialCommand() {
           Serial.print(F("                                    ++++++++++++++++++++++      \n"));
 
         }
+        else if (commandBuffer == "logcap") {
+          Serial.println(F(">> Buscando log de captive portal"));
+          pcModeInitialized = false;
+          currentScreen = SCREEN_AJUSTES;
+          return;
+        }
 
         else {
           Serial.print(F(">> Comando desconocido: '"));

