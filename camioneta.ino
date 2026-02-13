@@ -11,6 +11,7 @@
 #include "screen_ayuda.h"
 #include "screen_rgbneo.h"
 #include "screen_pcmode.h"
+#include "screen_captive.h"  // Nueva pantalla
 
 // Pantalla 
 U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE, PIN_SCL, PIN_SDA);
@@ -72,6 +73,10 @@ void loop() {
       
     case SCREEN_PCMODE:
       screenPCModeLoop();
+      break;
+      
+    case SCREEN_CAPTIVE:  // Nueva pantalla
+      screenCaptiveLoop();
       break;
   }
   

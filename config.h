@@ -35,7 +35,8 @@ enum Screen {
   SCREEN_PCMODE,
   SCREEN_FRASES,
   SCREEN_DESTINOS,
-  SCREEN_NOMBRES
+  SCREEN_NOMBRES,
+  SCREEN_CAPTIVE  // Nueva pantalla para captive portal
 };
 
 extern Screen currentScreen;

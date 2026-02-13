@@ -233,10 +233,11 @@ void screenAppsLoop() {
   
   if (isButtonJustPressed(PIN_SELECT)) {
     buzzerBeep();
-    // Aquí puedes agregar acciones para cada app cuando se selecciona
+    // Acciones para cada app cuando se selecciona
     switch(appSelection) {
       case 0:
-        // Wifi Captive Portal action
+        // Wifi Captive Portal - Ir a la pantalla del captive portal
+        currentScreen = SCREEN_CAPTIVE;
         break;
       case 1:
         // AP Flood action
