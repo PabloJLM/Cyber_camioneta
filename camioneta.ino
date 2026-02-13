@@ -4,14 +4,14 @@
 #include "Drivers/neopixel.h"
 #include "Drivers/buzzer.h"
 #include "Estaticos/screen_splash.h"
-#include "screen_menu.h"
-#include "screen_apps.h"
+#include "Apps/screen_menu.h"
+#include "Apps/screen_apps.h"
 #include "Ajustes/screen_ajustes.h"
 #include "Estaticos/screen_creditos.h"
-#include "screen_ayuda.h"
+#include "Ayuda/screen_ayuda.h"
 #include "Ajustes/screen_rgbneo.h"
 #include "Ajustes/screen_pcmode.h"
-#include "screen_captive.h"  // Nueva pantalla
+#include "Apps/screen_captive.h"  
 
 // Pantalla 
 U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE, PIN_SCL, PIN_SDA);
