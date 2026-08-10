@@ -6,3 +6,4 @@
 void buzzerWelcome();
 void buzzerClick();
 void buzzerBeep();
+void buzzerNote(unsigned int freq, unsigned int durationMs);

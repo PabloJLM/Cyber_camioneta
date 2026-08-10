@@ -20,47 +20,55 @@ static const unsigned char image_Layer_9_bits[] PROGMEM = {
 };
 
 static bool pcModeInitialized = false;
+static bool pianoMode = false;
 static bool isButtonJustPressed(int pin);
 static void processSerialCommand();
 static void printPrompt();
+static void listSD();
+static void catFile(String path);
+static void processPiano(String in);
+static void printPianoHelp();
+static int  noteFreq(String n);
 
-void printCaptiveLogHeader() {
-  Serial.println(F("\n╔════════════════════════════════════╗"));
-  Serial.println(F("║     CAPTIVE PORTAL LOG            ║"));
-  Serial.println(F("╠════════════════════════════════════╣"));
+static void printSection(const char* title) {
+  Serial.println();
+  Serial.print(F("== "));
+  Serial.println(title);
 }
 
-void printCaptiveLogFooter() {
-  Serial.println(F("╚════════════════════════════════════╝\n"));
+static void printRow(const char* key, const String& value) {
+  Serial.print(F("  "));
+  Serial.print(key);
+  int pad = 14 - strlen(key);
+  for (int i = 0; i < pad; i++) Serial.print(' ');
+  Serial.println(value);
 }
+
+// ---------- Captive log ----------
 
 void showCaptiveLog() {
-  printCaptiveLogHeader();
-  
+  printSection("captive log (ultimos 5)");
+
   if (!SD.begin(PIN_CD)) {
-    Serial.println(F("║   SD: No disponible              ║"));
-    printCaptiveLogFooter();
+    Serial.println(F("  SD no disponible"));
     return;
   }
-  
   if (!SD.exists("/captive_log.txt")) {
-    Serial.println(F("║   No hay archivo de log          ║"));
-    Serial.println(F("║  El portal no ha capturado datos   ║"));
-    printCaptiveLogFooter();
+    Serial.println(F("  sin datos: el portal no ha capturado nada"));
     return;
   }
-  
+
   File logFile = SD.open("/captive_log.txt", FILE_READ);
   if (!logFile) {
-    Serial.println(F("║   Error al abrir el archivo      ║"));
-    printCaptiveLogFooter();
+    Serial.println(F("  no se pudo abrir el archivo"));
     return;
   }
-  
 
-  logFile.readStringUntil('\n'); 
-  logFile.readStringUntil('\n'); //ignora el header xd
-  
+  logFile.readStringUntil('\n');
+  logFile.readStringUntil('\n'); // ignora el header xd
+
+  Serial.println(F("  time   correo                  ip"));
+
   int count = 0;
   while (logFile.available() && count < 5) {
     String line = logFile.readStringUntil('\n');
@@ -69,210 +77,310 @@ void showCaptiveLog() {
       int comma1 = line.indexOf(',');
       int comma2 = line.indexOf(',', comma1 + 1);
       int comma3 = line.indexOf(',', comma2 + 1);
-      
+
       if (comma1 > 0 && comma2 > 0 && comma3 > 0) {
         String timestamp = line.substring(0, comma1);
         String correo = line.substring(comma1 + 1, comma2);
-        String telefono = line.substring(comma2 + 1, comma3);
         String ip = line.substring(comma3 + 1);
-        
+
         unsigned long segundos = timestamp.toInt();
         int mins = segundos / 60;
         int secs = segundos % 60;
-        
-        Serial.print(F("║  "));
-        Serial.printf("%02d:%02d | %-20s | %s\n", mins, secs, correo.c_str(), ip.c_str());
+
+        Serial.printf("  %02d:%02d  %-22s  %s\n", mins, secs, correo.c_str(), ip.c_str());
         count++;
       }
     }
   }
-  
-  if (count == 0) {
-    Serial.println(F("║  No hay registros en el log        ║"));
-  }
-  
+
+  if (count == 0) Serial.println(F("  sin registros"));
   logFile.close();
-  printCaptiveLogFooter();
 }
 
 void showFullCaptiveLog() {
-  Serial.println(F("\n╔════════════════════════════════════╗"));
-  Serial.println(F("║     CAPTIVE PORTAL LOG (COMPLETO)  ║"));
-  Serial.println(F("╠════════════════════════════════════╣"));
-  
+  printSection("captive log (completo)");
+
   if (!SD.begin(PIN_CD) || !SD.exists("/captive_log.txt")) {
-    Serial.println(F("║   No hay archivo de log          ║"));
-    Serial.println(F("╚════════════════════════════════════╝\n"));
+    Serial.println(F("  sin datos"));
     return;
   }
-  
+
   File logFile = SD.open("/captive_log.txt", FILE_READ);
   if (logFile) {
     while (logFile.available()) {
       String line = logFile.readStringUntil('\n');
       line.trim();
       if (line.length() > 0) {
-        Serial.print(F("║  "));
-        Serial.println(line.substring(0, 36));
+        Serial.print(F("  "));
+        Serial.println(line);
       }
     }
     logFile.close();
   }
-  
-  Serial.println(F("╚════════════════════════════════════╝\n"));
 }
 
 void clearCaptiveLog() {
-  Serial.println(F("\n╔════════════════════════════════════╗"));
-  Serial.println(F("║     BORRAR LOG CAPTIVE PORTAL      ║"));
-  Serial.println(F("╠════════════════════════════════════╣"));
-  
+  printSection("borrar captive log");
+
   if (!SD.begin(PIN_CD)) {
-    Serial.println(F("║   SD: No disponible              ║"));
-    Serial.println(F("╚════════════════════════════════════╝\n"));
+    Serial.println(F("  SD no disponible"));
     return;
   }
-  
+
   if (SD.exists("/captive_log.txt")) {
     if (SD.exists("/captive_log_old.txt")) {
       SD.remove("/captive_log_old.txt");
     }
     SD.rename("/captive_log.txt", "/captive_log_old.txt");
-    Serial.println(F("║   Backup: captive_log_old.txt     ║"));
+    Serial.println(F("  backup: captive_log_old.txt"));
   }
-  
+
   File logFile = SD.open("/captive_log.txt", FILE_WRITE);
   if (logFile) {
     logFile.println("=== CAPTIVE PORTAL LOG ===");
     logFile.println("Timestamp,Correo,Telefono,IP");
     logFile.close();
-    Serial.println(F("║   Log borrado y reiniciado      ║"));
+    Serial.println(F("  ok: log borrado y reiniciado"));
   } else {
-    Serial.println(F("║   Error al crear nuevo log      ║"));
+    Serial.println(F("  error: no se pudo crear el log"));
   }
-  
-  Serial.println(F("╚════════════════════════════════════╝\n"));
 }
 
 void showCaptiveStats() {
-  Serial.println(F("\n╔════════════════════════════════════╗"));
-  Serial.println(F("║     ESTADISTICAS CAPTIVE PORTAL    ║"));
-  Serial.println(F("╠════════════════════════════════════╣"));
-  
+  printSection("estadisticas captive");
+
   if (!SD.begin(PIN_CD) || !SD.exists("/captive_log.txt")) {
-    Serial.println(F("║   No hay datos                   ║"));
-    Serial.println(F("╚════════════════════════════════════╝\n"));
+    Serial.println(F("  sin datos"));
     return;
   }
-  
+
   File logFile = SD.open("/captive_log.txt", FILE_READ);
   if (logFile) {
-    // Saltar headers
     logFile.readStringUntil('\n');
     logFile.readStringUntil('\n');
-    
+
     int total = 0;
-    
     while (logFile.available()) {
       String line = logFile.readStringUntil('\n');
       line.trim();
-      if (line.length() > 0) {
-        total++;
-      }
+      if (line.length() > 0) total++;
     }
     logFile.close();
-    
-    Serial.print(F("║  Total capturados: "));
-    Serial.print(total);
-    Serial.println(F("                 ║"));
-    
-    // Obtener el último registro
+
+    printRow("total", String(total));
+
     logFile = SD.open("/captive_log.txt", FILE_READ);
     logFile.readStringUntil('\n');
     logFile.readStringUntil('\n');
-    
+
     String lastLine;
     while (logFile.available()) {
       String line = logFile.readStringUntil('\n');
       line.trim();
-      if (line.length() > 0) {
-        lastLine = line;
-      }
+      if (line.length() > 0) lastLine = line;
     }
     logFile.close();
-    
+
     if (lastLine.length() > 0) {
-      Serial.println(F("║                                    ║"));
-      Serial.println(F("║  Último registro:                 ║"));
-      
       int comma1 = lastLine.indexOf(',');
       int comma2 = lastLine.indexOf(',', comma1 + 1);
       int comma3 = lastLine.indexOf(',', comma2 + 1);
-      
+
       if (comma1 > 0 && comma2 > 0 && comma3 > 0) {
         String correo = lastLine.substring(comma1 + 1, comma2);
         String telefono = lastLine.substring(comma2 + 1, comma3);
-        
-        Serial.print(F("║  Correo: "));
-        Serial.println(correo.substring(0, 20));
-        Serial.print(F("║  Tel: "));
-        Serial.println(telefono);
+        printRow("ult. correo", correo.substring(0, 24));
+        printRow("ult. tel", telefono);
       }
     }
   }
-  
-  Serial.println(F("╚════════════════════════════════════╝\n"));
 }
 
+// ---------- SD por serial ----------
+
+// Lista el contenido completo
+static void listSD() {
+  printSection("sd: contenido de /");
+
+  if (!SD.begin(PIN_CD)) {
+    Serial.println(F("  SD no disponible"));
+    return;
+  }
+
+  File root = SD.open("/");
+  if (!root) {
+    Serial.println(F("  no se pudo abrir /"));
+    return;
+  }
+
+  int n = 0;
+  File entry = root.openNextFile();
+  while (entry) {
+    if (entry.isDirectory()) {
+      Serial.printf("  [dir]  %s\n", entry.name());
+    } else {
+      Serial.printf("  %8lu  %s\n", (unsigned long)entry.size(), entry.name());
+    }
+    entry.close();
+    entry = root.openNextFile();
+    n++;
+  }
+  root.close();
+
+  if (n == 0) Serial.println(F("  (vacio)"));
+}
+
+// Vuelca un archivo de la SD por serial
+static void catFile(String path) {
+  path.trim();
+  if (path.length() == 0) {
+    Serial.println(F("  uso: cat <archivo>"));
+    return;
+  }
+  if (!path.startsWith("/")) path = "/" + path;
+
+  printSection("sd: cat");
+  Serial.print(F("  archivo: "));
+  Serial.println(path);
+
+  if (!SD.begin(PIN_CD)) {
+    Serial.println(F("  SD no disponible"));
+    return;
+  }
+  if (!SD.exists(path)) {
+    Serial.println(F("  no existe"));
+    return;
+  }
+
+  File f = SD.open(path, FILE_READ);
+  if (!f) {
+    Serial.println(F("  no se pudo abrir"));
+    return;
+  }
+
+  Serial.println(F("  ---- inicio ----"));
+  while (f.available()) {
+    Serial.write(f.read());
+  }
+  f.close();
+  Serial.println();
+  Serial.println(F("  ---- fin ----"));
+}
+
+// ---------- Modo piano ----------
+
+static int noteFreq(String n) {
+  n.trim();
+  n.toUpperCase();
+  if (n == "DO")  return 262;
+  if (n == "RE")  return 294;
+  if (n == "MI")  return 330;
+  if (n == "FA")  return 349;
+  if (n == "SOL") return 392;
+  if (n == "LA")  return 440;
+  if (n == "SI")  return 494;
+  if (n == "DO2" || n == "DO+") return 523; // do de la octava superior
+  if (n == "-" || n == "_")     return 0;   // mudaaaa
+  return -1;
+}
+
+static void printPianoHelp() {
+  printSection("modo piano");
+  Serial.println(F("  toca escribiendo notas separadas por espacio."));
+  Serial.println(F("  ej:  do re mi fa sol la si do2"));
+  Serial.println(F("  notas: DO RE MI FA SOL LA SI DO2 (do agudo)"));
+  Serial.println(F("  '-' = silencio   |   exit = salir del piano"));
+}
+
+static void processPiano(String in) {
+  in.trim();
+
+  if (in == "exit" || in == "salir") {
+    pianoMode = false;
+    Serial.println(F("  saliendo del modo piano"));
+    return;
+  }
+  if (in == "help" || in == "?") {
+    printPianoHelp();
+    return;
+  }
+
+  int start = 0;
+  bool played = false;
+  while (start < (int)in.length()) {
+    int sp = in.indexOf(' ', start);
+    if (sp < 0) sp = in.length();
+    String tok = in.substring(start, sp);
+    tok.trim();
+    if (tok.length() > 0) {
+      int f = noteFreq(tok);
+      if (f < 0) {
+        Serial.print(F("  nota desconocida: "));
+        Serial.println(tok);
+      } else {
+        buzzerNote(f, 300);
+        played = true;
+      }
+    }
+    start = sp + 1;
+  }
+
+  if (!played) Serial.println(F("  (nada que tocar) escribe 'help'"));
+}
+
+// ---------- Procesamiento de comandos ----------
 
 void processSerialCommand() {
   static String commandBuffer = "";
-  
+
   while (Serial.available() > 0) {
     char c = Serial.read();
-    
+
     if (c == '\n' || c == '\r') {
       if (commandBuffer.length() > 0) {
         commandBuffer.trim();
         Serial.println();
-        
-        if (commandBuffer == "help") {
-          Serial.println(F("╔════════════════════════════════════╗"));
-          Serial.println(F("║        COMANDOS DISPONIBLES        ║"));
-          Serial.println(F("╠════════════════════════════════════╣"));
-          Serial.println(F("║ help     - Muestra esta ayuda      ║"));
-          Serial.println(F("║ status   - Estado del sistema      ║"));
-          Serial.println(F("║ info     - Información del device  ║"));
-          Serial.println(F("║ rgb/R/G/B- Control de NeoPixels    ║"));
-          Serial.println(F("║ buzzer   - Prueba del buzzer       ║"));
-          Serial.println(F("║ logcap   - Últimos 5 logs portal   ║"));
-          Serial.println(F("║ logfull  - Todos los logs          ║"));
-          Serial.println(F("║ logclear - Borrar log              ║"));
-          Serial.println(F("║ logstats - Estadísticas            ║"));
-          Serial.println(F("║ exit     - Salir del PC-Mode       ║"));
-          Serial.println(F("╚════════════════════════════════════╝"));
+
+        if (pianoMode) {
+          processPiano(commandBuffer);
+        }
+        else if (commandBuffer == "help") {
+          printSection("comandos");
+          Serial.println(F("  help       esta ayuda"));
+          Serial.println(F("  status     estado del sistema"));
+          Serial.println(F("  info       informacion del device"));
+          Serial.println(F("  rgb/R/G/B  control de NeoPixels"));
+          Serial.println(F("  buzzer     prueba del buzzer"));
+          Serial.println(F("  piano      mini piano por serial"));
+          Serial.println(F("  ls         listar archivos de la SD"));
+          Serial.println(F("  cat <arch> ver un archivo de la SD"));
+          Serial.println(F("  logcap     ultimos 5 logs del portal"));
+          Serial.println(F("  logfull    todos los logs"));
+          Serial.println(F("  logclear   borrar log"));
+          Serial.println(F("  logstats   estadisticas"));
+          Serial.println(F("  clear      limpiar pantalla"));
+          Serial.println(F("  exit       salir del PC-Mode"));
         }
         else if (commandBuffer == "status") {
-          Serial.println(F("╔════════════════════════════════════╗"));
-          Serial.println(F("║       ESTADO DEL SISTEMA           ║"));
-          Serial.println(F("╠════════════════════════════════════╣"));
-          Serial.print(F("║ RGB R: ")); Serial.print(neoR); Serial.println(F("                         ║"));
-          Serial.print(F("║ RGB G: ")); Serial.print(neoG); Serial.println(F("                         ║"));
-          Serial.print(F("║ RGB B: ")); Serial.print(neoB); Serial.println(F("                         ║"));
-          Serial.print(F("║ Uptime: ")); Serial.print(millis()/1000); Serial.println(F(" seg               ║"));
-          Serial.println(F("╚════════════════════════════════════╝"));
+          printSection("estado del sistema");
+          char rgb[16];
+          snprintf(rgb, sizeof(rgb), "%d, %d, %d", neoR, neoG, neoB);
+          printRow("rgb", String(rgb));
+          unsigned long s = millis() / 1000;
+          char up[24];
+          snprintf(up, sizeof(up), "%luh %02lum %02lus", s/3600, (s%3600)/60, s%60);
+          printRow("uptime", String(up));
+          printRow("neopixels", String(NUM_PIXELS));
         }
         else if (commandBuffer == "info") {
-          Serial.println(F("╔════════════════════════════════════╗"));
-          Serial.println(F("║      INFORMACIÓN DEL DEVICE        ║"));
-          Serial.println(F("╠════════════════════════════════════╣"));
-          Serial.println(F("║ Proyecto: Camioneta                ║"));
-          Serial.println(F("║ Version: 1.0                       ║"));
-          Serial.println(F("║ Autor: Pablo Lopez                 ║"));
-          Serial.println(F("║ Lab: Tesla Lab                     ║"));
-          Serial.println(F("║ NeoPixels: 9                       ║"));
-          Serial.println(F("║ Display: SH1106 128x64            ║"));
-          Serial.println(F("╚════════════════════════════════════╝"));
+          printSection("device info");
+          printRow("proyecto", "Camioneta");
+          printRow("version", "1.0");
+          printRow("autor", "Pablo Lopez");
+          printRow("lab", "Tesla Lab");
+          printRow("neopixels", String(NUM_PIXELS));
+          printRow("display", "SH1106 128x64");
+          printRow("mcu", "ESP32");
         }
         else if (commandBuffer.startsWith("rgb/")) {
           int r, g, b;
@@ -280,44 +388,47 @@ void processSerialCommand() {
             r = constrain(r, 0, 255);
             g = constrain(g, 0, 255);
             b = constrain(b, 0, 255);
-            neoR = r;
-            neoG = g;
-            neoB = b;
-            for (int i = 0; i < NUM_PIXELS; i++) {
-              neopixelSetPixel(i, r, g, b);
-            }
+            neoR = r; neoG = g; neoB = b;
+            for (int i = 0; i < NUM_PIXELS; i++) neopixelSetPixel(i, r, g, b);
             neopixelShow();
-            Serial.println(F("RGB actualizado"));
+            Serial.printf("  ok: rgb -> %d,%d,%d\n", r, g, b);
           } else {
-            Serial.println(F("Formato invalido. Usa rgb/R/G/B"));
+            Serial.println(F("  error: usa rgb/R/G/B"));
           }
         }
         else if (commandBuffer == "buzzer") {
-          Serial.println(F(">> Probando buzzer..."));
+          Serial.println(F("  probando buzzer..."));
           buzzerBeep();
           delay(750);
           buzzerBeep();
-          Serial.println(F(">> Test completado"));
+          Serial.println(F("  ok: test completado"));
         }
-        else if (commandBuffer == "logcap") {
-          showCaptiveLog();
+        else if (commandBuffer == "piano") {
+          pianoMode = true;
+          printPianoHelp();
         }
-        else if (commandBuffer == "logfull") {
-          showFullCaptiveLog();
+        else if (commandBuffer == "ls" || commandBuffer == "dir") {
+          listSD();
         }
-        else if (commandBuffer == "logclear") {
-          clearCaptiveLog();
+        else if (commandBuffer.startsWith("cat ")) {
+          catFile(commandBuffer.substring(4));
         }
-        else if (commandBuffer == "logstats") {
-          showCaptiveStats();
+        else if (commandBuffer == "logcap")   { showCaptiveLog(); }
+        else if (commandBuffer == "logfull")  { showFullCaptiveLog(); }
+        else if (commandBuffer == "logclear") { clearCaptiveLog(); }
+        else if (commandBuffer == "logstats") { showCaptiveStats(); }
+        else if (commandBuffer == "clear" || commandBuffer == "cls") {
+          Serial.print(F("\033[2J\033[H"));
         }
         else if (commandBuffer == "exit") {
-          Serial.println(F(">> Saliendo de PC-Mode..."));
+          Serial.println(F("  saliendo de PC-Mode..."));
           pcModeInitialized = false;
+          pianoMode = false;
           currentScreen = SCREEN_AJUSTES;
           return;
         }
-        else if(commandBuffer == "Tesla"){
+        else if (commandBuffer == "Tesla") {
+          Serial.println();
           Serial.print(F("       ++++++++++++++++++++++++++++++++++++        \n"));
           Serial.print(F("    ++++++++++++++++++++++++++++++++++++++        \n"));
           Serial.print(F("   ++++++++++++++++++++++++++++++++++++++         \n"));
@@ -332,7 +443,8 @@ void processSerialCommand() {
           Serial.print(F("    ++++++++++++++++++++++++++++++++++++++++++    \n"));
           Serial.print(F("   =++++++++++++++++++++++++++++++++++++++++      \n"));
         }
-        else if(commandBuffer == "Goth"){
+        else if (commandBuffer == "Goth") {
+          Serial.println();
           Serial.print(F("##################+++++--------------..........                 \n"));
           Serial.print(F("#################++++++-------------........                    \n"));
           Serial.print(F("###############+++++++--------------........                    \n"));
@@ -364,12 +476,11 @@ void processSerialCommand() {
           Serial.print(F("                                    ++++++++++++++++++++++      \n"));
         }
         else {
-          Serial.print(F(">> Comando desconocido: '"));
-          Serial.print(commandBuffer);
-          Serial.println(F("'"));
-          Serial.println(F(">> Escribe 'help' para ver comandos disponibles"));
+          Serial.print(F("  command not found: "));
+          Serial.println(commandBuffer);
+          Serial.println(F("  escribe 'help' para ver los comandos"));
         }
-        
+
         commandBuffer = "";
         Serial.println();
         printPrompt();
@@ -391,57 +502,77 @@ void processSerialCommand() {
 }
 
 
+static void printBanner() {
+  //no sirve xd Serial.print(F("\033[2J\033[H")); // limpia pantalla
+  Serial.println();
+  Serial.println(F(" _________  _______   ________  ___       ________"));
+  Serial.println(F("|\\___   ___\\\\  ___ \\ |\\   ____\\|\\  \\     |\\   __  \\"));
+  Serial.println(F("\\|___ \\  \\_\\ \\   __/|\\ \\  \\___|\\ \\  \\    \\ \\  \\|\\  \\"));
+  Serial.println(F("     \\ \\  \\ \\ \\  \\_|/_\\ \\_____  \\ \\  \\    \\ \\   __  \\"));
+  Serial.println(F("      \\ \\  \\ \\ \\  \\_|\\ \\|____|\\  \\ \\  \\____\\ \\  \\ \\  \\"));
+  Serial.println(F("       \\ \\__\\ \\ \\_______\\____\\_\\  \\ \\_______\\ \\__\\ \\__\\"));
+  Serial.println(F("        \\|__|  \\|_______|\\_________\\|_______|\\|__|\\|__|"));
+  Serial.println(F("                        \\|_________|"));
+  Serial.println(F(" ___       ________  ________"));
+  Serial.println(F("|\\  \\     |\\   __  \\|\\   __  \\"));
+  Serial.println(F("\\ \\  \\    \\ \\  \\|\\  \\ \\  \\|\\ /_"));
+  Serial.println(F(" \\ \\  \\    \\ \\   __  \\ \\   __  \\"));
+  Serial.println(F("  \\ \\  \\____\\ \\  \\ \\  \\ \\  \\|\\  \\"));
+  Serial.println(F("   \\ \\_______\\ \\__\\ \\__\\ \\_______\\"));
+  Serial.println(F("    \\|_______|\\|__|\\|__|\\|_______|"));
+  Serial.println();
+  Serial.println(F("Version 1.0  ::  PC-MODE / Serial Mode"));
+  Serial.println();
+}
+
 void screenPCModeLoop() {
   if (!pcModeInitialized) {
-    Serial.println();
-    Serial.println(F("╔════════════════════════════════════╗"));
-    Serial.println(F("║     CAMIONETA PC-MODE v1.0         ║"));
-    Serial.println(F("║     Terminal de Control            ║"));
-    Serial.println(F("╚════════════════════════════════════╝"));
-    Serial.println();
-    Serial.println(F("Hola! Bienvenido al modo PC"));
-    Serial.println(F("Escribe 'help' para ver comandos disponibles"));
-    Serial.println();
+    printBanner();
     printPrompt();
     pcModeInitialized = true;
   }
-  
+
   processSerialCommand();
-  
+
   if (isButtonJustPressed(PIN_BACK)) {
     buzzerClick();
     pcModeInitialized = false;
+    pianoMode = false;
     Serial.println();
-    Serial.println(F(">> Saliendo de PC-Mode..."));
+    Serial.println(F("  saliendo de PC-Mode..."));
     currentScreen = SCREEN_AJUSTES;
     return;
   }
-  
+
   u8g2.clearBuffer();
   u8g2.setFontMode(1);
   u8g2.setBitmapMode(1);
   u8g2.setFont(u8g2_font_6x10_tr);
-  
+
   u8g2.setDrawColor(1);
   u8g2.drawBox(16, 1, 96, 14);
   u8g2.setDrawColor(2);
   u8g2.drawStr(35, 11, "PC-MODE");
   u8g2.setDrawColor(1);
-  
+
   u8g2.drawXBM(0, 1, 16, 14, image_Layer_9_bits);
   u8g2.drawXBM(112, 1, 16, 14, image_Layer_9_bits);
-  
+
   u8g2.drawXBM(48, 24, 32, 16, image_terminal_bits);
-  
+
   u8g2.setFont(u8g2_font_5x7_tr);
   u8g2.drawStr(25, 48, "Terminal Activo");
   u8g2.drawStr(15, 58, "Ver Monitor Serial");
-  
+
   u8g2.sendBuffer();
 }
 
 static void printPrompt() {
-  Serial.print(F("camioneta> "));
+  if (pianoMode) {
+    Serial.print(F("piano> "));
+  } else {
+    Serial.print(F("camioneta:~$ "));
+  }
 }
 
 static bool isButtonJustPressed(int pin) {
