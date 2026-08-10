@@ -36,7 +36,9 @@ enum Screen {
   SCREEN_FRASES,
   SCREEN_DESTINOS,
   SCREEN_NOMBRES,
-  SCREEN_CAPTIVE  // Nueva pantalla para captive portal
+  SCREEN_CAPTIVE,  // Nueva pantalla para captive portal
+  SCREEN_APFLOOD,  // Beacon flood
+  SCREEN_SNIFFER   // Sniffer de paquetes (PCAP)
 };
 
 extern Screen currentScreen;

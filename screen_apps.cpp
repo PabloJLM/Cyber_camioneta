@@ -134,7 +134,7 @@ static bool isButtonJustPressed(int pin) {
 // ========== APP SELECTION STATE ==========
 
 static int appSelection = 0;
-static const int TOTAL_APPS = 6;
+static const int TOTAL_APPS = 7;
 
 // ========== SCREEN RENDERING ==========
 
@@ -205,6 +205,16 @@ void drawWardriving() {
   u8g2.drawXBM(68, 27, 13, 16, image_location_bits);
 }
 
+void drawSniffer() {
+  u8g2.setFontMode(1);
+  u8g2.setBitmapMode(1);
+  u8g2.drawXBM(8, 40, 16, 8, image_download_bits);
+  u8g2.drawXBM(8, 23, 16, 8, image_download_1_bits);
+  u8g2.setFont(u8g2_font_6x10_tr);
+  u8g2.drawStr(47, 20, "Sniffer");
+  u8g2.drawXBM(45, 27, 38, 32, image_download_bits_wifi);
+}
+
 // ========== MAIN LOOP ==========
 
 void screenAppsLoop() {
@@ -236,11 +246,12 @@ void screenAppsLoop() {
     // Acciones para cada app cuando se selecciona
     switch(appSelection) {
       case 0:
-        // Wifi Captive Portal - Ir a la pantalla del captive portal
+        // Wifi Captive Portal
         currentScreen = SCREEN_CAPTIVE;
         break;
       case 1:
-        // AP Flood action
+        // AP Flood (beacon flooding)
+        currentScreen = SCREEN_APFLOOD;
         break;
       case 2:
         // Karma Attack action
@@ -253,6 +264,10 @@ void screenAppsLoop() {
         break;
       case 5:
         // Wardriving action
+        break;
+      case 6:
+        // Sniffer de paquetes
+        currentScreen = SCREEN_SNIFFER;
         break;
     }
   }
@@ -280,7 +295,10 @@ void screenAppsLoop() {
     case 5:
       drawWardriving();
       break;
+    case 6:
+      drawSniffer();
+      break;
   }
-  
+
   u8g2.sendBuffer();
 }
