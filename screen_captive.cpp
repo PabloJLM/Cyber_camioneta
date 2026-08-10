@@ -18,9 +18,13 @@ static const char* AP_SSID = "WiFi_Gratis1";
 static const char* AP_PASS = "";               
 
 static const byte      DNS_PORT = 53;
-static const IPAddress AP_IP(192, 168, 4, 1);
+// La IP del AP es 8.8.8.8 a proposito: varios Android (Samsung sobre todo)
+// consultan un DNS fijo (8.8.8.8) para la sonda de portal cautivo e ignoran
+// el DNS que reparte el AP. Al ser nosotros 8.8.8.8, esa consulta llega aqui
+// y podemos redirigir. Asi Android tambien abre el portal.
+static const IPAddress AP_IP(8, 8, 8, 8);
 static const IPAddress AP_MASK(255, 255, 255, 0);
-static const char*     PORTAL_URL = "http://192.168.4.1/";
+static const char*     PORTAL_URL = "http://8.8.8.8/";
 
 // Rutas de los archivos del portal en la SD
 static const char* PORTAL_INDEX = "/portal/index.html";
@@ -241,6 +245,9 @@ void startCaptivePortal() {
   Serial.print(F("SSID: ")); Serial.println(AP_SSID);
 
   // DNS: todos los dominios resuelven a nuestra IP.
+  // TTL 0 (no cachear) y NoError ayudan a que Android reintente la sonda.
+  dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
+  dnsServer.setTTL(0);
   dnsServer.start(DNS_PORT, "*", AP_IP);
 
   // Rutas del portal.
