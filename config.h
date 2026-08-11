@@ -38,7 +38,8 @@ enum Screen {
   SCREEN_NOMBRES,
   SCREEN_CAPTIVE,  // Nueva pantalla para captive portal
   SCREEN_APFLOOD,  // Beacon flood
-  SCREEN_SNIFFER   // Sniffer de paquetes (PCAP)
+  SCREEN_SNIFFER,  // Sniffer de paquetes (PCAP)
+  SCREEN_BTSPAM    // Publicidad por BLE advertising
 };
 
 extern Screen currentScreen;

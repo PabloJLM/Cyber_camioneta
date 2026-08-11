@@ -11,47 +11,69 @@
 //  Sniffer WiFi -> PCAP
 //
 //  Pone el ESP32 en modo promiscuo (802.11) y guarda cada
-//  paquete en un archivo .pcap en la SD. Ese archivo se abre
-//  directamente en Wireshark (Link-layer: IEEE 802.11).
+//  paquete crudo en un archivo .pcap en la SD. El analisis
+//  serio siempre se hace despues en la PC con Wireshark; el
+//  ESP32 no relee ni interpreta el archivo.
+//
+//  En pantalla solo se muestran estadisticas basicas EN VIVO,
+//  calculadas al vuelo mientras se captura (sin tocar el
+//  archivo), pensadas para la parte educativa:
+//    - Cuantos beacons / probes / datos se ven.
+//    - Intensidad de señal del ultimo paquete (RSSI).
+//    - El ultimo SSID que un celular busco por probe request
+//      (la fuga de privacidad clasica: el telefono delata
+//      redes a las que se conecto antes).
+//    - Aviso de que el trafico de datos esta cifrado y no se
+//      puede leer sin la contraseña + handshake.
 //
 //  Controles:
-//    SEL   -> iniciar / detener captura
-//    UP    -> canal +1
-//    DOWN  -> canal -1
-//    BACK  -> salir (detiene y cierra el archivo)
+//    SEL     -> iniciar / detener captura
+//    UP/DOWN -> canal (1-13)
+//    BACK    -> salir
 // ============================================================
 
-// Bytes maximos que guardamos por paquete (recorta los muy grandes).
-#define SNAP_LEN   256
-// Cuantos paquetes caben en la cola callback -> loop.
-#define QUEUE_LEN  24
+// 512 bytes cubre beacons con varios tags (WPS, WMM, HT/VHT, vendor IEs),
+// que son muy comunes en routers modernos y con 256 se cortaban a la
+// mitad, causando "Malformed Packet" en Wireshark.
+#define SNAP_LEN   512   // bytes maximos guardados por paquete
+#define QUEUE_LEN  24    // paquetes en cola entre el callback y el loop
 
-// Un paquete capturado listo para escribir.
 struct PktRec {
   uint32_t ts_sec;
   uint32_t ts_usec;
-  uint16_t len;
+  uint16_t capLen;   // bytes realmente guardados (<= SNAP_LEN)
+  uint16_t origLen;  // tamaño real de la trama en el aire (antes de recortar)
+  int8_t   rssi;
   uint8_t  data[SNAP_LEN];
 };
 
-static QueueHandle_t pktQueue = NULL;
+static QueueHandle_t pktQueue  = NULL;
 static File          pcapFile;
-static bool          capturing = false;
-static uint8_t       channel   = 1;
-static uint32_t      pktCount  = 0;
-static char          pcapName[24] = "";
+static volatile bool capturing = false;
+static uint8_t        channel  = 1;
+static char           pcapName[24] = "";
+
+// ---------- Estadisticas en vivo (solo en RAM) ----------
+static uint32_t pktCount    = 0;
+static uint32_t cntBeacon   = 0;
+static uint32_t cntProbe    = 0;
+static uint32_t cntData     = 0;
+static uint32_t cntOtros    = 0;
+static bool     dataSeen    = false;
+static int8_t   lastRssi    = -100;
+static char     lastProbeSsid[23] = "";
+static bool     hasProbeSsid = false;
 
 // ---------- Escritura PCAP ----------
 
-// Cabecera global del formato .pcap (24 bytes).
 static void writePcapGlobalHeader(File& f) {
-  uint32_t magic   = 0xa1b2c3d4;
-  uint16_t vmajor  = 2;
-  uint16_t vminor  = 4;
+  uint32_t magic    = 0xa1b2c3d4;
+  uint16_t vmajor   = 2;
+  uint16_t vminor   = 4;
   int32_t  thiszone = 0;
-  uint32_t sigfigs = 0;
-  uint32_t snaplen = SNAP_LEN;
-  uint32_t network = 105;         // LINKTYPE_IEEE802_11
+  uint32_t sigfigs  = 0;
+  uint32_t snaplen  = SNAP_LEN;
+  uint32_t network  = 105;         // LINKTYPE_IEEE802_11
 
   f.write((uint8_t*)&magic,    4);
   f.write((uint8_t*)&vmajor,   2);
@@ -65,11 +87,69 @@ static void writePcapGlobalHeader(File& f) {
 static void writePcapRecord(File& f, const PktRec& rec) {
   f.write((uint8_t*)&rec.ts_sec,  4);
   f.write((uint8_t*)&rec.ts_usec, 4);
-  uint32_t inclLen = rec.len;
-  uint32_t origLen = rec.len;
+  // incl_len = lo que de verdad guardamos; orig_len = tamaño real en el
+  // aire. Si difieren, Wireshark lo marca como "recortado durante la
+  // captura" (correcto) en vez de "malformado" (confuso).
+  uint32_t inclLen = rec.capLen;
+  uint32_t origLen = rec.origLen;
   f.write((uint8_t*)&inclLen, 4);
   f.write((uint8_t*)&origLen, 4);
-  f.write(rec.data, rec.len);
+  f.write(rec.data, rec.capLen);
+}
+
+// ---------- Estadisticas ----------
+
+// Clasifica una trama 802.11 cruda y actualiza los contadores.
+// Si es un probe request con SSID (no vacio), lo guarda como
+// "ultima red buscada" para la leccion de privacidad.
+static void classifyFrame(const uint8_t* d, uint16_t len) {
+  if (len < 1) { cntOtros++; return; }
+
+  uint8_t frameType    = (d[0] >> 2) & 0x03;
+  uint8_t frameSubtype = (d[0] >> 4) & 0x0F;
+
+  if (frameType == 0) {                 // gestion
+    if (frameSubtype == 8) {                          // beacon
+      cntBeacon++;
+    } else if (frameSubtype == 4) {                   // probe request
+      cntProbe++;
+      // Sin parametros fijos: el tag SSID empieza justo tras
+      // el header de 24 bytes (id en 24, longitud en 25).
+      if (len >= 26) {
+        uint8_t ssidLen = d[25];
+        if (ssidLen > 0 && 26u + ssidLen <= len) {
+          if (ssidLen > 22) ssidLen = 22;
+          memcpy(lastProbeSsid, &d[26], ssidLen);
+          lastProbeSsid[ssidLen] = '\0';
+          hasProbeSsid = true;
+        }
+      }
+    } else if (frameSubtype == 5) {                   // probe response
+      cntProbe++;
+    } else {
+      cntOtros++;
+    }
+  } else if (frameType == 2) {          // datos
+    cntData++;
+    dataSeen = true;
+  } else {                              // control u otro
+    cntOtros++;
+  }
+}
+
+static void processRecord(const PktRec& rec) {
+  writePcapRecord(pcapFile, rec);
+  pktCount++;
+  lastRssi = rec.rssi;
+  classifyFrame(rec.data, rec.capLen);
+}
+
+static void resetStats() {
+  pktCount = cntBeacon = cntProbe = cntData = cntOtros = 0;
+  dataSeen = false;
+  hasProbeSsid = false;
+  lastProbeSsid[0] = '\0';
+  lastRssi = -100;
 }
 
 // ---------- Callback de modo promiscuo ----------
@@ -78,15 +158,18 @@ static void snifferCallback(void* buf, wifi_promiscuous_pkt_type_t type) {
   if (!capturing || pktQueue == NULL) return;
 
   const wifi_promiscuous_pkt_t* pkt = (wifi_promiscuous_pkt_t*)buf;
-  uint16_t len = pkt->rx_ctrl.sig_len;
-  if (len > SNAP_LEN) len = SNAP_LEN;
+  uint16_t origLen = pkt->rx_ctrl.sig_len;   // tamaño real en el aire
+  uint16_t capLen  = origLen;
+  if (capLen > SNAP_LEN) capLen = SNAP_LEN;  // recorte, si aplica
 
   PktRec rec;
   int64_t us = esp_timer_get_time();
   rec.ts_sec  = us / 1000000;
   rec.ts_usec = us % 1000000;
-  rec.len     = len;
-  memcpy(rec.data, pkt->payload, len);
+  rec.capLen  = capLen;
+  rec.origLen = origLen;
+  rec.rssi    = pkt->rx_ctrl.rssi;
+  memcpy(rec.data, pkt->payload, capLen);
 
   // Si la cola esta llena, se descarta el paquete (sin bloquear).
   xQueueSend(pktQueue, &rec, 0);
@@ -94,7 +177,6 @@ static void snifferCallback(void* buf, wifi_promiscuous_pkt_type_t type) {
 
 // ---------- Control de captura ----------
 
-// Busca el primer nombre libre /capNNNN.pcap
 static void nextPcapName() {
   for (int i = 1; i < 10000; i++) {
     snprintf(pcapName, sizeof(pcapName), "/cap%04d.pcap", i);
@@ -124,7 +206,7 @@ static void startCapture() {
     pktQueue = xQueueCreate(QUEUE_LEN, sizeof(PktRec));
   }
 
-  pktCount = 0;
+  resetStats();
 
   // WiFi en modo estacion pero sin conectarse, solo escuchando.
   WiFi.mode(WIFI_STA);
@@ -146,12 +228,10 @@ static void stopCapture() {
   capturing = false;
   esp_wifi_set_promiscuous(false);
 
-  // Vacia lo que quede en la cola.
   if (pktQueue) {
     PktRec rec;
     while (xQueueReceive(pktQueue, &rec, 0) == pdTRUE) {
-      writePcapRecord(pcapFile, rec);
-      pktCount++;
+      processRecord(rec);
     }
   }
 
@@ -197,16 +277,83 @@ static bool isButtonJustPressed(int pin) {
   return false;
 }
 
+// ---------- Iconos ----------
+
+// Barras de señal tipo WiFi: 4 barras crecientes, solo se
+// dibujan las que corresponden a la intensidad (rssi en dBm).
+static void drawSignalIcon(int x, int baselineY, int8_t rssi) {
+  int level;
+  if      (rssi > -50) level = 4;
+  else if (rssi > -60) level = 3;
+  else if (rssi > -70) level = 2;
+  else if (rssi > -80) level = 1;
+  else                 level = 0;
+
+  const uint8_t heights[4] = {3, 5, 7, 9};
+  for (int i = 0; i < 4; i++) {
+    if (i >= level) continue;
+    int barX = x + i * 3;
+    int barH = heights[i];
+    int barY = baselineY - barH;
+    u8g2.drawBox(barX, barY, 2, barH);
+  }
+}
+
+// Candado pequeño: cuerpo + arco superior (mitad de un circulo).
+static void drawLockIcon(int x, int y) {
+  u8g2.drawCircle(x + 3, y + 2, 3, U8G2_DRAW_UPPER_LEFT | U8G2_DRAW_UPPER_RIGHT);
+  u8g2.drawBox(x, y + 2, 7, 6);
+}
+
 // ---------- Pantalla ----------
 
+static void drawDashboard() {
+  char line[26];
+
+  // Fila 1: estado (punto lleno = grabando) + canal + señal.
+  u8g2.setFont(u8g2_font_6x10_tr);
+  if (capturing) {
+    u8g2.drawDisc(10, 21, 3);
+    u8g2.drawStr(16, 25, "REC");
+  } else {
+    u8g2.drawCircle(10, 21, 3);
+    u8g2.drawStr(16, 25, "IDLE");
+  }
+  snprintf(line, sizeof(line), "CH%02d", channel);
+  u8g2.drawStr(62, 25, line);
+  drawSignalIcon(106, 25, lastRssi);
+
+  // Fila 2: contadores compactos + candado si hay datos cifrados.
+  snprintf(line, sizeof(line), "B:%lu  P:%lu  D:%lu",
+           (unsigned long)cntBeacon, (unsigned long)cntProbe, (unsigned long)cntData);
+  u8g2.drawStr(6, 40, line);
+  if (dataSeen) drawLockIcon(112, 32);
+
+  // Fila 3: ultimo SSID buscado por un celular (probe request).
+  u8g2.setFont(u8g2_font_5x7_tr);
+  if (hasProbeSsid) {
+    snprintf(line, sizeof(line), "Busca: %s", lastProbeSsid);
+  } else {
+    snprintf(line, sizeof(line), "Busca: --");
+  }
+  u8g2.drawStr(6, 52, line);
+
+  // Fila 4: ayuda de controles, segun el estado.
+  if (capturing) {
+    u8g2.drawStr(6, 62, "SEL:Detener  BACK:Salir");
+  } else {
+    u8g2.drawStr(6, 62, "SEL:Iniciar  UP/DN:Canal");
+  }
+}
+
 void screenSnifferLoop() {
-  // Escribe a la SD los paquetes que haya en la cola.
+  // Escribe a la SD los paquetes que haya en la cola (limite por
+  // vuelta para no bloquear el loop principal mucho tiempo).
   if (capturing && pktQueue) {
     PktRec rec;
     int written = 0;
     while (written < 32 && xQueueReceive(pktQueue, &rec, 0) == pdTRUE) {
-      writePcapRecord(pcapFile, rec);
-      pktCount++;
+      processRecord(rec);
       written++;
     }
     if (written > 0) pcapFile.flush();
@@ -225,7 +372,6 @@ void screenSnifferLoop() {
     else           startCapture();
   }
 
-  // Cambiar canal (afecta en vivo si esta capturando).
   if (isButtonJustPressed(PIN_UP)) {
     buzzerClick();
     if (channel < 13) channel++;
@@ -245,26 +391,7 @@ void screenSnifferLoop() {
   u8g2.drawStr(35, 10, "Sniffer");
   u8g2.drawLine(0, 12, 127, 12);
 
-  char line[24];
-
-  if (capturing) {
-    u8g2.drawStr(6, 26, "Estado: CAPTURANDO");
-  } else {
-    u8g2.drawStr(6, 26, "Estado: IDLE");
-  }
-
-  snprintf(line, sizeof(line), "Canal: %d", channel);
-  u8g2.drawStr(6, 38, line);
-
-  snprintf(line, sizeof(line), "Paquetes: %lu", (unsigned long)pktCount);
-  u8g2.drawStr(6, 50, line);
-
-  u8g2.setFont(u8g2_font_5x7_tr);
-  if (capturing && pcapName[0]) {
-    u8g2.drawStr(6, 60, pcapName);
-  } else {
-    u8g2.drawStr(6, 60, "SEL:Iniciar UP/DN:Canal");
-  }
+  drawDashboard();
 
   u8g2.sendBuffer();
 }

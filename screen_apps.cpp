@@ -257,7 +257,8 @@ void screenAppsLoop() {
         // Karma Attack action
         break;
       case 3:
-        // Bluetooth Spam action
+        // Bluetooth Spam - publicidad por BLE advertising
+        currentScreen = SCREEN_BTSPAM;
         break;
       case 4:
         // GPS Position action
