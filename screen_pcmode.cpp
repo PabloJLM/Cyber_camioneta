@@ -1,6 +1,7 @@
 #include "Ajustes/screen_pcmode.h"
 #include "Drivers/buzzer.h"
 #include "Drivers/neopixel.h"
+#include "Apps/screen_apflood.h"
 #include <SD.h>
 #include <SPI.h>
 #include "config.h"
@@ -29,6 +30,7 @@ static void catFile(String path);
 static void processPiano(String in);
 static void printPianoHelp();
 static int  noteFreq(String n);
+static void processFloodCommand(const String& cmd);
 
 static void printSection(const char* title) {
   Serial.println();
@@ -328,6 +330,70 @@ static void processPiano(String in) {
   if (!played) Serial.println(F("  (nada que tocar) escribe 'help'"));
 }
 
+// ---------- AP Flood parametrico ----------
+
+// Parsea  flood{mensaje1,mensaje2,...}  y actualiza los SSID que
+// transmite el AP Flood. Hasta APFLOOD_MAX_MSGS mensajes, cada uno
+// recortado a APFLOOD_MAX_SSIDLEN bytes (limite real de un SSID).
+static void processFloodCommand(const String& cmd) {
+  int open  = cmd.indexOf('{');
+  int close = cmd.lastIndexOf('}');
+  if (open < 0 || close < 0 || close <= open) {
+    Serial.println(F("  uso: flood{mensaje1,mensaje2,...}"));
+    return;
+  }
+
+  String inner = cmd.substring(open + 1, close);
+
+  String msgs[APFLOOD_MAX_MSGS];
+  int  count    = 0;
+  bool overflow = false;
+  int  start    = 0;
+
+  while (start <= (int)inner.length()) {
+    int comma = inner.indexOf(',', start);
+    if (comma < 0) comma = inner.length();
+
+    String tok = inner.substring(start, comma);
+    tok.trim();
+
+    if (tok.length() > 0) {
+      if (count < APFLOOD_MAX_MSGS) {
+        bool trimmed = tok.length() > APFLOOD_MAX_SSIDLEN;
+        if (trimmed) tok = tok.substring(0, APFLOOD_MAX_SSIDLEN);
+        msgs[count++] = tok;
+        if (trimmed) {
+          Serial.print(F("  aviso: recortado a 32 bytes -> "));
+          Serial.println(tok);
+        }
+      } else {
+        overflow = true;
+      }
+    }
+    start = comma + 1;
+  }
+
+  if (count == 0) {
+    Serial.println(F("  no se encontraron mensajes validos"));
+    return;
+  }
+
+  const char* ptrs[APFLOOD_MAX_MSGS];
+  for (int i = 0; i < count; i++) ptrs[i] = msgs[i].c_str();
+
+  int applied = apFloodSetMessages(ptrs, count);
+
+  Serial.print(F("  ok: AP Flood actualizado con "));
+  Serial.print(applied);
+  Serial.println(F(" mensajes"));
+
+  if (overflow) {
+    Serial.print(F("  aviso: se ignoraron mensajes extra (max "));
+    Serial.print(APFLOOD_MAX_MSGS);
+    Serial.println(F(")"));
+  }
+}
+
 // ---------- Procesamiento de comandos ----------
 
 void processSerialCommand() {
@@ -354,6 +420,7 @@ void processSerialCommand() {
           Serial.println(F("  piano      mini piano por serial"));
           Serial.println(F("  ls         listar archivos de la SD"));
           Serial.println(F("  cat <arch> ver un archivo de la SD"));
+          Serial.println(F("  flood{...} SSIDs del AP Flood (max 6)"));
           Serial.println(F("  logcap     ultimos 5 logs del portal"));
           Serial.println(F("  logfull    todos los logs"));
           Serial.println(F("  logclear   borrar log"));
@@ -412,6 +479,9 @@ void processSerialCommand() {
         }
         else if (commandBuffer.startsWith("cat ")) {
           catFile(commandBuffer.substring(4));
+        }
+        else if (commandBuffer.startsWith("flood{") && commandBuffer.endsWith("}")) {
+          processFloodCommand(commandBuffer);
         }
         else if (commandBuffer == "logcap")   { showCaptiveLog(); }
         else if (commandBuffer == "logfull")  { showFullCaptiveLog(); }
@@ -504,6 +574,44 @@ void processSerialCommand() {
 
 static void printBanner() {
   //no sirve xd Serial.print(F("\033[2J\033[H")); // limpia pantalla
+  Serial.println();
+  Serial.println(F("                      ***************++"));
+  Serial.println(F("                  ***+=::...... ....::-++**"));
+  Serial.println(F("               **+-:......................-+**"));
+  Serial.println(F("             **-......:......................-**"));
+  Serial.println(F("          +*+-.::::::::::::-+++**=-:...........-+*+"));
+  Serial.println(F("         *+=:::::::=****###%%%%%%%%#*=-:::.......-*+"));
+  Serial.println(F("        *+-::::::=###++*#@@@%%%%%%%%@%%#=::::::::::+*"));
+  Serial.println(F("      =*+:::::::=*##+++*#%@@@@@@%%%%%%%%#=::::::::::+*"));
+  Serial.println(F("      *+--------=*%%+===*#%@@@@@@@@@@@@%%#+-:::::::::+*"));
+  Serial.println(F("     ++-------::+%%@*=++=-..:----*%#==++++*+---::::::-++"));
+  Serial.println(F("    =+=-------:-+##%*=-=+*=:::::.-##-..:-++*=------:--=+="));
+  Serial.println(F("    ++--------::-*=+*=:---=#%%#+++*#%%##*=+**----------++"));
+  Serial.println(F("    +=-------:.:=#@#+=++**#%%%#**==-+**%%**%*----------=+"));
+  Serial.println(F("   =+=-=----=-.:=#%#==++*#@@@@%%=:....:%@%%%#=---------=+"));
+  Serial.println(F("   =+=-======-:-*%#=:::==++*#%@#*#####@%@@@@#+---------=+-"));
+  Serial.println(F("   -+=========-:+*++=-::=+**#%%###*=-:=#@@@%**====-----=+"));
+  Serial.println(F("    ++=======-.::-=******%%#*#@@*=*#*+=-*@@@+==========++"));
+  Serial.println(F("    =+========-:..-**##***#%%%@%#####%%#+%%@%+=========+="));
+  Serial.println(F("    :++=++++++:...:-=+#*+=*#####@@@@@@@@@@%%%%+=======++:"));
+  Serial.println(F("     =++++++++=:.:.:=-+++=*%@%@@@@@@@@@@@@@@@%#+======+="));
+  Serial.println(F("     -=+=+++++++=-..:-:-+=-#%#%%%@@%@@@%#%@@@@@%=====+=:"));
+  Serial.println(F("      :=+=+++++====..:::.:-++*@%%#@@@@@@@#*@@@@@+===+=:"));
+  Serial.println(F("        =+=========-:......--*#@@%%@%@@%%%%%%@@%+==+="));
+  Serial.println(F("         -==--::::--:.... ..:-=+==+=+*%+##*###%#+++-"));
+  Serial.println(F("          :==:.......  .. .  ..::-:::::-=-=-::-++=-"));
+  Serial.println(F("            :-=-.           ..          .....-+-."));
+  Serial.println(F("              :-==:...     .    ...     ..-==-:"));
+  Serial.println(F("                 :-===-:....     ....:-===-:"));
+  Serial.println(F("                     :---===========---:"));
+  Serial.println();
+  Serial.println(F(" ____    ______  __     ______   __       ____    _____"));
+  Serial.println(F("/\\  _`\\ /\\  _  \\/\\ \\   /\\__  _\\ /\\ \\     /\\  _`\\ /\\  __`\\"));
+  Serial.println(F("\\ \\ \\L\\_\\ \\ \\L\\ \\ \\ \\  \\/_/\\ \\/ \\ \\ \\    \\ \\ \\L\\_\\ \\ \\/\\ \\"));
+  Serial.println(F(" \\ \\ \\L_L\\ \\  __ \\ \\ \\  __\\ \\ \\  \\ \\ \\  __\\ \\  _\\L\\ \\ \\ \\ \\"));
+  Serial.println(F("  \\ \\ \\/, \\ \\ \\/\\ \\ \\ \\L\\ \\\\_\\ \\__\\ \\ \\L\\ \\\\ \\ \\L\\ \\ \\ \\_\\ \\"));
+  Serial.println(F("   \\ \\____/\\ \\_\\ \\_\\ \\____//\\_____\\\\ \\____/ \\ \\____/\\ \\_____\\"));
+  Serial.println(F("    \\/___/  \\/_/\\/_/\\/___/ \\/_____/ \\/___/   \\/___/  \\/_____/"));
   Serial.println();
   Serial.println(F(" _________  _______   ________  ___       ________"));
   Serial.println(F("|\\___   ___\\\\  ___ \\ |\\   ____\\|\\  \\     |\\   __  \\"));

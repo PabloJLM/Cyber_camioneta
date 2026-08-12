@@ -8,7 +8,10 @@
 //
 //  Inyecta tramas beacon 802.11 con SSID falsos, de modo que
 //  aparezcan como redes WiFi en los dispositivos cercanos.
-//  Cada SSID es una linea de la cancion (max 32 bytes por SSID).
+//  Los mensajes se pueden cambiar en caliente desde PC-Mode con
+//  el comando flood{mensaje1,mensaje2,...} (hasta 6, 32 bytes
+//  cada uno, limite real de un SSID 802.11). Si no se configura
+//  nada, usa la lista de fabrica de abajo.
 //
 //  Uso responsable: es una demo. Saturar el espectro 2.4GHz
 //  con SSID falsos puede molestar a redes vecinas; usalo solo
@@ -18,7 +21,8 @@
 //    SEL  -> iniciar / detener
 //    BACK -> salir
 
-static const char* ssidList[] = {
+// +1 para el terminador nulo.
+static char ssidList[APFLOOD_MAX_MSGS][APFLOOD_MAX_SSIDLEN + 1] = {
   "That girl is corrupt",
   "Could you raise her to love me",
   "maybe?",
@@ -26,7 +30,24 @@ static const char* ssidList[] = {
   "And yes I'm talking 'bout your",
   "baby"
 };
-static const int SSID_COUNT = sizeof(ssidList) / sizeof(ssidList[0]);
+static int SSID_COUNT = 6;   // cuantas entradas de ssidList estan en uso
+
+// Reemplaza los mensajes activos. Se llama desde PC-Mode.
+int apFloodSetMessages(const char* const* msgs, int count) {
+  if (count > APFLOOD_MAX_MSGS) count = APFLOOD_MAX_MSGS;
+  if (count < 1) return 0;
+
+  for (int i = 0; i < count; i++) {
+    strncpy(ssidList[i], msgs[i], APFLOOD_MAX_SSIDLEN);
+    ssidList[i][APFLOOD_MAX_SSIDLEN] = '\0';
+  }
+  SSID_COUNT = count;
+  return SSID_COUNT;
+}
+
+int apFloodGetMessageCount() {
+  return SSID_COUNT;
+}
 
 static bool     flooding    = false;
 static uint32_t beaconsSent = 0;
