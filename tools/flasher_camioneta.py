@@ -3,7 +3,7 @@
 
 #Uso:  python flasher_camioneta.py
 
-
+#!/usr/bin/env python3
 import os
 import re
 import sys
@@ -49,7 +49,7 @@ DEFAULT_BIN = os.path.join(
 BACKGROUND_IMAGE_PATH = os.path.join(_BASE, "reze.jpg")
 
 # <-- AQUI se ajusta la transparencia: 0.0 = invisible, 1.0 = opaca del todo.
-BACKGROUND_OPACITY = 0.00
+BACKGROUND_OPACITY = 0.15
 
 _bin_override = ""
 
