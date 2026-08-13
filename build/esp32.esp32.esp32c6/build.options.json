@@ -1,0 +1,10 @@
+{
+  "additionalFiles": "..\\..\\..,..\\..\\..,..\\..\\..,..\\..\\..,..\\..\\..,..\\..\\..,..\\..\\..,..\\..\\..,..\\..\\..,..\\..\\..,..\\..\\..,..\\..\\..,..\\..\\..,..\\..\\..,..\\..,..\\..,..\\..,..\\..,..\\..,..\\..,..\\..,..\\..,..\\..,..\\..,..\\..,..\\..,..\\..,..\\..,..\\..,..\\..",
+  "builtInLibrariesFolders": "C:\\Users\\pablo\\AppData\\Local\\Arduino15\\libraries",
+  "compiler.optimization_flags": "-Os",
+  "customBuildProperties": "",
+  "fqbn": "esp32:esp32:esp32c6:UploadSpeed=921600,CDCOnBoot=cdc,CPUFreq=160,FlashFreq=80,FlashMode=qio,FlashSize=8M,PartitionScheme=huge_app,DebugLevel=none,EraseFlash=all,JTAGAdapter=default,ZigbeeMode=default",
+  "hardwareFolders": "c:\\Users\\pablo\\AppData\\Local\\Arduino15\\packages",
+  "otherLibrariesFolders": "c:\\Users\\pablo\\OneDrive\\Documentos\\Arduino\\libraries",
+  "sketchLocation": "C:\\Users\\pablo\\OneDrive\\Documentos\\Arduino\\camioneta"
+}

@@ -3,9 +3,6 @@ __pycache__/
 *.pyc
 *.pyo
 
-# ---- Build de Arduino ----
-build/
-
 # ---- Basura del sistema operativo ----
 .DS_Store
 Thumbs.db
