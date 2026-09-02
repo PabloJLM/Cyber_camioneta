@@ -1,8 +1,7 @@
 #include "Ayuda/screen_ayuda_sd.h"
 #include "Drivers/buzzer.h"
 
-// Pantalla de ayuda: texto plano, edita las cadenas de drawStr como
-// quieras (o abri el proyecto en u8g2 Studio y editalas ahi mismo).
+static const unsigned char image_download_bits[] = {0x7e,0x7e,0x7e,0x7e,0x99,0x99,0x99,0x99,0x67,0xe6,0x67,0xe6,0x18,0x18,0x18,0x18,0x67,0xe6,0x67,0xe6,0x99,0x99,0x99,0x99,0x7e,0x7e,0x7e,0x7e};
 
 static bool isButtonJustPressed(int pin) {
   static uint8_t lastStableState[4] = {HIGH, HIGH, HIGH, HIGH};
@@ -46,16 +45,22 @@ void screenAyudaSDLoop() {
   u8g2.setBitmapMode(1);
 
   u8g2.setFont(u8g2_font_6x10_tr);
-  u8g2.drawStr(38, 10, "Ayuda SD");
-  u8g2.drawLine(0, 12, 127, 12);
+  u8g2.drawXBM(0, 1, 16, 14, image_download_bits);
+
+  u8g2.drawXBM(112, 1, 16, 14, image_download_bits);
+
+  u8g2.drawBox(16, 1, 96, 14);
+
+  u8g2.setDrawColor(2);
+  u8g2.drawStr(43, 11, "AYUDA SD");
 
   u8g2.setFont(u8g2_font_5x7_tr);
-  u8g2.drawStr(2, 24, "Texto de ejemplo linea 1");
-  u8g2.drawStr(2, 34, "Texto de ejemplo linea 2");
-  u8g2.drawStr(2, 44, "Texto de ejemplo linea 3");
-  u8g2.drawStr(2, 54, "Texto de ejemplo linea 4");
+  u8g2.drawStr(2, 24, "Conectate al AP para");
+  u8g2.drawStr(2, 34, "Subir, bajar o borrar");
+  u8g2.drawStr(2, 44, "Archivos de la SD");
+  u8g2.drawStr(2, 54, "IP: 192.168.4.1");
 
-  u8g2.drawStr(6, 62, "BACK:Volver");
+  u8g2.drawStr(4, 62, "BACK: Volver");
 
   u8g2.sendBuffer();
 }

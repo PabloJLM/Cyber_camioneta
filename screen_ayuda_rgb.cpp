@@ -1,9 +1,6 @@
 #include "Ayuda/screen_ayuda_rgb.h"
 #include "Drivers/buzzer.h"
 
-// Pantalla de ayuda: texto plano, edita las cadenas de drawStr como
-// quieras (o abri el proyecto en u8g2 Studio y editalas ahi mismo).
-
 static bool isButtonJustPressed(int pin) {
   static uint8_t lastStableState[4] = {HIGH, HIGH, HIGH, HIGH};
   static uint8_t lastReading[4]     = {HIGH, HIGH, HIGH, HIGH};
