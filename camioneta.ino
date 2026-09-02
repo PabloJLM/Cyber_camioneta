@@ -9,6 +9,10 @@
 #include "Ajustes/screen_ajustes.h"
 #include "Estaticos/screen_creditos.h"
 #include "Ayuda/screen_ayuda.h"
+#include "Ayuda/screen_ayuda_gps.h"
+#include "Ayuda/screen_ayuda_sd.h"
+#include "Ayuda/screen_ayuda_rgb.h"
+#include "Ayuda/screen_ayuda_qr.h"
 #include "Ajustes/screen_rgbneo.h"
 #include "Ajustes/screen_pcmode.h"
 #include "Apps/screen_captive.h"
@@ -92,6 +96,22 @@ void loop() {
 
     case SCREEN_BTSPAM:
       screenBtSpamLoop();
+      break;
+
+    case SCREEN_AYUDA_GPS:
+      screenAyudaGPSLoop();
+      break;
+
+    case SCREEN_AYUDA_SD:
+      screenAyudaSDLoop();
+      break;
+
+    case SCREEN_AYUDA_RGB:
+      screenAyudaRGBLoop();
+      break;
+
+    case SCREEN_AYUDA_QR:
+      screenAyudaQRLoop();
       break;
   }
   
