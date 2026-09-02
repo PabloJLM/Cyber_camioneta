@@ -1,10 +1,6 @@
 #include "Ayuda/screen_ayuda_qr.h"
 #include "Drivers/buzzer.h"
 
-// Pantalla de ayuda: texto plano, edita las cadenas de drawStr como
-// quieras (o abri el proyecto en u8g2 Studio y editalas ahi mismo).
-// Si en vez de texto queres un QR real, esta es la pantalla donde
-// agregarias un u8g2.drawXBM(...) con el bitmap del QR.
 
 static bool isButtonJustPressed(int pin) {
   static uint8_t lastStableState[4] = {HIGH, HIGH, HIGH, HIGH};
@@ -46,16 +42,6 @@ void screenAyudaQRLoop() {
   u8g2.clearBuffer();
   u8g2.setFontMode(1);
   u8g2.setBitmapMode(1);
-
-  u8g2.setFont(u8g2_font_6x10_tr);
-  u8g2.drawStr(38, 10, "Codigo QR");
-  u8g2.drawLine(0, 12, 127, 12);
-
-  u8g2.setFont(u8g2_font_5x7_tr);
-  u8g2.drawStr(2, 24, "Texto de ejemplo linea 1");
-  u8g2.drawStr(2, 34, "Texto de ejemplo linea 2");
-  u8g2.drawStr(2, 44, "Texto de ejemplo linea 3");
-  u8g2.drawStr(2, 54, "Texto de ejemplo linea 4");
 
   u8g2.drawStr(6, 62, "BACK:Volver");
 

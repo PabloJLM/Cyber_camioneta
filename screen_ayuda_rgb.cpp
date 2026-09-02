@@ -1,6 +1,9 @@
 #include "Ayuda/screen_ayuda_rgb.h"
 #include "Drivers/buzzer.h"
 
+static const unsigned char image_download_bits[] = {0x7e,0x7e,0x7e,0x7e,0x99,0x99,0x99,0x99,0x67,0xe6,0x67,0xe6,0x18,0x18,0x18,0x18,0x67,0xe6,0x67,0xe6,0x99,0x99,0x99,0x99,0x7e,0x7e,0x7e,0x7e};
+
+
 static bool isButtonJustPressed(int pin) {
   static uint8_t lastStableState[4] = {HIGH, HIGH, HIGH, HIGH};
   static uint8_t lastReading[4]     = {HIGH, HIGH, HIGH, HIGH};
@@ -43,16 +46,22 @@ void screenAyudaRGBLoop() {
   u8g2.setBitmapMode(1);
 
   u8g2.setFont(u8g2_font_6x10_tr);
-  u8g2.drawStr(38, 10, "Ayuda RGB");
-  u8g2.drawLine(0, 12, 127, 12);
+  u8g2.drawXBM(0, 1, 16, 14, image_download_bits);
+
+  u8g2.drawXBM(112, 1, 16, 14, image_download_bits);
+
+  u8g2.drawBox(16, 1, 96, 14);
+
+  u8g2.setDrawColor(2);
+  u8g2.drawStr(39, 11, "AYUDA RGB");
 
   u8g2.setFont(u8g2_font_5x7_tr);
-  u8g2.drawStr(2, 24, "Texto de ejemplo linea 1");
-  u8g2.drawStr(2, 34, "Texto de ejemplo linea 2");
-  u8g2.drawStr(2, 44, "Texto de ejemplo linea 3");
-  u8g2.drawStr(2, 54, "Texto de ejemplo linea 4");
+  u8g2.drawStr(2, 24, "Para ajustar el color");
+  u8g2.drawStr(2, 34, "De los neopixeles ve");
+  u8g2.drawStr(2, 44, "A ajustes y con el boton");
+  u8g2.drawStr(2, 54, "OK mueve los sliders RGB");
 
-  u8g2.drawStr(6, 62, "BACK:Volver");
+  u8g2.drawStr(4, 62, "BACK:Volver");
 
   u8g2.sendBuffer();
 }
