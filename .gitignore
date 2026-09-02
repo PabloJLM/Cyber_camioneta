@@ -1,11 +1,18 @@
-# ---- Python (tools/flasher_camioneta.py) ----
+# ---- Python ----
 __pycache__/
 *.pyc
 *.pyo
+.venv
 
 # ---- Basura del sistema operativo ----
 .DS_Store
 Thumbs.db
 desktop.ini
 
-.venv
+# ---- Build de Arduino / PyInstaller (se regenera al compilar) ----
+build/
+dist/
+*.bin
+*.elf
+*.map
+*.spec
