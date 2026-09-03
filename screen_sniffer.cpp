@@ -53,6 +53,30 @@ static volatile bool capturing = false;
 static uint8_t        channel  = 1;
 static char           pcapName[24] = "";
 
+// Nombre base configurable desde la terminal de Ajustes (comando
+// "snifname <nombre>"). Por defecto "cap" -> cap1.pcap, cap2.pcap...
+// Si en una misma sesion se hacen 2 capturas, la segunda sigue el
+// numero siguiente automaticamente (nextPcapName ya revisa la SD).
+#define SNIFFER_MAX_BASENAME 12
+static char pcapBaseName[SNIFFER_MAX_BASENAME + 1] = "cap";
+
+void snifferSetBaseName(const char* name) {
+  if (!name || !name[0]) return;
+  int j = 0;
+  for (int i = 0; name[i] != '\0' && j < SNIFFER_MAX_BASENAME; i++) {
+    char c = name[i];
+    bool ok = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+              (c >= '0' && c <= '9') || c == '_' || c == '-';
+    if (ok) pcapBaseName[j++] = c;
+  }
+  pcapBaseName[j] = '\0';
+  if (j == 0) strcpy(pcapBaseName, "cap");   // no dejar el nombre vacio
+}
+
+const char* snifferGetBaseName() {
+  return pcapBaseName;
+}
+
 // ---------- Estadisticas en vivo (solo en RAM) ----------
 static uint32_t pktCount    = 0;
 static uint32_t cntBeacon   = 0;
@@ -178,11 +202,14 @@ static void snifferCallback(void* buf, wifi_promiscuous_pkt_type_t type) {
 // ---------- Control de captura ----------
 
 static void nextPcapName() {
+  // "nombre1.pcap", "nombre2.pcap", ... -- sin ceros a la izquierda,
+  // como pidio Pablo. Si ya se hizo una captura en esta sesion (o en
+  // una anterior, porque revisa la SD) el numero sigue subiendo solo.
   for (int i = 1; i < 10000; i++) {
-    snprintf(pcapName, sizeof(pcapName), "/cap%04d.pcap", i);
+    snprintf(pcapName, sizeof(pcapName), "/%s%d.pcap", pcapBaseName, i);
     if (!SD.exists(pcapName)) return;
   }
-  strcpy(pcapName, "/cap0000.pcap");
+  snprintf(pcapName, sizeof(pcapName), "/%s0.pcap", pcapBaseName);
 }
 
 static void startCapture() {

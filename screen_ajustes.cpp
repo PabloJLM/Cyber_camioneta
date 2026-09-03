@@ -114,7 +114,7 @@ void screenAjustesLoop() {
       case 0: currentScreen = SCREEN_FRASES; break;
       case 1: currentScreen = SCREEN_DESTINOS; break;
       case 2: currentScreen = SCREEN_RGBNEO; break;
-      case 3: currentScreen = SCREEN_PCMODE; break;
+      case 3: currentScreen = SCREEN_AJUSTES_TERM; break;
     }
     return;
   }
@@ -147,7 +147,7 @@ void screenAjustesLoop() {
   u8g2.drawXBM(112, 1, 16, 14, image_Layer_9_bits);
   
   // Menu items
-  const char* items[] = {"GPS Config", "SD Storage", "NEOPIXEL", "PC-Mode"};
+  const char* items[] = {"GPS Config", "SD Storage", "NEOPIXEL", "Terminal"};
   const int yPositions[] = {24, 36, 48, 60};
   
   for (int i = 0; i < MENU_ITEMS; i++) {

@@ -43,7 +43,8 @@ enum Screen {
   SCREEN_AYUDA_GPS,
   SCREEN_AYUDA_SD,
   SCREEN_AYUDA_RGB,
-  SCREEN_AYUDA_QR
+  SCREEN_AYUDA_QR,
+  SCREEN_AJUSTES_TERM  // Terminal serial exclusiva de Ajustes (flood, sniffer, portal)
 };
 
 extern Screen currentScreen;

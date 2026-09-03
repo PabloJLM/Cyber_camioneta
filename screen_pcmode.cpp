@@ -1,4 +1,4 @@
-#include "Ajustes/screen_pcmode.h"
+#include "Apps/screen_pcmode.h"
 #include "Drivers/buzzer.h"
 #include "Drivers/neopixel.h"
 #include "Apps/screen_apflood.h"
@@ -494,7 +494,7 @@ void processSerialCommand() {
           Serial.println(F("  saliendo de PC-Mode..."));
           pcModeInitialized = false;
           pianoMode = false;
-          currentScreen = SCREEN_AJUSTES;
+          currentScreen = SCREEN_APPS;
           return;
         }
         else if (commandBuffer == "Tesla") {
@@ -648,7 +648,7 @@ void screenPCModeLoop() {
     pianoMode = false;
     Serial.println();
     Serial.println(F("  saliendo de PC-Mode..."));
-    currentScreen = SCREEN_AJUSTES;
+    currentScreen = SCREEN_APPS;
     return;
   }
 

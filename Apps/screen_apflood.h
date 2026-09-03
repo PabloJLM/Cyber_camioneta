@@ -17,3 +17,8 @@ int apFloodSetMessages(const char* const* msgs, int count);
 
 // Cuantos mensajes hay cargados actualmente.
 int apFloodGetMessageCount();
+
+// Mensaje actual en la posicion i (0-based). Devuelve "" si i esta
+// fuera de rango. Sirve para mostrar la lista desde la terminal de
+// Ajustes sin duplicar el arreglo interno.
+const char* apFloodGetMessage(int i);

@@ -14,7 +14,8 @@
 #include "Ayuda/screen_ayuda_rgb.h"
 #include "Ayuda/screen_ayuda_qr.h"
 #include "Ajustes/screen_rgbneo.h"
-#include "Ajustes/screen_pcmode.h"
+#include "Ajustes/screen_ajustes_term.h"
+#include "Apps/screen_pcmode.h"
 #include "Apps/screen_captive.h"
 #include "Apps/screen_apflood.h"
 #include "Apps/screen_sniffer.h"
@@ -112,6 +113,10 @@ void loop() {
 
     case SCREEN_AYUDA_QR:
       screenAyudaQRLoop();
+      break;
+
+    case SCREEN_AJUSTES_TERM:
+      screenAjustesTermLoop();
       break;
   }
   

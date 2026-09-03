@@ -49,6 +49,11 @@ int apFloodGetMessageCount() {
   return SSID_COUNT;
 }
 
+const char* apFloodGetMessage(int i) {
+  if (i < 0 || i >= SSID_COUNT) return "";
+  return ssidList[i];
+}
+
 static bool     flooding    = false;
 static uint32_t beaconsSent = 0;
 static uint8_t  channel     = 1;
