@@ -669,8 +669,8 @@ void screenPCModeLoop() {
   u8g2.drawXBM(48, 24, 32, 16, image_terminal_bits);
 
   u8g2.setFont(u8g2_font_5x7_tr);
-  u8g2.drawStr(25, 48, "Terminal Activo");
-  u8g2.drawStr(15, 58, "Ver Monitor Serial");
+  u8g2.drawStr(25, 48, "Terminal Activa");
+  u8g2.drawStr(18, 58, "Ver Monitor Serial");
 
   u8g2.sendBuffer();
 }

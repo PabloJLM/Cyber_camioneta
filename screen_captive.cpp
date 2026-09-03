@@ -345,8 +345,8 @@ void screenCaptiveLoop() {
   u8g2.setBitmapMode(1);
   u8g2.setFont(u8g2_font_6x10_tr);
 
-  u8g2.drawStr(20, 10, "Captive Portal");
-  u8g2.drawLine(0, 12, 127, 12);
+  u8g2.drawStr(22, 7, "Captive Portal");
+  u8g2.drawLine(0, 9, 127, 9);
 
   if (captiveRunning) {
     u8g2.drawStr(10, 24, "Estado: ACTIVO");
@@ -363,13 +363,13 @@ void screenCaptiveLoop() {
     u8g2.setFont(u8g2_font_5x7_tr);
     u8g2.drawStr(5, 60, "SEL:Detener BACK:Salir");
   } else {
-    u8g2.drawStr(10, 24, "Estado: INACTIVO");
+    u8g2.drawStr(11, 19, "Estado: INACTIVO");
     u8g2.setFont(u8g2_font_5x7_tr);
-    u8g2.drawStr(10, 38, "Captura correo y telefono");
-    u8g2.drawStr(10, 46, "Carpeta SD: /portal/");
-    u8g2.drawStr(10, 54, "Log: captive_log.txt");
+    u8g2.drawStr(12, 29, "Carpeta SD: /portal/");
+    u8g2.drawStr(13, 39, "Log: captive_log.txt");
     u8g2.setFont(u8g2_font_6x10_tr);
-    u8g2.drawStr(5, 62, "SEL:Iniciar BACK:Salir");
+    u8g2.drawStr(1, 49, "SEL:Iniciar");
+    u8g2.drawStr(1, 58, "BACK:Salir");
   }
 
   u8g2.sendBuffer();
