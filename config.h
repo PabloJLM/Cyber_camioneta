@@ -44,7 +44,9 @@ enum Screen {
   SCREEN_AYUDA_SD,
   SCREEN_AYUDA_RGB,
   SCREEN_AYUDA_QR,
-  SCREEN_AJUSTES_TERM  // Terminal serial exclusiva de Ajustes (flood, sniffer, portal)
+  SCREEN_AJUSTES_TERM,  // Terminal serial exclusiva de Ajustes (flood, sniffer, portal)
+  SCREEN_AYUDA_PCMODE,  // Ayuda: comandos de PC-Mode (Apps)
+  SCREEN_AYUDA_TERM     // Ayuda: comandos de la terminal de Ajustes
 };
 
 extern Screen currentScreen;

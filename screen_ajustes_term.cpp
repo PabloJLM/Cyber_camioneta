@@ -70,7 +70,7 @@ static void printRow(const char* key, const String& value) {
 }
 
 static void printPrompt() {
-  Serial.print(F("ajustes:~$ "));
+  Serial.print(F("Ajustes:~$ "));
 }
 
 // ---------- flood{...} (mismo parser que PC-Mode) ----------
@@ -296,14 +296,10 @@ static void processSerialCommand() {
 
 static void printBanner() {
   Serial.println();
-  Serial.println(F("  ================================"));
-  Serial.println(F("   CAMIONETA :: Terminal de Ajustes"));
-  Serial.println(F("  ================================"));
+  Serial.println(F("   Terminal de Ajustes"));
   Serial.println(F("  Solo configuracion: AP Flood, nombre del sniffer"));
-  Serial.println(F("  y fuente del captive portal. Para el juguete de"));
-  Serial.println(F("  siempre (piano, ASCII art, ls/cat SD) anda a"));
-  Serial.println(F("  Apps -> PC-Mode."));
-  Serial.println(F("  escribe 'help' para ver los comandos."));
+  Serial.println(F("  y fuente del captive portal."));
+  Serial.println(F("  Escribe 'help' para ver los comandos."));
 }
 
 void screenAjustesTermLoop() {
@@ -338,10 +334,10 @@ void screenAjustesTermLoop() {
   u8g2.drawXBM(0, 1, 16, 14, image_Layer_9_bits);
   u8g2.drawXBM(112, 1, 16, 14, image_Layer_9_bits);
 
-  u8g2.drawXBM(48, 24, 32, 32, image_gear_bits);
+  u8g2.drawXBM(47, 16, 32, 32, image_gear_bits);
 
   u8g2.setFont(u8g2_font_5x7_tr);
-  u8g2.drawStr(20, 60, "Ver Monitor Serial");
+  u8g2.drawStr(20, 54, "Ver Monitor Serial");
 
   u8g2.sendBuffer();
 }

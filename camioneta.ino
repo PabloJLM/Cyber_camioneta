@@ -13,6 +13,8 @@
 #include "Ayuda/screen_ayuda_sd.h"
 #include "Ayuda/screen_ayuda_rgb.h"
 #include "Ayuda/screen_ayuda_qr.h"
+#include "Ayuda/screen_ayuda_pcmode.h"
+#include "Ayuda/screen_ayuda_term.h"
 #include "Ajustes/screen_rgbneo.h"
 #include "Ajustes/screen_ajustes_term.h"
 #include "Apps/screen_pcmode.h"
@@ -117,6 +119,14 @@ void loop() {
 
     case SCREEN_AJUSTES_TERM:
       screenAjustesTermLoop();
+      break;
+
+    case SCREEN_AYUDA_PCMODE:
+      screenAyudaPCModeLoop();
+      break;
+
+    case SCREEN_AYUDA_TERM:
+      screenAyudaTermLoop();
       break;
   }
   
