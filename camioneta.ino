@@ -22,6 +22,7 @@
 #include "Apps/screen_apflood.h"
 #include "Apps/screen_sniffer.h"
 #include "Apps/screen_btspam.h"
+#include "Apps/screen_gps.h"
 
 // Pantalla 
 U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE, PIN_SCL, PIN_SDA);
@@ -99,6 +100,10 @@ void loop() {
 
     case SCREEN_BTSPAM:
       screenBtSpamLoop();
+      break;
+
+    case SCREEN_GPS:
+      screenGPSLoop();
       break;
 
     case SCREEN_AYUDA_GPS:

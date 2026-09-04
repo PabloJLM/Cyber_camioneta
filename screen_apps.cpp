@@ -239,17 +239,8 @@ void drawPCMode() {
   u8g2.drawXBM(8, 40, 16, 8, image_download_bits);
   u8g2.drawXBM(8, 23, 16, 8, image_download_1_bits);
   u8g2.setFont(u8g2_font_6x10_tr);
-  u8g2.drawStr(47, 7, "PC-Mode");
-  u8g2.drawFrame(43, 12, 49, 36);
-  u8g2.drawRBox(48, 16, 40, 28, 3);
-  u8g2.drawVLine(56, 47, 7);
-  u8g2.drawVLine(80, 47, 7);
-  u8g2.drawFrame(48, 53, 41, 9);
-  u8g2.drawHLine(73, 57, 12);
-  u8g2.drawPixel(86, 57);
-  u8g2.drawBox(50, 57, 2, 4);
-  u8g2.drawBox(55, 57, 2, 4);
-  u8g2.drawBox(60, 57, 2, 4);
+  u8g2.drawStr(40, 19, "PC-Mode");
+  u8g2.drawXBM(48, 23, 32, 32, image_pcmode_placeholder_bits);
 }
 
 // ========== MAIN LOOP ==========
@@ -298,7 +289,8 @@ void screenAppsLoop() {
         currentScreen = SCREEN_BTSPAM;
         break;
       case 4:
-        // GPS Position action
+        // GPS Position
+        currentScreen = SCREEN_GPS;
         break;
       case 5:
         // Wardriving action

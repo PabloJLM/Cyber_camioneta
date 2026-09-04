@@ -1,6 +1,9 @@
 #include "Ayuda/screen_ayuda_gps.h"
 #include "Drivers/buzzer.h"
 
+// Ayuda: que muestra la app GPS Position (Apps -> Posicion GPS).
+// Modulo real: ATGM336H-6N-74 (GPS+BeiDou) por UART0 (TXD0/RXD0).
+
 static const unsigned char image_download_bits[] = {0x7e,0x7e,0x7e,0x7e,0x99,0x99,0x99,0x99,0x67,0xe6,0x67,0xe6,0x18,0x18,0x18,0x18,0x67,0xe6,0x67,0xe6,0x99,0x99,0x99,0x99,0x7e,0x7e,0x7e,0x7e};
 
 static bool isButtonJustPressed(int pin) {
@@ -52,13 +55,13 @@ void screenAyudaGPSLoop() {
   u8g2.drawBox(16, 1, 96, 14);
 
   u8g2.setDrawColor(2);
-  u8g2.drawStr(39, 11, "AYUDA RGB");
+  u8g2.drawStr(39, 11, "AYUDA GPS");
 
   u8g2.setFont(u8g2_font_5x7_tr);
-  u8g2.drawStr(2, 24, "Texto de ejemplo linea 1");
-  u8g2.drawStr(2, 34, "Texto de ejemplo linea 2");
-  u8g2.drawStr(2, 44, "Texto de ejemplo linea 3");
-  u8g2.drawStr(2, 54, "Texto de ejemplo linea 4");
+  u8g2.drawStr(2, 24, "Lat/Lon: posicion actual");
+  u8g2.drawStr(2, 34, "Alt/Vel: altura y veloc.");
+  u8g2.drawStr(2, 44, "UTC/Sat: hora y # de sats");
+  u8g2.drawStr(2, 54, "Sin fix: busca senal afuera");
 
   u8g2.drawStr(4, 62, "BACK:Volver");
 

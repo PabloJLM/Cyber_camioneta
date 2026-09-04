@@ -40,6 +40,7 @@ enum Screen {
   SCREEN_APFLOOD,  // Beacon flood
   SCREEN_SNIFFER,  // Sniffer de paquetes (PCAP)
   SCREEN_BTSPAM,   // Publicidad por BLE advertising
+  SCREEN_GPS,      // GPS Position (lee NMEA del ATGM336H-6N-74 por UART0)
   SCREEN_AYUDA_GPS,
   SCREEN_AYUDA_SD,
   SCREEN_AYUDA_RGB,
