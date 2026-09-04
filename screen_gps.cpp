@@ -1,46 +1,57 @@
 #include "Apps/screen_gps.h"
 #include "Drivers/buzzer.h"
 #include <TinyGPSPlus.h>
+#include <string.h>
 
 // Modulo real (ver esquematico): ATGM336H-6N-74, GNSS GPS+BeiDou.
 //
-// Historial del lio de pines (para que quede documentado):
-// 1) Se asumio que el GPS estaba en TXD0/RXD0 (UART0 "de fabrica" del
-//    chip) por como se leia el esquematico general. Se probo con
-//    HardwareSerial(0) directo -> rompia el Monitor Serie (esa consola
-//    SI es UART0 en esta placa).
-// 2) Se paso a UART1 (periferico de hardware separado) pero routeado
-//    via GPIO matrix a los pines de las macros RX/TX del core (GPIO17 /
-//    GPIO16) -- pensando que esos eran los pines fisicos del GPS.
-//    Resultado: cero bytes, nunca llego nada.
-// 3) Con el pinout real de la placa se confirmo que el GPS en realidad
-//    esta soldado a otro par completamente distinto: neto "RX1" -> IO4
-//    y neto "TX1" -> IO5. Nada que ver con TXD0/RXD0. Con eso arreglado
-//    deberia empezar a llegar dato.
-//
-// Asi que: UART1 de hardware (separado de la consola), pero apuntado a
-// los pines reales IO4 (RX del ESP32, recibe el TX del modulo) e IO5
-// (TX del ESP32, hacia el RX del modulo).
-static const int GPS_RX_PIN = 4;   // IO4 = "RX1" en el esquematico
-static const int GPS_TX_PIN = 5;   // IO5 = "TX1" en el esquematico
-//
-// Con los pines ya correctos empezo a llegar dato, pero repetia siempre
-// el mismo patron de basura -- la firma clasica de un baudrate mal
-// puesto (la trama real se repite ~1 vez por segundo y al decodificarla
-// mal siempre sale la misma pinta). En vez de recompilar a mano
-// probando velocidades, las probamos en rotacion automatica hasta que
-// una trama pase el checksum de NMEA.
-static const unsigned long BAUD_CANDIDATES[] = {9600, 4800, 19200, 38400, 57600, 115200};
-static const int NUM_BAUDS = sizeof(BAUD_CANDIDATES) / sizeof(BAUD_CANDIDATES[0]);
-static const unsigned long BAUD_TRY_MS = 2500;  // cuanto se le da a cada velocidad antes de probar la siguiente
-
-static int baudIndex = 0;
-static unsigned long lastBaudSwitch = 0;
-static bool baudLocked = false;  // true en cuanto una trama pasa el checksum -- deja de rotar
+// Datos confirmados en banco de pruebas (ver historial en el chat si
+// hace falta reabrir esto):
+// - El modulo NO esta en TXD0/RXD0 (esos son otra cosa en esta placa).
+//   Esta soldado a los netos "RX1"/"TX1" = IO4/IO5.
+// - Corre a 115200 baudios (no el 9600 "de fabrica" que trae la hoja de
+//   datos generica -- este modulo en particular viene configurado a
+//   otra velocidad).
+// - El propio modulo reporta "$GPTXT,...,ANTENNA OPEN" pero en esta
+//   placa ese aviso NO es confiable: entre el conector de antena y el
+//   pin RF_IN del modulo hay un LNA propio en la placa (U5, AT2659S)
+//   con su capacitor de acoplamiento -- eso corta la continuidad de DC
+//   que el chip usa para "sentir" si hay antena, asi que el aviso sale
+//   "OPEN" este conectada o no la antena. No hace falta antena activa:
+//   el LNA ya esta puesto en la placa (VCC_RF alimenta a U5, no a la
+//   antena), asi que sirve una antena pasiva normal. Se muestra el
+//   aviso igual en pantalla como dato informativo del modulo, pero no
+//   como diagnostico definitivo -- la prueba real es salir a la calle.
+static const int GPS_RX_PIN = 4;        // IO4 = "RX1"
+static const int GPS_TX_PIN = 5;        // IO5 = "TX1"
+static const unsigned long GPS_BAUD = 115200;
 
 static HardwareSerial GPSSerial(1);  // UART1: hardware separado del UART0/consola
 static TinyGPSPlus gps;
 static bool gpsStarted = false;
+
+// El estado de la antena NO hace falta salir a la calle para verlo: el
+// propio modulo lo manda como texto plano en una sentencia $GPTXT
+// ("ANTENNA OPEN" = no conectada/cortada, "ANTENNA OK"/"ANTENNA ON" =
+// conectada bien, "ANTENNA SHORT" = cortocircuito). TinyGPSPlus ignora
+// esas lineas (no son GGA/RMC/etc), asi que las buscamos a mano
+// juntando los caracteres en un buffer chico hasta el salto de linea.
+// OJO: en esta placa este aviso del modulo no es diagnostico definitivo
+// (ver comentario arriba, hay un LNA propio -- U5 -- en el medio). Se
+// muestra como dato informativo nomas, con el prefijo "Modulo dice:".
+static char antennaStatus[24] = "Modulo: detectando...";
+static char lineBuf[96];
+static uint8_t lineLen = 0;
+
+static void checkAntennaLine(const char* line) {
+  if (strstr(line, "ANTENNA OPEN")) {
+    strcpy(antennaStatus, "Modulo dice: OPEN");
+  } else if (strstr(line, "ANTENNA SHORT")) {
+    strcpy(antennaStatus, "Modulo dice: SHORT");
+  } else if (strstr(line, "ANTENNA OK") || strstr(line, "ANTENNA ON")) {
+    strcpy(antennaStatus, "Modulo dice: OK");
+  }
+}
 
 static bool isButtonJustPressed(int pin) {
   static uint8_t lastStableState[4] = {HIGH, HIGH, HIGH, HIGH};
@@ -72,88 +83,43 @@ static bool isButtonJustPressed(int pin) {
   return false;
 }
 
-// Ademas de alimentar al parser, hace un eco crudo de cada byte que
-// llega del modulo hacia el Monitor Serie (Serial normal, USB) -- asi
-// se puede ver en vivo, desde la PC, si esta llegando algo y que pinta
-// tiene: si no aparece nada = no llega dato (cableado/GPS_ON); si
-// aparece basura ilegible = el baudrate no es el que pusimos; si
-// aparecen lineas tipo "$GPGGA,..." o "$GNRMC,..." = el UART esta bien
-// y solo falta el fix (antena/cielo abierto).
 static void gpsFeed() {
   while (GPSSerial.available()) {
     char c = GPSSerial.read();
-    Serial.write(c);
     gps.encode(c);
+
+    if (c == '\n' || lineLen >= sizeof(lineBuf) - 1) {
+      lineBuf[lineLen] = '\0';
+      checkAntennaLine(lineBuf);
+      lineLen = 0;
+    } else if (c != '\r') {
+      lineBuf[lineLen++] = c;
+    }
   }
 }
 
-// Traza de diagnostico: se imprime UNA sola vez por completo (la primera
-// vuelta que logra terminar entera) para ver, si vuelve a trabarse, en
-// que paso exacto se quedo -- el ultimo "paso N" que se alcanzo a
-// imprimir es la linea siguiente a la que esta colgando.
-static bool tracedOnce = false;
-#define GPS_TRACE(msg) do { if (!tracedOnce) { Serial.print(F("[GPS-trace] ")); Serial.println(F(msg)); } } while (0)
-
 void screenGPSLoop() {
   if (!gpsStarted) {
-    GPS_TRACE("paso 1: entrando");
-
-    // OJO: por ahora NO forzamos PIN_GPSON. No sabemos si es un enable
-    // activo en alto, activo en bajo, o un pin de solo lectura de
-    // estado del modulo -- forzarlo mal puede dejar el modulo apagado
-    // sin que se note. Lo dejamos como entrada (tal como estaria si
-    // este codigo no existiera; R4 lo mantiene en HIGH por el pull-up)
-    // y solo lo leemos, para no arriesgar apagarlo por error.
+    // PIN_GPSON se deja como entrada (sin forzar) -- R4 ya lo mantiene
+    // en HIGH por el pull-up, que es como estaba antes de este codigo.
     pinMode(PIN_GPSON, INPUT);
-    Serial.print(F("[GPS] PIN_GPSON leido (sin tocar) = "));
-    Serial.println(digitalRead(PIN_GPSON) ? "HIGH" : "LOW");
 
-    Serial.print(F("[GPS] Pines UART1 -> RX="));
-    Serial.print(GPS_RX_PIN);
-    Serial.print(F(" TX="));
-    Serial.println(GPS_TX_PIN);
-
-    GPS_TRACE("paso 2: llamando GPSSerial.begin()");
-    GPSSerial.begin(BAUD_CANDIDATES[baudIndex], SERIAL_8N1, GPS_RX_PIN, GPS_TX_PIN);  // IO4/IO5 = "RX1"/"TX1" reales
-    GPS_TRACE("paso 3: begin() volvio sin colgarse");
+    GPSSerial.begin(GPS_BAUD, SERIAL_8N1, GPS_RX_PIN, GPS_TX_PIN);
     gpsStarted = true;
-    lastBaudSwitch = millis();
+
     Serial.println();
-    Serial.print(F("[GPS] Probando baudrate: "));
-    Serial.println(BAUD_CANDIDATES[baudIndex]);
-    Serial.println(F("[GPS] Tramas NMEA crudas abajo (si no aparece nada, revisa cableado):"));
+    Serial.println(F("[GPS] UART1 @ 115200 (IO4/IO5). Tramas NMEA:"));
   }
 
-  // Si todavia no paso ninguna trama con checksum valido, cada
-  // BAUD_TRY_MS probamos la siguiente velocidad de la lista.
-  if (!baudLocked) {
-    if (gps.passedChecksum() > 0) {
-      baudLocked = true;
-      Serial.print(F("[GPS] Baudrate correcto encontrado: "));
-      Serial.println(BAUD_CANDIDATES[baudIndex]);
-    } else if (millis() - lastBaudSwitch > BAUD_TRY_MS) {
-      baudIndex = (baudIndex + 1) % NUM_BAUDS;
-      GPSSerial.end();
-      GPSSerial.begin(BAUD_CANDIDATES[baudIndex], SERIAL_8N1, GPS_RX_PIN, GPS_TX_PIN);
-      lastBaudSwitch = millis();
-      Serial.print(F("[GPS] Probando baudrate: "));
-      Serial.println(BAUD_CANDIDATES[baudIndex]);
-    }
-  }
-
-  GPS_TRACE("paso 4: chequeando boton BACK");
   if (isButtonJustPressed(PIN_BACK)) {
     buzzerClick();
     currentScreen = SCREEN_APPS;
     return;
   }
 
-  GPS_TRACE("paso 5: entrando a gpsFeed()");
   gpsFeed();
-  GPS_TRACE("paso 6: gpsFeed() volvio sin colgarse");
 
   u8g2.clearBuffer();
-  GPS_TRACE("paso 7: clearBuffer OK");
   u8g2.setFontMode(1);
   u8g2.setBitmapMode(1);
 
@@ -188,28 +154,22 @@ void screenGPSLoop() {
   } else {
     u8g2.drawStr(2, 24, "Buscando senal GPS...");
 
+    u8g2.drawStr(2, 34, antennaStatus);
+
     snprintf(line, sizeof(line), "Satelites: %d",
               gps.satellites.isValid() ? gps.satellites.value() : 0);
-    u8g2.drawStr(2, 34, line);
-
-    snprintf(line, sizeof(line), "Bytes:%lu OK:%lu",
-              gps.charsProcessed(), gps.passedChecksum());
     u8g2.drawStr(2, 44, line);
 
     if (gps.charsProcessed() < 10) {
       u8g2.drawStr(2, 54, "Sin datos del modulo");
-    } else if (!baudLocked) {
-      snprintf(line, sizeof(line), "Probando baud:%lu", BAUD_CANDIDATES[baudIndex]);
-      u8g2.drawStr(2, 54, line);
     } else {
-      u8g2.drawStr(2, 54, "Esperando fix...");
+      snprintf(line, sizeof(line), "Bytes:%lu OK:%lu",
+                gps.charsProcessed(), gps.passedChecksum());
+      u8g2.drawStr(2, 54, line);
     }
   }
 
   u8g2.drawStr(2, 62, "BACK:Volver");
 
-  GPS_TRACE("paso 8: antes de sendBuffer()");
   u8g2.sendBuffer();
-  GPS_TRACE("paso 9: sendBuffer() volvio, vuelta completa OK");
-  tracedOnce = true;
 }
