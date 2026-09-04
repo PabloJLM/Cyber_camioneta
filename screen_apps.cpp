@@ -33,21 +33,6 @@ static const unsigned char image_operation_warning_bits[] PROGMEM = {
   0x88,0x11,0x84,0x21,0x02,0x40,0x82,0x41,0x81,0x81,0x01,0x80,0xfe,0x7f,0x00,0x00
 };
 
-// Karma Attack icons
-static const unsigned char image_EviSmile1_bits[] PROGMEM = {
-  0x0c,0xc0,0x00,0x06,0x80,0x01,0x07,0x80,0x03,0xcf,0xcf,0x03,0xff,0xff,0x03,0xff,
-  0xff,0x03,0xfe,0xff,0x01,0xfe,0xff,0x01,0xfe,0xff,0x01,0xf7,0xbf,0x03,0xe7,0x9f,
-  0x03,0xc7,0x8f,0x03,0x87,0x87,0x03,0x8f,0xc7,0x03,0xff,0xff,0x03,0xfe,0xff,0x01,
-  0xde,0xef,0x01,0xbc,0xf4,0x00,0x78,0x78,0x00,0xf0,0x3f,0x00,0xc0,0x0f,0x00
-};
-
-static const unsigned char image_Smile_1_bits[] PROGMEM = {
-  0xc0,0x0f,0x00,0xf0,0x3f,0x00,0xf8,0x7f,0x00,0xfc,0xff,0x00,0xfe,0xff,0x01,0xfe,
-  0xff,0x01,0xff,0xff,0x03,0xcf,0xcf,0x03,0x87,0x87,0x03,0x87,0x87,0x03,0xcf,0xcf,
-  0x03,0xff,0xff,0x03,0xfe,0xff,0x01,0xbe,0xf7,0x01,0x7c,0xf8,0x00,0xf8,0x7f,0x00,
-  0xf0,0x3f,0x00,0xc0,0x0f,0x00
-};
-
 // Bluetooth Spam icon
 static const unsigned char image_bluetooth_bits[] PROGMEM = {
   0x80,0x00,0x40,0x01,0x40,0x02,0x44,0x04,0x48,0x04,0x50,0x02,0x60,0x01,0xc0,0x00,
@@ -148,7 +133,7 @@ static bool isButtonJustPressed(int pin) {
 // ========== APP SELECTION STATE ==========
 
 static int appSelection = 0;
-static const int TOTAL_APPS = 8;
+static const int TOTAL_APPS = 7;
 
 // ========== SCREEN RENDERING ==========
 
@@ -172,17 +157,6 @@ void drawAPFlood() {
   u8g2.drawStr(40, 19, "AP Flood");
   u8g2.drawXBM(54, 23, 25, 27, image_Dehumidify_hvr_bits);
   u8g2.drawXBM(43, 28, 16, 16, image_operation_warning_bits);
-}
-
-void drawKarmaAttack() {
-  u8g2.setFontMode(1);
-  u8g2.setBitmapMode(1);
-  u8g2.drawXBM(8, 40, 16, 8, image_download_bits);
-  u8g2.drawXBM(8, 23, 16, 8, image_download_1_bits);
-  u8g2.setFont(u8g2_font_6x10_tr);
-  u8g2.drawStr(29, 19, "Karma Attack");
-  u8g2.drawXBM(65, 23, 18, 21, image_EviSmile1_bits);
-  u8g2.drawXBM(45, 26, 18, 18, image_Smile_1_bits);
 }
 
 void drawBluetoothSpam() {
@@ -282,24 +256,21 @@ void screenAppsLoop() {
         currentScreen = SCREEN_APFLOOD;
         break;
       case 2:
-        // Karma Attack action
-        break;
-      case 3:
         // Bluetooth Spam - publicidad por BLE advertising
         currentScreen = SCREEN_BTSPAM;
         break;
-      case 4:
+      case 3:
         // GPS Position
         currentScreen = SCREEN_GPS;
         break;
-      case 5:
+      case 4:
         // Wardriving action
         break;
-      case 6:
+      case 5:
         // Sniffer de paquetes
         currentScreen = SCREEN_SNIFFER;
         break;
-      case 7:
+      case 6:
         // PC-Mode (antes vivia en Ajustes)
         currentScreen = SCREEN_PCMODE;
         break;
@@ -318,21 +289,18 @@ void screenAppsLoop() {
       drawAPFlood();
       break;
     case 2:
-      drawKarmaAttack();
-      break;
-    case 3:
       drawBluetoothSpam();
       break;
-    case 4:
+    case 3:
       drawGPSPosition();
       break;
-    case 5:
+    case 4:
       drawWardriving();
       break;
-    case 6:
+    case 5:
       drawSniffer();
       break;
-    case 7:
+    case 6:
       drawPCMode();
       break;
   }
