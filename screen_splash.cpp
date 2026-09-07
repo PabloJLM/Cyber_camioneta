@@ -50,14 +50,14 @@ void screenSplashLoop() {
 
 
   if (currentPixel < NUM_PIXELS) {
-    neopixelSplashSequence(currentPixel, lastPixelTime);
+    neopixelSplashSequence(currentPixel, lastPixelTime, breath.r, breath.g, breath.b);
   } else {
     neopixelBreathe(brightness, direction, lastBreatheTime, breath.r, breath.g, breath.b);
   }
 
 
   if (anyButtonPressed()) {
-    neopixelFadeOut();
+    neopixelFadeOut(breath.r, breath.g, breath.b);
     buzzerWelcome();
     currentScreen = SCREEN_MENU;
     delay(200);

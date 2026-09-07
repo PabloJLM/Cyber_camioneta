@@ -150,7 +150,7 @@ void screenConfigLoop() {
 
   if (mode == CFG_LIST) {
     for (int i = 0; i < MENU_COUNT; i++) {
-      int yy = 22 + i * 11;
+      int yy = 19 + i * 11;
       if (i == listSel) u8g2.drawStr(2, yy, ">");
       u8g2.drawStr(12, yy, MENU_ITEMS[i]);
     }

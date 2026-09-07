@@ -17,27 +17,19 @@ void neopixelSetPixel(int index, uint8_t r, uint8_t g, uint8_t b) {
   }
 }
 
-void neopixelSetPixelCustom(int index) {
-  if (index >= 0 && index < NUM_PIXELS) {
-    strip.setPixelColor(index, strip.Color(
-      pixelColors[index].r,
-      pixelColors[index].g,
-      pixelColors[index].b
-    ));
-  }
-}
-
 void neopixelShow() {
   strip.show();
 }
 
-// Encender neopixeles
-void neopixelSplashSequence(int &currentPixel, unsigned long &lastTime) {
+// Encender neopixeles con el color elegido (Ajustes > Configuracion >
+// Color Breath) en vez del patron fijo morado/blanco de antes.
+void neopixelSplashSequence(int &currentPixel, unsigned long &lastTime,
+                             uint8_t r, uint8_t g, uint8_t b) {
   unsigned long currentTime = millis();
 
   // Encender un pixel cada 200ms
   if (currentTime - lastTime > 200 && currentPixel < NUM_PIXELS) {
-    neopixelSetPixelCustom(currentPixel);
+    neopixelSetPixel(currentPixel, r, g, b);
     strip.show();
     currentPixel++;
     lastTime = currentTime;
@@ -45,8 +37,8 @@ void neopixelSplashSequence(int &currentPixel, unsigned long &lastTime) {
 }
 
 // Color configurable (ver BREATH_PRESETS en neopixel.h / pantalla
-// Ajustes > Configuracion > Color Breath) en vez del patron fijo de
-// pixelColors -- asi todo el tira "respira" con un solo color elegido.
+// Ajustes > Configuracion > Color Breath) -- todo el tira "respira" con
+// un solo color elegido.
 void neopixelBreathe(uint8_t &brightness, int8_t &direction, unsigned long &lastTime,
                       uint8_t r, uint8_t g, uint8_t b) {
   unsigned long currentTime = millis();
@@ -75,13 +67,15 @@ void neopixelBreathe(uint8_t &brightness, int8_t &direction, unsigned long &last
 }
 
 
-void neopixelFadeOut() {
+// Mismo color elegido para el fade-out al presionar un boton (antes
+// siempre era morado/blanco fijo, sin importar el color configurado).
+void neopixelFadeOut(uint8_t r, uint8_t g, uint8_t b) {
   for (int brightness = 255; brightness >= 0; brightness -= 10) {
+    uint8_t rr = (uint16_t)r * brightness / 255;
+    uint8_t gg = (uint16_t)g * brightness / 255;
+    uint8_t bb = (uint16_t)b * brightness / 255;
     for (int i = 0; i < NUM_PIXELS; i++) {
-      uint8_t r = pixelColors[i].r * brightness / 255;
-      uint8_t g = pixelColors[i].g * brightness / 255;
-      uint8_t b = pixelColors[i].b * brightness / 255;
-      strip.setPixelColor(i, strip.Color(r, g, b));
+      strip.setPixelColor(i, strip.Color(rr, gg, bb));
     }
     strip.show();
     delay(20);
