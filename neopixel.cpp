@@ -3,7 +3,7 @@
 void neopixelInit() {
   strip.begin();
   strip.show();
-  strip.setBrightness(100); 
+  strip.setBrightness(100);
 }
 
 void neopixelClear() {
@@ -31,10 +31,10 @@ void neopixelShow() {
   strip.show();
 }
 
-// Encender neopixeles 
+// Encender neopixeles
 void neopixelSplashSequence(int &currentPixel, unsigned long &lastTime) {
   unsigned long currentTime = millis();
-  
+
   // Encender un pixel cada 200ms
   if (currentTime - lastTime > 200 && currentPixel < NUM_PIXELS) {
     neopixelSetPixelCustom(currentPixel);
@@ -44,12 +44,16 @@ void neopixelSplashSequence(int &currentPixel, unsigned long &lastTime) {
   }
 }
 
-void neopixelBreathe(uint8_t &brightness, int8_t &direction, unsigned long &lastTime) {
+// Color configurable (ver BREATH_PRESETS en neopixel.h / pantalla
+// Ajustes > Configuracion > Color Breath) en vez del patron fijo de
+// pixelColors -- asi todo el tira "respira" con un solo color elegido.
+void neopixelBreathe(uint8_t &brightness, int8_t &direction, unsigned long &lastTime,
+                      uint8_t r, uint8_t g, uint8_t b) {
   unsigned long currentTime = millis();
-  
+
   if (currentTime - lastTime > 20) {
     brightness += direction * 5;
-    
+
     if (brightness >= 255) {
       brightness = 255;
       direction = -1;
@@ -57,13 +61,13 @@ void neopixelBreathe(uint8_t &brightness, int8_t &direction, unsigned long &last
       brightness = 50;
       direction = 1;
     }
-    
+
 
     for (int i = 0; i < NUM_PIXELS; i++) {
-      uint8_t r = pixelColors[i].r * brightness / 255;
-      uint8_t g = pixelColors[i].g * brightness / 255;
-      uint8_t b = pixelColors[i].b * brightness / 255;
-      strip.setPixelColor(i, strip.Color(r, g, b));
+      uint8_t rr = (uint16_t)r * brightness / 255;
+      uint8_t gg = (uint16_t)g * brightness / 255;
+      uint8_t bb = (uint16_t)b * brightness / 255;
+      strip.setPixelColor(i, strip.Color(rr, gg, bb));
     }
     strip.show();
     lastTime = currentTime;
@@ -83,5 +87,10 @@ void neopixelFadeOut() {
     delay(20);
   }
   strip.clear();
+  strip.show();
+}
+
+void neopixelSetBrightness(uint8_t brightness) {
+  strip.setBrightness(brightness);
   strip.show();
 }
