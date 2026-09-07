@@ -213,8 +213,15 @@ void drawPCMode() {
   u8g2.drawXBM(8, 40, 16, 8, image_download_bits);
   u8g2.drawXBM(8, 23, 16, 8, image_download_1_bits);
   u8g2.setFont(u8g2_font_6x10_tr);
-  u8g2.drawStr(40, 19, "PC-Mode");
-  u8g2.drawXBM(48, 23, 32, 32, image_pcmode_placeholder_bits);
+  u8g2.drawStr(43, 12, "PC-Mode");
+  u8g2.drawFrame(38, 17, 52, 29);
+  u8g2.drawVLine(69, 45, 7);
+  u8g2.drawVLine(54, 45, 7);
+  u8g2.drawHLine(42, 51, 40);
+  u8g2.drawRBox(41, 20, 46, 23, 3);
+  u8g2.drawFrame(42, 51, 40, 10);
+  u8g2.drawHLine(45, 55, 15);
+  u8g2.drawDisc(76, 55, 2);
 }
 
 // ========== MAIN LOOP ==========

@@ -41,6 +41,7 @@ enum Screen {
   SCREEN_SNIFFER,  // Sniffer de paquetes (PCAP)
   SCREEN_BTSPAM,   // Publicidad por BLE advertising
   SCREEN_GPS,      // GPS Position (lee NMEA del ATGM336H-6N-74 por UART0)
+  SCREEN_SDBROWSER, // SD Storage: explorador web (ver/descargar/borrar/subir)
   SCREEN_AYUDA_GPS,
   SCREEN_AYUDA_SD,
   SCREEN_AYUDA_RGB,

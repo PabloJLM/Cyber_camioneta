@@ -112,7 +112,7 @@ void screenAjustesLoop() {
     buzzerBeep();
     switch(menuSelection) {
       case 0: currentScreen = SCREEN_FRASES; break;
-      case 1: currentScreen = SCREEN_DESTINOS; break;
+      case 1: currentScreen = SCREEN_SDBROWSER; break;
       case 2: currentScreen = SCREEN_RGBNEO; break;
       case 3: currentScreen = SCREEN_AJUSTES_TERM; break;
     }
