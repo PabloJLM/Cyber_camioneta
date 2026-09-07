@@ -26,10 +26,13 @@ void screenSplashLoop() {
   }
   const BreathColor &breath = BREATH_PRESETS[breathIdx];
 
+ 
+  bool bounceVertical = (splash.h <= 45);
+
   static int x = (SCREEN_W - splash.w) / 2;
   static int y = (SCREEN_H - splash.h) / 2;
   static float vx = 1.5;//velocidad jsjs
-  static float vy = 1.5;
+  static float vy = bounceVertical ? 1.5 : 0;
   static int currentPixel = 0;
   static unsigned long lastPixelTime = 0;
   static uint8_t brightness = 50;
@@ -38,10 +41,10 @@ void screenSplashLoop() {
 
 
   x += vx;
-  y += vy;
+  if (bounceVertical) y += vy;
 
   if (x <= 0 || x >= SCREEN_W - splash.w) vx = -vx;
-  if (y <= 0 || y >= SCREEN_H - splash.h) vy = -vy;
+  if (bounceVertical && (y <= 0 || y >= SCREEN_H - splash.h)) vy = -vy;
 
   u8g2.clearBuffer();
   u8g2.setBitmapMode(1);
