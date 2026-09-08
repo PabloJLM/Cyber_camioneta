@@ -26,8 +26,9 @@
 #include "Ajustes/screen_sdbrowser.h"
 #include "Ajustes/screen_config.h"
 #include "Drivers/settings.h"
+#include "Apps/screen_blescan.h"
 
-// Pantalla 
+// Pantalla
 U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE, PIN_SCL, PIN_SDA);
 
 // Neopixeles
@@ -43,13 +44,13 @@ Screen currentScreen = SCREEN_SPLASH;
 
 void setup() {
   Serial.begin(115200);
-  
+
   pinMode(PIN_SELECT, INPUT_PULLUP);
   pinMode(PIN_UP, INPUT_PULLUP);
   pinMode(PIN_DOWN, INPUT_PULLUP);
   pinMode(PIN_BACK, INPUT_PULLUP);
   pinMode(PIN_BUZZER, OUTPUT);
-  
+
   neopixelInit();
   neopixelSetBrightness(settingsGetBrightness());  // aplica el brillo guardado (o "Medio" por defecto)
 
@@ -61,35 +62,35 @@ void loop() {
     case SCREEN_SPLASH:
       screenSplashLoop();
       break;
-      
+
     case SCREEN_MENU:
       screenMenuLoop();
       break;
-      
+
     case SCREEN_APPS:
       screenAppsLoop();
       break;
-      
+
     case SCREEN_AJUSTES:
       screenAjustesLoop();
       break;
-      
+
     case SCREEN_CREDITOS:
       screenCreditosLoop();
       break;
-      
+
     case SCREEN_AYUDA:
       screenAyudaLoop();
       break;
-      
+
     case SCREEN_RGBNEO:
       screenRGBNeoLoop();
       break;
-      
+
     case SCREEN_PCMODE:
       screenPCModeLoop();
       break;
-      
+
     case SCREEN_CAPTIVE:  // Nueva pantalla
       screenCaptiveLoop();
       break;
@@ -116,6 +117,10 @@ void loop() {
 
     case SCREEN_CONFIG:
       screenConfigLoop();
+      break;
+
+    case SCREEN_BLESCAN:
+      screenBleScanLoop();
       break;
 
     case SCREEN_AYUDA_GPS:
@@ -146,6 +151,6 @@ void loop() {
       screenAyudaTermLoop();
       break;
   }
-  
+
   delay(10);
 }

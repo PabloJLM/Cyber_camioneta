@@ -43,6 +43,7 @@ enum Screen {
   SCREEN_GPS,      // GPS Position (lee NMEA del ATGM336H-6N-74 por UART0)
   SCREEN_SDBROWSER, // SD Storage: explorador web (ver/descargar/borrar/subir)
   SCREEN_CONFIG,   // Configuraciones globales: splash, color breath, brillo, reset
+  SCREEN_BLESCAN,  // BLE Scanner: dispositivos Bluetooth cercanos (nombre, MAC, RSSI)
   SCREEN_AYUDA_GPS,
   SCREEN_AYUDA_SD,
   SCREEN_AYUDA_RGB,
