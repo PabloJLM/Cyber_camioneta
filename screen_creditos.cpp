@@ -58,9 +58,7 @@ void screenCreditosLoop() {
   u8g2.drawStr(36, 62, "Guatemala");
 
   u8g2.drawXBM(0, 1, 16, 14, image_Layer_9_bits);
-
   u8g2.drawXBM(112, 1, 16, 14, image_Layer_9_bits);
-
   u8g2.drawBox(16, 1, 96, 14);
 
   u8g2.setDrawColor(2);

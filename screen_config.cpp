@@ -10,6 +10,13 @@
 // NVS (Preferences) asi que sobrevive a reinicios. UP/DOWN navega,
 // SELECT entra/confirma-guarda, BACK sale/cancela sin guardar.
 
+static const unsigned char image_Layer_9_bits[] PROGMEM = {
+  0x7e,0x7e,0x7e,0x7e,0x99,0x99,0x99,0x99,
+  0x67,0xe6,0x67,0xe6,0x18,0x18,0x18,0x18,
+  0x67,0xe6,0x67,0xe6,0x99,0x99,0x99,0x99,
+  0x7e,0x7e,0x7e,0x7e
+};
+
 enum ConfigMode { CFG_LIST, CFG_SPLASH, CFG_BREATH, CFG_BRIGHTNESS, CFG_RESET_CONFIRM, CFG_SAVED };
 
 static const char* BRIGHTNESS_NAMES[]  = { "Bajo", "Medio", "Alto" };
@@ -145,12 +152,18 @@ void screenConfigLoop() {
   u8g2.setBitmapMode(1);
   u8g2.setFont(u8g2_font_6x10_tr);
 
-  u8g2.drawStr(20, 7, "Configuracion");
-  u8g2.drawLine(0, 9, 127, 9);
+  u8g2.setDrawColor(1);
+  u8g2.drawBox(16, 1, 96, 14);
+  u8g2.setDrawColor(2);
+  u8g2.drawStr(25, 11, "Configuracion");
+  u8g2.setDrawColor(1);
+
+  u8g2.drawXBM(0, 1, 16, 14, image_Layer_9_bits);
+  u8g2.drawXBM(112, 1, 16, 14, image_Layer_9_bits);
 
   if (mode == CFG_LIST) {
     for (int i = 0; i < MENU_COUNT; i++) {
-      int yy = 19 + i * 11;
+      int yy = 22 + i * 11;
       if (i == listSel) u8g2.drawStr(2, yy, ">");
       u8g2.drawStr(12, yy, MENU_ITEMS[i]);
     }

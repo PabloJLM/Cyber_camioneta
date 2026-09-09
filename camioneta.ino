@@ -52,7 +52,7 @@ void setup() {
   pinMode(PIN_BUZZER, OUTPUT);
 
   neopixelInit();
-  neopixelSetBrightness(settingsGetBrightness());  // aplica el brillo guardado (o "Medio" por defecto)
+  neopixelSetBrightness(settingsGetBrightness()); 
 
   u8g2.begin();
 }

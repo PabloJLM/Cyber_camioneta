@@ -233,11 +233,13 @@ void drawBleScan() {
   u8g2.drawXBM(8, 40, 16, 8, image_download_bits);
   u8g2.drawXBM(8, 23, 16, 8, image_download_1_bits);
   u8g2.setFont(u8g2_font_6x10_tr);
-  u8g2.drawStr(45, 11, "BLE");
-  u8g2.drawStr(35, 19, "Scanner");
-  u8g2.drawXBM(56, 26, 14, 16, image_bluetooth_bits);
-  u8g2.drawCircle(63, 34, 10);
-  u8g2.drawCircle(63, 34, 15);
+  u8g2.drawStr(55, 9, "BLE");
+  u8g2.drawStr(45, 18, "Scanner");
+  u8g2.drawXBM(59, 29, 14, 16, image_bluetooth_bits);
+  u8g2.drawCircle(65, 36, 10);
+  u8g2.drawLine(72, 43, 82, 51);
+  u8g2.drawLine(74, 44, 84, 52);
+  u8g2.drawLine(74, 42, 84, 50);
 }
 
 // ========== MAIN LOOP ==========

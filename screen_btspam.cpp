@@ -5,6 +5,13 @@
 #include <BLEAdvertising.h>
 #include <esp_random.h>
 
+static const unsigned char image_Layer_9_bits[] PROGMEM = {
+  0x7e,0x7e,0x7e,0x7e,0x99,0x99,0x99,0x99,
+  0x67,0xe6,0x67,0xe6,0x18,0x18,0x18,0x18,
+  0x67,0xe6,0x67,0xe6,0x99,0x99,0x99,0x99,
+  0x7e,0x7e,0x7e,0x7e
+};
+
 // ---------------------------------------------------------------------
 //  BT Spam
 //  ------------------------------------------------------------------
@@ -208,8 +215,14 @@ void screenBtSpamLoop() {
   u8g2.setBitmapMode(1);
   u8g2.setFont(u8g2_font_6x10_tr);
 
-  u8g2.drawStr(34, 10, "BT Spam");
-  u8g2.drawLine(0, 12, 127, 12);
+  u8g2.setDrawColor(1);
+  u8g2.drawBox(16, 1, 96, 14);
+  u8g2.setDrawColor(2);
+  u8g2.drawStr(43, 11, "BT Spam");
+  u8g2.setDrawColor(1);
+
+  u8g2.drawXBM(0, 1, 16, 14, image_Layer_9_bits);
+  u8g2.drawXBM(112, 1, 16, 14, image_Layer_9_bits);
 
   char line[24];
 

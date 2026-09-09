@@ -5,6 +5,13 @@
 #include <BLEScan.h>
 #include <BLEAdvertisedDevice.h>
 
+static const unsigned char image_Layer_9_bits[] PROGMEM = {
+  0x7e,0x7e,0x7e,0x7e,0x99,0x99,0x99,0x99,
+  0x67,0xe6,0x67,0xe6,0x18,0x18,0x18,0x18,
+  0x67,0xe6,0x67,0xe6,0x99,0x99,0x99,0x99,
+  0x7e,0x7e,0x7e,0x7e
+};
+
 // BLE Scanner: reconocimiento pasivo de dispositivos BLE cercanos
 // (nombre, MAC, RSSI). Solo escucha advertising -- no transmite nada
 // propio, a diferencia de Bluetooth Spam. SELECT prende/apaga el
@@ -146,8 +153,14 @@ void screenBleScanLoop() {
   u8g2.setBitmapMode(1);
   u8g2.setFont(u8g2_font_6x10_tr);
 
-  u8g2.drawStr(28, 10, "BLE Scanner");
-  u8g2.drawLine(0, 12, 127, 12);
+  u8g2.setDrawColor(1);
+  u8g2.drawBox(16, 1, 96, 14);
+  u8g2.setDrawColor(2);
+  u8g2.drawStr(31, 11, "BLE Scanner");
+  u8g2.setDrawColor(1);
+
+  u8g2.drawXBM(0, 1, 16, 14, image_Layer_9_bits);
+  u8g2.drawXBM(112, 1, 16, 14, image_Layer_9_bits);
 
   if (!scanning) {
     u8g2.drawCircle(10, 21, 3);

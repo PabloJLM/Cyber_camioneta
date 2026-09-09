@@ -8,6 +8,13 @@
 #include <FS.h>
 #include <LittleFS.h>
 
+static const unsigned char image_Layer_9_bits[] PROGMEM = {
+  0x7e,0x7e,0x7e,0x7e,0x99,0x99,0x99,0x99,
+  0x67,0xe6,0x67,0xe6,0x18,0x18,0x18,0x18,
+  0x67,0xe6,0x67,0xe6,0x99,0x99,0x99,0x99,
+  0x7e,0x7e,0x7e,0x7e
+};
+
 //  Captive Portal
 //    - Android : http://connectivitycheck.../generate_204
 //    - iOS/mac : http://captive.apple.com/hotspot-detect.html
@@ -413,8 +420,14 @@ void screenCaptiveLoop() {
   u8g2.setBitmapMode(1);
   u8g2.setFont(u8g2_font_6x10_tr);
 
-  u8g2.drawStr(22, 7, "Captive Portal");
-  u8g2.drawLine(0, 9, 127, 9);
+  u8g2.setDrawColor(1);
+  u8g2.drawBox(16, 1, 96, 14);
+  u8g2.setDrawColor(2);
+  u8g2.drawStr(22, 11, "Captive Portal");
+  u8g2.setDrawColor(1);
+
+  u8g2.drawXBM(0, 1, 16, 14, image_Layer_9_bits);
+  u8g2.drawXBM(112, 1, 16, 14, image_Layer_9_bits);
 
   if (captiveRunning) {
     u8g2.drawStr(10, 24, "Estado: ACTIVO");

@@ -1,6 +1,12 @@
 #include "Ayuda/screen_ayuda_qr.h"
 #include "Drivers/buzzer.h"
 
+static const unsigned char image_download_bits[] PROGMEM = {
+  0x7e,0x7e,0x7e,0x7e,0x99,0x99,0x99,0x99,
+  0x67,0xe6,0x67,0xe6,0x18,0x18,0x18,0x18,
+  0x67,0xe6,0x67,0xe6,0x99,0x99,0x99,0x99,
+  0x7e,0x7e,0x7e,0x7e
+};
 
 static bool isButtonJustPressed(int pin) {
   static uint8_t lastStableState[4] = {HIGH, HIGH, HIGH, HIGH};
@@ -43,6 +49,17 @@ void screenAyudaQRLoop() {
   u8g2.setFontMode(1);
   u8g2.setBitmapMode(1);
 
+  u8g2.setFont(u8g2_font_6x10_tr);
+  u8g2.setDrawColor(1);
+  u8g2.drawBox(16, 1, 96, 14);
+  u8g2.setDrawColor(2);
+  u8g2.drawStr(39, 11, "AYUDA QR");
+  u8g2.setDrawColor(1);
+
+  u8g2.drawXBM(0, 1, 16, 14, image_download_bits);
+  u8g2.drawXBM(112, 1, 16, 14, image_download_bits);
+
+  u8g2.setFont(u8g2_font_5x7_tr);
   u8g2.drawStr(6, 62, "BACK:Volver");
 
   u8g2.sendBuffer();

@@ -1,6 +1,13 @@
 #include "Ayuda/screen_ayuda_term.h"
 #include "Drivers/buzzer.h"
 
+static const unsigned char image_download_bits[] PROGMEM = {
+  0x7e,0x7e,0x7e,0x7e,0x99,0x99,0x99,0x99,
+  0x67,0xe6,0x67,0xe6,0x18,0x18,0x18,0x18,
+  0x67,0xe6,0x67,0xe6,0x99,0x99,0x99,0x99,
+  0x7e,0x7e,0x7e,0x7e
+};
+
 // Ayuda: comandos de la terminal de Ajustes (Ajustes -> Terminal).
 // Prellenado con la lista real de comandos (ver screen_ajustes_term.cpp);
 // edita los textos como quieras, o abri el proyecto en u8g2 Studio.
@@ -87,8 +94,15 @@ void screenAyudaTermLoop() {
   u8g2.setFont(u8g2_font_6x10_tr);
   char title[24];
   snprintf(title, sizeof(title), "Term.Ajustes (%d/%d)", page + 1, TOTAL_PAGES);
-  u8g2.drawStr(8, 10, title);
-  u8g2.drawLine(0, 12, 127, 12);
+
+  u8g2.setDrawColor(1);
+  u8g2.drawBox(16, 1, 96, 14);
+  u8g2.setDrawColor(2);
+  u8g2.drawStr(64 - u8g2.getStrWidth(title) / 2, 11, title);
+  u8g2.setDrawColor(1);
+
+  u8g2.drawXBM(0, 1, 16, 14, image_download_bits);
+  u8g2.drawXBM(112, 1, 16, 14, image_download_bits);
 
   u8g2.setFont(u8g2_font_5x7_tr);
   u8g2.drawStr(2, 24, PAGES[page][0]);
