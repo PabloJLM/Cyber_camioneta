@@ -46,7 +46,6 @@ static void printRow(const char* key, const String& value) {
   Serial.println(value);
 }
 
-// ---------- Captive log ----------
 
 void showCaptiveLog() {
   printSection("captive log (ultimos 5)");
@@ -198,9 +197,7 @@ void showCaptiveStats() {
   }
 }
 
-// ---------- SD por serial ----------
 
-// Lista el contenido completo
 static void listSD() {
   printSection("sd: contenido de /");
 
@@ -232,7 +229,6 @@ static void listSD() {
   if (n == 0) Serial.println(F("  (vacio)"));
 }
 
-// Vuelca un archivo de la SD por serial
 static void catFile(String path) {
   path.trim();
   if (path.length() == 0) {
@@ -269,7 +265,6 @@ static void catFile(String path) {
   Serial.println(F("  ---- fin ----"));
 }
 
-// ---------- Modo piano ----------
 
 static int noteFreq(String n) {
   n.trim();
@@ -330,11 +325,7 @@ static void processPiano(String in) {
   if (!played) Serial.println(F("  (nada que tocar) escribe 'help'"));
 }
 
-// ---------- AP Flood parametrico ----------
 
-// Parsea  flood{mensaje1,mensaje2,...}  y actualiza los SSID que
-// transmite el AP Flood. Hasta APFLOOD_MAX_MSGS mensajes, cada uno
-// recortado a APFLOOD_MAX_SSIDLEN bytes (limite real de un SSID).
 static void processFloodCommand(const String& cmd) {
   int open  = cmd.indexOf('{');
   int close = cmd.lastIndexOf('}');
@@ -394,8 +385,8 @@ static void processFloodCommand(const String& cmd) {
   }
 }
 
-// ---------- Procesamiento de comandos ----------
 
+//comandos
 void processSerialCommand() {
   static String commandBuffer = "";
 

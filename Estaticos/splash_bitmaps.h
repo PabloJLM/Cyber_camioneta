@@ -1,10 +1,8 @@
 #pragma once
 #include <Arduino.h>
 
-// Diccionario de splashes disponibles. Para agregar uno nuevo: convertí el
-// bitmap al formato XBM 
-// Tamaño recomendado: igual o menor al del logo actual (65x33), para que
-// entre rebotando en la pantalla de 128x64 sin salirse.
+// Diccionario de splashes
+// Tamaño recomendado: igual o menor al del logo actual (65x33)
 
 struct SplashBitmap {
   const char* name;           

@@ -10,25 +10,6 @@ static const unsigned char image_Layer_9_bits[] PROGMEM = {
   0x7e,0x7e,0x7e,0x7e
 };
 
-// Modulo real (ver esquematico): ATGM336H-6N-74, GNSS GPS+BeiDou.
-//
-// Datos confirmados en banco de pruebas (ver historial en el chat si
-// hace falta reabrir esto):
-// - El modulo NO esta en TXD0/RXD0 (esos son otra cosa en esta placa).
-//   Esta soldado a los netos "RX1"/"TX1" = IO4/IO5.
-// - Corre a 115200 baudios (no el 9600 "de fabrica" que trae la hoja de
-//   datos generica -- este modulo en particular viene configurado a
-//   otra velocidad).
-// - El propio modulo reporta "$GPTXT,...,ANTENNA OPEN" pero en esta
-//   placa ese aviso NO es confiable: entre el conector de antena y el
-//   pin RF_IN del modulo hay un LNA propio en la placa (U5, AT2659S)
-//   con su capacitor de acoplamiento -- eso corta la continuidad de DC
-//   que el chip usa para "sentir" si hay antena, asi que el aviso sale
-//   "OPEN" este conectada o no la antena. No hace falta antena activa:
-//   el LNA ya esta puesto en la placa (VCC_RF alimenta a U5, no a la
-//   antena), asi que sirve una antena pasiva normal. Se muestra el
-//   aviso igual en pantalla como dato informativo del modulo, pero no
-//   como diagnostico definitivo -- la prueba real es salir a la calle.
 static const int GPS_RX_PIN = 4;        // IO4 = "RX1"
 static const int GPS_TX_PIN = 5;        // IO5 = "TX1"
 static const unsigned long GPS_BAUD = 115200;
@@ -37,15 +18,6 @@ static HardwareSerial GPSSerial(1);  // UART1: hardware separado del UART0/conso
 static TinyGPSPlus gps;
 static bool gpsStarted = false;
 
-// El estado de la antena NO hace falta salir a la calle para verlo: el
-// propio modulo lo manda como texto plano en una sentencia $GPTXT
-// ("ANTENNA OPEN" = no conectada/cortada, "ANTENNA OK"/"ANTENNA ON" =
-// conectada bien, "ANTENNA SHORT" = cortocircuito). TinyGPSPlus ignora
-// esas lineas (no son GGA/RMC/etc), asi que las buscamos a mano
-// juntando los caracteres en un buffer chico hasta el salto de linea.
-// OJO: en esta placa este aviso del modulo no es diagnostico definitivo
-// (ver comentario arriba, hay un LNA propio -- U5 -- en el medio). Se
-// muestra como dato informativo nomas, con el prefijo "Modulo dice:".
 static char antennaStatus[24] = "Modulo: detectando...";
 static char lineBuf[96];
 static uint8_t lineLen = 0;
@@ -107,8 +79,7 @@ static void gpsFeed() {
 
 void screenGPSLoop() {
   if (!gpsStarted) {
-    // PIN_GPSON se deja como entrada (sin forzar) -- R4 ya lo mantiene
-    // en HIGH por el pull-up, que es como estaba antes de este codigo.
+  
     pinMode(PIN_GPSON, INPUT);
 
     GPSSerial.begin(GPS_BAUD, SERIAL_8N1, GPS_RX_PIN, GPS_TX_PIN);

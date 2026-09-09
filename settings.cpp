@@ -5,8 +5,7 @@ static Preferences prefs;
 static const char* NS = "camioneta";
 
 void settingsInit() {
-  // nada que hacer por ahora -- Preferences no necesita inicializacion
-  // global, cada funcion abre/cierra su propio namespace.
+
 }
 
 uint8_t settingsGetSplashIndex() {
@@ -37,7 +36,7 @@ void settingsSetBreathColorIndex(uint8_t index) {
 
 uint8_t settingsGetBrightness() {
   prefs.begin(NS, true);
-  uint8_t v = prefs.getUChar("bright", 150);  // default: "Medio"
+  uint8_t v = prefs.getUChar("bright", 150);  
   prefs.end();
   return v;
 }

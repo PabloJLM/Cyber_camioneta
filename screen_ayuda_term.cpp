@@ -8,10 +8,6 @@ static const unsigned char image_download_bits[] PROGMEM = {
   0x7e,0x7e,0x7e,0x7e
 };
 
-// Ayuda: comandos de la terminal de Ajustes (Ajustes -> Terminal).
-// Prellenado con la lista real de comandos (ver screen_ajustes_term.cpp);
-// edita los textos como quieras, o abri el proyecto en u8g2 Studio.
-// Se navega con UP/DOWN igual que la ayuda de PC-Mode.
 
 static const int TOTAL_PAGES = 3;
 static const char* PAGES[TOTAL_PAGES][4] = {

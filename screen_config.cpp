@@ -5,11 +5,6 @@
 #include "Estaticos/splash_bitmaps.h"
 #include <string.h>
 
-// Configuraciones globales: splash de inicio, color del efecto breath y
-// brillo de los neopixeles, mas un reset de fabrica. Todo se guarda en
-// NVS (Preferences) asi que sobrevive a reinicios. UP/DOWN navega,
-// SELECT entra/confirma-guarda, BACK sale/cancela sin guardar.
-
 static const unsigned char image_Layer_9_bits[] PROGMEM = {
   0x7e,0x7e,0x7e,0x7e,0x99,0x99,0x99,0x99,
   0x67,0xe6,0x67,0xe6,0x18,0x18,0x18,0x18,

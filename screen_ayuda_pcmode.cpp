@@ -8,13 +8,8 @@ static const unsigned char image_download_bits[] PROGMEM = {
   0x7e,0x7e,0x7e,0x7e
 };
 
-// Ayuda: comandos de PC-Mode (Apps -> PC-Mode).
-// Prellenado con la lista real de comandos (ver screen_pcmode.cpp);
-// edita los textos como quieras, o abri el proyecto en u8g2 Studio.
-// No entran todos en una sola pantalla asi que se navegan paginas
-// con UP/DOWN, igual que un menu.
 
-static const int TOTAL_PAGES = 4;
+static const int TOTAL_PAGES = 4;// numero de paginas de ayuda 
 static const char* PAGES[TOTAL_PAGES][4] = {
   {
     "help   - esta ayuda",

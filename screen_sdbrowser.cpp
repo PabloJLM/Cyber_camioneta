@@ -14,15 +14,9 @@ static const unsigned char image_Layer_9_bits[] PROGMEM = {
   0x7e,0x7e,0x7e,0x7e
 };
 
-// SD Storage: explorador de la tarjeta SD por WiFi (AP propio + pagina
-// web). Se levanta solo mientras estas parado en esta pantalla, igual
-// que el Captive Portal -- entras, apretas SELECT para prenderlo,
-// te conectas al AP desde el celu/PC, y ahi ves/descargas/borras/subis
-// archivos (util para sacar los .pcap del sniffer o el log del portal
-// sin desarmar nada). BACK apaga todo y vuelve a Ajustes.
 
-static const char* AP_SSID = "SD_Browser";
-static const char* AP_PASS = "camioneta1234";  // 8+ caracteres, WPA2
+static const char* AP_SSID = "Camioneta1";
+static const char* AP_PASS = "12345678";  
 
 static const IPAddress AP_IP(192, 168, 4, 1);
 static const IPAddress AP_MASK(255, 255, 255, 0);
@@ -31,14 +25,12 @@ static WebServer webServer(80);
 static bool browserRunning = false;
 static File uploadFile;
 
-// ---------- SD ----------
 
 static bool sdReady() {
   return SD.begin(PIN_CD);
 }
 
-// LittleFS: filesystem propio del ESP32 en su misma flash (no depende
-// de que la SD este puesta). Mismo patron que usa el Captive Portal.
+
 static bool fsReady() {
   static bool mounted = false;
   static bool tried = false;
@@ -50,7 +42,6 @@ static bool fsReady() {
   return mounted;
 }
 
-// ---------- helpers ----------
 
 static String jstr(const String& v) {
   String o = "\"";
@@ -63,7 +54,6 @@ static String jstr(const String& v) {
   return o;
 }
 
-// Evita salir de la SD con "..", y siempre trabaja con rutas absolutas.
 static bool sanitizePath(String& path) {
   if (path.length() == 0) return false;
   if (path.indexOf("..") >= 0) return false;
@@ -76,15 +66,6 @@ static String joinPath(const String& dir, const String& name) {
   return dir + "/" + name;
 }
 
-// ---------- pagina embebida (PROGMEM, no depende de SD ni LittleFS) --
-//
-// Sirve de respaldo (y de referencia para armar tu propia version).
-// Para personalizar sin recompilar: subi tu index.html y/o style.css
-// por LittleFS (o dejalos en la SD en /sdbrowser/) -- ver el
-// despachador serveCustom() mas abajo, mismo patron que el Captive
-// Portal (SD primero, despues LittleFS, si no hay nada usa esto).
-// El HTML pide el CSS aparte (/style.css) en vez de tenerlo inline,
-// justamente para que puedas tocar el estilo sin duplicar el HTML/JS.
 
 static const char PAGE_BROWSER_HTML[] PROGMEM = R"HTML(<!DOCTYPE html>
 <html lang="es">
@@ -270,9 +251,7 @@ static bool serveFromFS(const char* path, const char* contentType) {
   return true;
 }
 
-// SD primero (mas facil de editar: la subis con el mismo browser a
-// /sdbrowser/), despues LittleFS, y si no hay nada en ninguna, el
-// embebido de mas arriba.
+
 static bool serveCustom(const char* path, const char* contentType) {
   return serveFromSD(path, contentType) || serveFromFS(path, contentType);
 }
@@ -381,9 +360,6 @@ static void handleUploadDone() {
   webServer.send(200, "text/plain", "OK");
 }
 
-// Subida directa a LittleFS (nunca a la SD) para el HTML/CSS personalizado
-// de esta misma pagina. Ignora el nombre real del archivo subido: siempre
-// se guarda con el nombre fijo (fsPath) para que serveCustom() lo encuentre.
 static File customUploadFile;
 
 static void handleCustomUpload(const char* fsPath) {
@@ -406,8 +382,7 @@ static void handleCustomUpload(const char* fsPath) {
 static void handleCustomUploadHTML() { handleCustomUpload(SDB_INDEX); }
 static void handleCustomUploadCSS()  { handleCustomUpload(SDB_CSS); }
 
-// Borra el html/css personalizado (SD y LittleFS) para volver al
-// embebido de fabrica -- por si un custom queda roto o se subio mal.
+
 static void handleCustomReset() {
   bool didSomething = false;
 
@@ -423,7 +398,7 @@ static void handleCustomReset() {
   webServer.send(200, "text/plain", didSomething ? "OK, restaurado" : "nada que borrar");
 }
 
-// ---------- arranque / apagado ----------
+
 
 static void startBrowser() {
   if (browserRunning) return;
@@ -464,7 +439,7 @@ static void stopBrowser() {
   Serial.println(F("SD Browser: detenido"));
 }
 
-// ---------- botones ----------
+
 
 static bool isButtonJustPressed(int pin) {
   static uint8_t lastStableState[4] = {HIGH, HIGH, HIGH, HIGH};

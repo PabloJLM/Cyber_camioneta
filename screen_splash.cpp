@@ -12,7 +12,7 @@ static bool anyButtonPressed() {
 }
 
 void screenSplashLoop() {
-  static uint8_t splashIdx = 255;  // 255 = todavia no leido de NVS
+  static uint8_t splashIdx = 255;  
   if (splashIdx == 255) {
     splashIdx = settingsGetSplashIndex();
     if (splashIdx >= SPLASH_COUNT) splashIdx = 0;

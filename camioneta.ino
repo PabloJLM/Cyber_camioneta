@@ -91,7 +91,7 @@ void loop() {
       screenPCModeLoop();
       break;
 
-    case SCREEN_CAPTIVE:  // Nueva pantalla
+    case SCREEN_CAPTIVE:  
       screenCaptiveLoop();
       break;
 

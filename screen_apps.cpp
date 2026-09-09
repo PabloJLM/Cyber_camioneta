@@ -1,7 +1,6 @@
 #include "Apps/screen_apps.h"
 #include "Drivers/buzzer.h"
 
-// ========== BITMAPS ==========
 
 // Wifi Captive Portal icon
 static const unsigned char image_download_bits_wifi[] PROGMEM = {
@@ -33,15 +32,13 @@ static const unsigned char image_operation_warning_bits[] PROGMEM = {
   0x88,0x11,0x84,0x21,0x02,0x40,0x82,0x41,0x81,0x81,0x01,0x80,0xfe,0x7f,0x00,0x00
 };
 
-// Bluetooth Spam icon (reutilizado tambien para BLE Scanner)
+// Bluetooth Spam icon
 static const unsigned char image_bluetooth_bits[] PROGMEM = {
   0x80,0x00,0x40,0x01,0x40,0x02,0x44,0x04,0x48,0x04,0x50,0x02,0x60,0x01,0xc0,0x00,
   0x60,0x01,0x50,0x02,0x48,0x04,0x44,0x04,0x40,0x02,0x40,0x01,0x80,0x00,0x00,0x00
 };
 
-// PC-Mode icon -- PLACEHOLDER, Pablo lo va a reemplazar por el suyo.
-// 32x32, mismo formato XBM que los demas (u8g2 Studio -> pestana
-// Pixel Art la puede editar sin tocar el resto del codigo).
+// pc mode icon
 static const unsigned char image_pcmode_placeholder_bits[] PROGMEM = {
   0xff,0xff,0xff,0xff,0x01,0x00,0x00,0x80,0x01,0x00,0x00,0x80,0x01,0x00,0x00,0x80,
   0x01,0x00,0x00,0x80,0x01,0x00,0x00,0x80,0x01,0x00,0x00,0x80,0x01,0x00,0x00,0x80,
@@ -94,7 +91,6 @@ static const unsigned char image_download_bits[] PROGMEM = {
   0xff,0xff,0xff,0xff,0xfc,0x3f,0xfc,0x3f,0xf0,0x0f,0xf0,0x0f,0xc0,0x03,0xc0,0x03
 };
 
-// ========== BUTTON HANDLING ==========
 
 static bool isButtonJustPressed(int pin) {
   static uint8_t lastStableState[4] = {HIGH, HIGH, HIGH, HIGH};
@@ -130,12 +126,10 @@ static bool isButtonJustPressed(int pin) {
   return false;
 }
 
-// ========== APP SELECTION STATE ==========
 
 static int appSelection = 0;
 static const int TOTAL_APPS = 8;
 
-// ========== SCREEN RENDERING ==========
 
 void drawWifiCaptivePortal() {
   u8g2.setFontMode(1);
@@ -203,10 +197,6 @@ void drawSniffer() {
   u8g2.drawXBM(45, 27, 38, 32, image_download_bits_wifi);
 }
 
-// PC-Mode se movio aca desde Ajustes: es una app mas, no una
-// configuracion. El icono de abajo es un marcador temporal
-// (image_pcmode_placeholder_bits) -- Pablo lo va a reemplazar por
-// el suyo, ya sea a mano o editando el bitmap desde u8g2 Studio.
 void drawPCMode() {
   u8g2.setFontMode(1);
   u8g2.setBitmapMode(1);
@@ -224,9 +214,6 @@ void drawPCMode() {
   u8g2.drawDisc(76, 55, 2);
 }
 
-// BLE Scanner -- reusa el mismo icono de Bluetooth Spam (a pedido de
-// Pablo), pero con doble circulo (radar) en vez de la elipse de
-// transmision, ya que este solo escucha advertising, no transmite.
 void drawBleScan() {
   u8g2.setFontMode(1);
   u8g2.setBitmapMode(1);
@@ -242,7 +229,7 @@ void drawBleScan() {
   u8g2.drawLine(74, 42, 84, 50);
 }
 
-// ========== MAIN LOOP ==========
+
 
 void screenAppsLoop() {
   // Handle button input
@@ -277,7 +264,7 @@ void screenAppsLoop() {
         currentScreen = SCREEN_CAPTIVE;
         break;
       case 1:
-        // AP Flood (beacon flooding)
+        // AP Flood 
         currentScreen = SCREEN_APFLOOD;
         break;
       case 2:
@@ -296,7 +283,7 @@ void screenAppsLoop() {
         currentScreen = SCREEN_SNIFFER;
         break;
       case 6:
-        // PC-Mode (antes vivia en Ajustes)
+        // PC-Mode 
         currentScreen = SCREEN_PCMODE;
         break;
       case 7:
@@ -306,10 +293,8 @@ void screenAppsLoop() {
     }
   }
 
-  // Render screen
   u8g2.clearBuffer();
 
-  // Draw current app
   switch(appSelection) {
     case 0:
       drawWifiCaptivePortal();

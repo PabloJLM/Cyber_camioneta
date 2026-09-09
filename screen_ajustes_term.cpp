@@ -73,7 +73,6 @@ static void printPrompt() {
   Serial.print(F("Ajustes:~$ "));
 }
 
-// ---------- flood{...} (mismo parser que PC-Mode) ----------
 
 static void processFloodCommand(const String& cmd) {
   int open  = cmd.indexOf('{');
@@ -150,10 +149,9 @@ static void showFloodMessages() {
   }
 }
 
-// ---------- snifname ----------
 
 static void processSnifNameCommand(const String& cmd) {
-  String name = cmd.substring(9);  // largo de "snifname "
+  String name = cmd.substring(9);  
   name.trim();
   if (name.length() == 0) {
     Serial.println(F("  uso: snifname <nombre>   (ej: snifname captura)"));
@@ -177,10 +175,9 @@ static void showSnifName() {
   Serial.println(F("<N>.pcap (el numero sube solo si ya existe en la SD)"));
 }
 
-// ---------- portalsrc ----------
 
 static void processPortalSrcCommand(const String& cmd) {
-  String mode = cmd.substring(10);  // largo de "portalsrc "
+  String mode = cmd.substring(10);  
   mode.trim();
   mode.toLowerCase();
 
@@ -207,7 +204,7 @@ static void showPortalSrc() {
   Serial.println(F("                      /portal/success.html (SD o FS interno)"));
 }
 
-// ---------- Procesamiento de comandos ----------
+//comandos
 
 static void processSerialCommand() {
   static String commandBuffer = "";

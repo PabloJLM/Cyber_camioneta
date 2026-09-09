@@ -10,25 +10,6 @@ static const unsigned char image_Layer_9_bits[] PROGMEM = {
   0x7e,0x7e,0x7e,0x7e
 };
 
-// ============================================================
-//  AP Flood (beacon flooding)
-//
-//  Inyecta tramas beacon 802.11 con SSID falsos, de modo que
-//  aparezcan como redes WiFi en los dispositivos cercanos.
-//  Los mensajes se pueden cambiar en caliente desde PC-Mode con
-//  el comando flood{mensaje1,mensaje2,...} (hasta 6, 32 bytes
-//  cada uno, limite real de un SSID 802.11). Si no se configura
-//  nada, usa la lista de fabrica de abajo.
-//
-//  Uso responsable: es una demo. Saturar el espectro 2.4GHz
-//  con SSID falsos puede molestar a redes vecinas; usalo solo
-//  en tu propio entorno de pruebas.
-//
-//  Controles:
-//    SEL  -> iniciar / detener
-//    BACK -> salir
-
-// +1 para el terminador nulo.
 static char ssidList[APFLOOD_MAX_MSGS][APFLOOD_MAX_SSIDLEN + 1] = {
   "That girl is corrupt",
   "Could you raise her to love me",
@@ -39,7 +20,7 @@ static char ssidList[APFLOOD_MAX_MSGS][APFLOOD_MAX_SSIDLEN + 1] = {
 };
 static int SSID_COUNT = 6;   // cuantas entradas de ssidList estan en uso
 
-// Reemplaza los mensajes activos. Se llama desde PC-Mode.
+
 int apFloodSetMessages(const char* const* msgs, int count) {
   if (count > APFLOOD_MAX_MSGS) count = APFLOOD_MAX_MSGS;
   if (count < 1) return 0;
@@ -65,7 +46,6 @@ static bool     flooding    = false;
 static uint32_t beaconsSent = 0;
 static uint8_t  channel     = 1;
 
-// Plantilla de trama beacon. El SSID se inserta en el offset 38.
 static uint8_t beaconTemplate[128] = {
   0x80, 0x00,                                     // Frame Control: beacon
   0x00, 0x00,                                     // Duration
@@ -79,26 +59,21 @@ static uint8_t beaconTemplate[128] = {
   0x00, 0x00                                      // Tag SSID: id=0, len (se rellena)
 };
 
-// Nota: en IDF 5.x (core 3.x) esp_wifi_80211_tx() ya permite enviar
-// beacons con cualquier MAC de origen, asi que NO hace falta sobreescribir
-// ieee80211_raw_frame_sanity_check (hacerlo da "multiple definition").
 
-// Envia un beacon para el SSID indicado.
 static void sendBeacon(const char* ssid) {
   uint8_t packet[128];
   memcpy(packet, beaconTemplate, sizeof(beaconTemplate));
 
-  // BSSID/origen aleatorio para que cada red parezca distinta.
   uint8_t mac[6];
   for (int i = 0; i < 6; i++) mac[i] = random(256);
-  mac[0] = (mac[0] & 0xFE) | 0x02; // MAC localmente administrada
+  mac[0] = (mac[0] & 0xFE) | 0x02; 
   memcpy(&packet[10], mac, 6);
   memcpy(&packet[16], mac, 6);
 
   // Inserta el SSID.
   int ssidLen = strlen(ssid);
   if (ssidLen > 32) ssidLen = 32;
-  packet[37] = ssidLen;                 // longitud del tag SSID
+  packet[37] = ssidLen;                
   memcpy(&packet[38], ssid, ssidLen);
 
   int pos = 38 + ssidLen;
@@ -108,7 +83,6 @@ static void sendBeacon(const char* ssid) {
   memcpy(&packet[pos], rates, sizeof(rates));
   pos += sizeof(rates);
 
-  // Tag: DS parameter set (canal actual)
   packet[pos++] = 0x03;
   packet[pos++] = 0x01;
   packet[pos++] = channel;
@@ -137,7 +111,6 @@ static void stopFlood() {
   Serial.println(beaconsSent);
 }
 
-// ---------- Botones ----------
 
 static bool isButtonJustPressed(int pin) {
   static uint8_t lastStableState[4] = {HIGH, HIGH, HIGH, HIGH};
@@ -169,15 +142,13 @@ static bool isButtonJustPressed(int pin) {
   return false;
 }
 
-// ---------- Pantalla ----------
 
 void screenApFloodLoop() {
-  // Mientras flooding: manda un beacon de cada SSID y salta de canal.
   if (flooding) {
     for (int i = 0; i < SSID_COUNT; i++) {
       sendBeacon(ssidList[i]);
     }
-    // Rota entre canales 1, 6 y 11 (los que no se solapan).
+
     static const uint8_t hop[] = {1, 6, 11};
     static uint8_t hopIdx = 0;
     hopIdx = (hopIdx + 1) % 3;

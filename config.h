@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 
-// ==================== PINES ====================
+// pines
 #define PIN_SDA         6
 #define PIN_SCL         7
 #define PIN_SELECT      1
@@ -16,14 +16,13 @@
 #define PIN_GPSON       8
 #define PIN_CD          40
 
-// ==================== PANTALLA ====================
+// resolucion 
 #define SCREEN_W        128
 #define SCREEN_H        64
 
-// ==================== NEOPIXELES ====================
 #define NUM_PIXELS      9
 
-// ==================== ESTADOS ====================
+//pantallas o estados 
 enum Screen {
   SCREEN_SPLASH,
   SCREEN_MENU,
@@ -36,14 +35,14 @@ enum Screen {
   SCREEN_FRASES,
   SCREEN_DESTINOS,
   SCREEN_NOMBRES,
-  SCREEN_CAPTIVE,  // Nueva pantalla para captive portal
-  SCREEN_APFLOOD,  // Beacon flood
-  SCREEN_SNIFFER,  // Sniffer de paquetes (PCAP)
-  SCREEN_BTSPAM,   // Publicidad por BLE advertising
-  SCREEN_GPS,      // GPS Position (lee NMEA del ATGM336H-6N-74 por UART0)
-  SCREEN_SDBROWSER, // SD Storage: explorador web (ver/descargar/borrar/subir)
-  SCREEN_CONFIG,   // Configuraciones globales: splash, color breath, brillo, reset
-  SCREEN_BLESCAN,  // BLE Scanner: dispositivos Bluetooth cercanos (nombre, MAC, RSSI)
+  SCREEN_CAPTIVE,  
+  SCREEN_APFLOOD,  
+  SCREEN_SNIFFER,  
+  SCREEN_BTSPAM,   
+  SCREEN_GPS,      
+  SCREEN_SDBROWSER, 
+  SCREEN_CONFIG,   
+  SCREEN_BLESCAN,  
   SCREEN_AYUDA_GPS,
   SCREEN_AYUDA_SD,
   SCREEN_AYUDA_RGB,
@@ -55,7 +54,6 @@ enum Screen {
 
 extern Screen currentScreen;
 
-// ==================== VARIABLES RGB NEOPIXEL ====================
 extern uint8_t neoR;
 extern uint8_t neoG;
 extern uint8_t neoB;

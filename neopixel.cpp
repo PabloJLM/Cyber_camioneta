@@ -1,5 +1,6 @@
 #include "Drivers/neopixel.h"
 
+//Funciones para neos simplificadas xd 
 void neopixelInit() {
   strip.begin();
   strip.show();
@@ -21,8 +22,7 @@ void neopixelShow() {
   strip.show();
 }
 
-// Encender neopixeles con el color elegido (Ajustes > Configuracion >
-// Color Breath) en vez del patron fijo morado/blanco de antes.
+// Encender neopixeles con el color elegido 
 void neopixelSplashSequence(int &currentPixel, unsigned long &lastTime,
                              uint8_t r, uint8_t g, uint8_t b) {
   unsigned long currentTime = millis();
@@ -36,9 +36,6 @@ void neopixelSplashSequence(int &currentPixel, unsigned long &lastTime,
   }
 }
 
-// Color configurable (ver BREATH_PRESETS en neopixel.h / pantalla
-// Ajustes > Configuracion > Color Breath) -- todo el tira "respira" con
-// un solo color elegido.
 void neopixelBreathe(uint8_t &brightness, int8_t &direction, unsigned long &lastTime,
                       uint8_t r, uint8_t g, uint8_t b) {
   unsigned long currentTime = millis();
@@ -67,8 +64,6 @@ void neopixelBreathe(uint8_t &brightness, int8_t &direction, unsigned long &last
 }
 
 
-// Mismo color elegido para el fade-out al presionar un boton (antes
-// siempre era morado/blanco fijo, sin importar el color configurado).
 void neopixelFadeOut(uint8_t r, uint8_t g, uint8_t b) {
   for (int brightness = 255; brightness >= 0; brightness -= 10) {
     uint8_t rr = (uint16_t)r * brightness / 255;

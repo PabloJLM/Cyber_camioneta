@@ -4,21 +4,14 @@
 
 extern U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2;
 
-// Limites de los SSID falsos del AP Flood.
+// Maximo de aps falsos 
 #define APFLOOD_MAX_MSGS    6
-#define APFLOOD_MAX_SSIDLEN 32   // limite real de un SSID 802.11
+#define APFLOOD_MAX_SSIDLEN 32   // limite real se supone
 
 void screenApFloodLoop();
 
-// Reemplaza los SSID que transmite el AP Flood (desde PC-Mode, comando
-// flood{...}). Cada mensaje se recorta a APFLOOD_MAX_SSIDLEN bytes y
-// se aceptan como maximo APFLOOD_MAX_MSGS. Devuelve cuantos quedaron.
 int apFloodSetMessages(const char* const* msgs, int count);
 
-// Cuantos mensajes hay cargados actualmente.
 int apFloodGetMessageCount();
 
-// Mensaje actual en la posicion i (0-based). Devuelve "" si i esta
-// fuera de rango. Sirve para mostrar la lista desde la terminal de
-// Ajustes sin duplicar el arreglo interno.
 const char* apFloodGetMessage(int i);

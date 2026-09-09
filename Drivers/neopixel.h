@@ -4,12 +4,7 @@
 
 extern Adafruit_NeoPixel strip;
 
-// Presets de color para todos los efectos de neopixel relacionados con el
-// splash: la secuencia de encendido, el "breath" (respiracion) de
-// despues, y el fade-out al presionar un boton. Elegibles desde
-// Ajustes > Configuracion > Color Breath, y guardados en NVS. Para
-// agregar uno nuevo alcanza con sumar una fila aca -- BREATH_PRESET_COUNT
-// se calcula solo.
+// Presets de color para el splash 
 struct BreathColor {
   const char* name;
   uint8_t r, g, b;
@@ -35,4 +30,4 @@ void neopixelSplashSequence(int &currentPixel, unsigned long &lastTime,
 void neopixelBreathe(uint8_t &brightness, int8_t &direction, unsigned long &lastTime,
                       uint8_t r, uint8_t g, uint8_t b);
 void neopixelFadeOut(uint8_t r, uint8_t g, uint8_t b);
-void neopixelSetBrightness(uint8_t brightness);  // 0-255, se aplica de una (strip.show())
+void neopixelSetBrightness(uint8_t brightness);  
