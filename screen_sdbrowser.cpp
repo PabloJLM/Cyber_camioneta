@@ -16,7 +16,7 @@ static const unsigned char image_Layer_9_bits[] PROGMEM = {
 
 
 static const char* AP_SSID = "Camioneta1";
-static const char* AP_PASS = "12345678";  
+static const char* AP_PASS = "12345678";
 
 static const IPAddress AP_IP(192, 168, 4, 1);
 static const IPAddress AP_MASK(255, 255, 255, 0);
@@ -517,12 +517,15 @@ void screenSDBrowserLoop() {
     u8g2.drawStr(5, 60, "SEL:Detener BACK:Salir");
   } else {
     u8g2.drawStr(11, 19, "Estado: INACTIVO");
+
+    // Descripcion en 3 lineas cortas con mas aire entre ellas, en vez
+    // de 2 lineas largas apretadas (la segunda no cabia bien).
     u8g2.setFont(u8g2_font_5x7_tr);
-    u8g2.drawStr(12, 29, "Ver/bajar/subir/borrar");
-    u8g2.drawStr(12, 39, "archivos de la SD por WiFi");
-    u8g2.setFont(u8g2_font_6x10_tr);
-    u8g2.drawStr(1, 49, "SEL:Iniciar");
-    u8g2.drawStr(1, 58, "BACK:Salir");
+    u8g2.drawStr(12, 30, "Ver, subir y borrar");
+    u8g2.drawStr(12, 39, "archivos de la SD");
+    u8g2.drawStr(12, 48, "por WiFi");
+
+    u8g2.drawStr(1, 59, "SEL:Iniciar BACK:Salir");
   }
 
   u8g2.sendBuffer();

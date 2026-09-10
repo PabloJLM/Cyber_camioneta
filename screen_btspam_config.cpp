@@ -2,11 +2,6 @@
 #include "Drivers/buzzer.h"
 #include "Apps/screen_btspam.h"
 
-// Pantalla de checkbox: elegir que fabricantes rota el BT Spam
-// (Apps -> Bluetooth Spam). Lee y escribe directo via la API publica
-// de screen_btspam.h/.cpp, que a su vez guarda la mascara en NVS
-// (Drivers/settings.h) -- asi el estado sobrevive un reinicio.
-
 static const unsigned char image_Layer_9_bits[] PROGMEM = {
   0x7e,0x7e,0x7e,0x7e,0x99,0x99,0x99,0x99,
   0x67,0xe6,0x67,0xe6,0x18,0x18,0x18,0x18,

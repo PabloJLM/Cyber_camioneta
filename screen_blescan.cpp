@@ -12,13 +12,6 @@ static const unsigned char image_Layer_9_bits[] PROGMEM = {
   0x7e,0x7e,0x7e,0x7e
 };
 
-// BLE Scanner: reconocimiento pasivo de dispositivos BLE cercanos
-// (nombre, MAC, RSSI). Solo escucha advertising -- no transmite nada
-// propio, a diferencia de Bluetooth Spam. SELECT prende/apaga el
-// escaneo (mismo patron que BT Spam: WiFi.mode(WIFI_OFF) antes de
-// BLEDevice::init(), radio 2.4GHz compartido), UP/DOWN recorre la
-// lista mientras esta prendido, BACK apaga y sale.
-
 #define BLESCAN_MAX_DEVICES 24
 #define BLESCAN_DURATION_S  2
 static const unsigned long RESCAN_INTERVAL_MS = 3000;
@@ -93,8 +86,6 @@ static void runScan() {
 static void startScanning() {
   if (scanning) return;
 
-  // Mismo criterio que BT Spam: el radio 2.4GHz es compartido entre
-  // WiFi y BLE, asi que se apaga el WiFi para no pelear con BLE.
   WiFi.mode(WIFI_OFF);
 
   BLEDevice::init("");

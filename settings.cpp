@@ -4,15 +4,10 @@
 static Preferences prefs;
 static const char* NS = "camioneta";
 
-// Mascara por defecto del BT Spam: bit0 Apple, bit1 Microsoft,
-// bit2 Samsung prendidos. bit3 Google y bit4 Flipper apagados porque
-// dan crash en hardware real (ver nota en screen_btspam.cpp).
 static const uint8_t BTSPAM_MASK_DEFAULT = 0x07;
 static const char*   PORTAL_SSID_DEFAULT = "WiFi_Gratis1";
 
 void settingsInit() {
-  // nada que hacer por ahora -- Preferences no necesita inicializacion
-  // global, cada funcion abre/cierra su propio namespace.
 }
 
 uint8_t settingsGetSplashIndex() {

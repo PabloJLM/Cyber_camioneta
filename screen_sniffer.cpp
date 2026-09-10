@@ -15,34 +15,6 @@ static const unsigned char image_Layer_9_bits[] PROGMEM = {
   0x7e,0x7e,0x7e,0x7e
 };
 
-// ============================================================
-//  Sniffer WiFi -> PCAP
-//
-//  Pone el ESP32 en modo promiscuo (802.11) y guarda cada
-//  paquete crudo en un archivo .pcap en la SD. El analisis
-//  serio siempre se hace despues en la PC con Wireshark; el
-//  ESP32 no relee ni interpreta el archivo.
-//
-//  En pantalla solo se muestran estadisticas basicas EN VIVO,
-//  calculadas al vuelo mientras se captura (sin tocar el
-//  archivo), pensadas para la parte educativa:
-//    - Cuantos beacons / probes / datos se ven.
-//    - Intensidad de señal del ultimo paquete (RSSI).
-//    - El ultimo SSID que un celular busco por probe request
-//      (la fuga de privacidad clasica: el telefono delata
-//      redes a las que se conecto antes).
-//    - Aviso de que el trafico de datos esta cifrado y no se
-//      puede leer sin la contraseña + handshake.
-//
-//  Controles:
-//    SEL     -> iniciar / detener captura
-//    UP/DOWN -> canal (1-13)
-//    BACK    -> salir
-// ============================================================
-
-// 512 bytes cubre beacons con varios tags (WPS, WMM, HT/VHT, vendor IEs),
-// que son muy comunes en routers modernos y con 256 se cortaban a la
-// mitad, causando "Malformed Packet" en Wireshark.
 #define SNAP_LEN   512   // bytes maximos guardados por paquete
 #define QUEUE_LEN  24    // paquetes en cola entre el callback y el loop
 
@@ -62,10 +34,6 @@ static uint8_t        channel  = 1;
 static bool            channelLoaded = false;
 static char           pcapName[24] = "";
 
-// Carga el canal inicial desde NVS la primera vez que se entra a la
-// app. Dentro de la app, UP/DOWN lo siguen cambiando en vivo como
-// siempre (esos cambios no se persisten, solo el que se fija con
-// snifferSetChannel/terminal).
 static void loadChannelIfNeeded() {
   if (channelLoaded) return;
   channel = settingsGetSnifferChannel();
@@ -87,10 +55,6 @@ uint8_t snifferGetChannel() {
   return channel;
 }
 
-// Nombre base configurable desde la terminal de Ajustes (comando
-// "snifname <nombre>"). Por defecto "cap" -> cap1.pcap, cap2.pcap...
-// Si en una misma sesion se hacen 2 capturas, la segunda sigue el
-// numero siguiente automaticamente (nextPcapName ya revisa la SD).
 #define SNIFFER_MAX_BASENAME 12
 static char pcapBaseName[SNIFFER_MAX_BASENAME + 1] = "cap";
 
@@ -145,9 +109,6 @@ static void writePcapGlobalHeader(File& f) {
 static void writePcapRecord(File& f, const PktRec& rec) {
   f.write((uint8_t*)&rec.ts_sec,  4);
   f.write((uint8_t*)&rec.ts_usec, 4);
-  // incl_len = lo que de verdad guardamos; orig_len = tamaño real en el
-  // aire. Si difieren, Wireshark lo marca como "recortado durante la
-  // captura" (correcto) en vez de "malformado" (confuso).
   uint32_t inclLen = rec.capLen;
   uint32_t origLen = rec.origLen;
   f.write((uint8_t*)&inclLen, 4);
@@ -157,9 +118,6 @@ static void writePcapRecord(File& f, const PktRec& rec) {
 
 // ---------- Estadisticas ----------
 
-// Clasifica una trama 802.11 cruda y actualiza los contadores.
-// Si es un probe request con SSID (no vacio), lo guarda como
-// "ultima red buscada" para la leccion de privacidad.
 static void classifyFrame(const uint8_t* d, uint16_t len) {
   if (len < 1) { cntOtros++; return; }
 
@@ -171,8 +129,6 @@ static void classifyFrame(const uint8_t* d, uint16_t len) {
       cntBeacon++;
     } else if (frameSubtype == 4) {                   // probe request
       cntProbe++;
-      // Sin parametros fijos: el tag SSID empieza justo tras
-      // el header de 24 bytes (id en 24, longitud en 25).
       if (len >= 26) {
         uint8_t ssidLen = d[25];
         if (ssidLen > 0 && 26u + ssidLen <= len) {
@@ -229,16 +185,12 @@ static void snifferCallback(void* buf, wifi_promiscuous_pkt_type_t type) {
   rec.rssi    = pkt->rx_ctrl.rssi;
   memcpy(rec.data, pkt->payload, capLen);
 
-  // Si la cola esta llena, se descarta el paquete (sin bloquear).
   xQueueSend(pktQueue, &rec, 0);
 }
 
 // ---------- Control de captura ----------
 
 static void nextPcapName() {
-  // "nombre1.pcap", "nombre2.pcap", ... -- sin ceros a la izquierda,
-  // como pidio Pablo. Si ya se hizo una captura en esta sesion (o en
-  // una anterior, porque revisa la SD) el numero sigue subiendo solo.
   for (int i = 1; i < 10000; i++) {
     snprintf(pcapName, sizeof(pcapName), "/%s%d.pcap", pcapBaseName, i);
     if (!SD.exists(pcapName)) return;
@@ -269,7 +221,6 @@ static void startCapture() {
 
   resetStats();
 
-  // WiFi en modo estacion pero sin conectarse, solo escuchando.
   WiFi.mode(WIFI_STA);
   esp_wifi_set_promiscuous(false);
   esp_wifi_set_promiscuous_rx_cb(&snifferCallback);
@@ -340,8 +291,6 @@ static bool isButtonJustPressed(int pin) {
 
 // ---------- Iconos ----------
 
-// Barras de señal tipo WiFi: 4 barras crecientes, solo se
-// dibujan las que corresponden a la intensidad (rssi en dBm).
 static void drawSignalIcon(int x, int baselineY, int8_t rssi) {
   int level;
   if      (rssi > -50) level = 4;
@@ -360,7 +309,6 @@ static void drawSignalIcon(int x, int baselineY, int8_t rssi) {
   }
 }
 
-// Candado pequeño: cuerpo + arco superior (mitad de un circulo).
 static void drawLockIcon(int x, int y) {
   u8g2.drawCircle(x + 3, y + 2, 3, U8G2_DRAW_UPPER_LEFT | U8G2_DRAW_UPPER_RIGHT);
   u8g2.drawBox(x, y + 2, 7, 6);
@@ -371,7 +319,6 @@ static void drawLockIcon(int x, int y) {
 static void drawDashboard() {
   char line[26];
 
-  // Fila 1: estado (punto lleno = grabando) + canal + señal.
   u8g2.setFont(u8g2_font_6x10_tr);
   if (capturing) {
     u8g2.drawDisc(10, 21, 3);
@@ -384,13 +331,11 @@ static void drawDashboard() {
   u8g2.drawStr(62, 25, line);
   drawSignalIcon(106, 25, lastRssi);
 
-  // Fila 2: contadores compactos + candado si hay datos cifrados.
   snprintf(line, sizeof(line), "B:%lu  P:%lu  D:%lu",
            (unsigned long)cntBeacon, (unsigned long)cntProbe, (unsigned long)cntData);
   u8g2.drawStr(6, 40, line);
   if (dataSeen) drawLockIcon(112, 32);
 
-  // Fila 3: ultimo SSID buscado por un celular (probe request).
   u8g2.setFont(u8g2_font_5x7_tr);
   if (hasProbeSsid) {
     snprintf(line, sizeof(line), "Busca: %s", lastProbeSsid);
@@ -399,7 +344,6 @@ static void drawDashboard() {
   }
   u8g2.drawStr(6, 52, line);
 
-  // Fila 4: ayuda de controles, segun el estado.
   if (capturing) {
     u8g2.drawStr(6, 62, "SEL:Detener  BACK:Salir");
   } else {
@@ -410,8 +354,6 @@ static void drawDashboard() {
 void screenSnifferLoop() {
   loadChannelIfNeeded();
 
-  // Escribe a la SD los paquetes que haya en la cola (limite por
-  // vuelta para no bloquear el loop principal mucho tiempo).
   if (capturing && pktQueue) {
     PktRec rec;
     int written = 0;

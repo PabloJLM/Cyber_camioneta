@@ -12,6 +12,10 @@ static const unsigned char image_Layer_9_bits[] PROGMEM = {
   0x7e,0x7e,0x7e,0x7e
 };
 
+static const unsigned char image_arrow_bits[] PROGMEM = {
+  0x01,0x03,0x07,0x0f,0x07,0x03,0x01
+};
+
 enum ConfigMode { CFG_LIST, CFG_SPLASH, CFG_BREATH, CFG_BRIGHTNESS, CFG_RESET_CONFIRM, CFG_SAVED };
 
 static const char* BRIGHTNESS_NAMES[]  = { "Bajo", "Medio", "Alto" };
@@ -20,6 +24,8 @@ static const uint8_t BRIGHTNESS_COUNT = 3;
 
 static const char* MENU_ITEMS[] = { "Splash", "Color Breath", "Brillo", "Reset de fabrica" };
 static const uint8_t MENU_COUNT = 4;
+
+static const uint8_t VISIBLE_ITEMS = 3;
 
 static ConfigMode mode = CFG_LIST;
 static int listSel = 0;
@@ -157,11 +163,33 @@ void screenConfigLoop() {
   u8g2.drawXBM(112, 1, 16, 14, image_Layer_9_bits);
 
   if (mode == CFG_LIST) {
-    for (int i = 0; i < MENU_COUNT; i++) {
-      int yy = 22 + i * 11;
-      if (i == listSel) u8g2.drawStr(2, yy, ">");
+    int scrollTop = listSel - (VISIBLE_ITEMS - 1);
+    if (scrollTop < 0) scrollTop = 0;
+    int maxTop = MENU_COUNT - VISIBLE_ITEMS;
+    if (maxTop < 0) maxTop = 0;
+    if (scrollTop > listSel) scrollTop = listSel;
+    if (scrollTop > maxTop) scrollTop = maxTop;
+
+    const int rowSpacing = 13;
+    const int firstY = 25;
+
+    for (int row = 0; row < VISIBLE_ITEMS; row++) {
+      int i = scrollTop + row;
+      if (i >= MENU_COUNT) break;
+      int yy = firstY + row * rowSpacing;
+      if (i == listSel) {
+        u8g2.drawXBM(2, yy - 6, 4, 7, image_arrow_bits);
+      }
       u8g2.drawStr(12, yy, MENU_ITEMS[i]);
     }
+
+    if (scrollTop > 0) {
+      u8g2.drawTriangle(122, 20, 126, 20, 124, 17);
+    }
+    if (scrollTop + VISIBLE_ITEMS < MENU_COUNT) {
+      u8g2.drawTriangle(122, 54, 126, 54, 124, 57);
+    }
+
     u8g2.setFont(u8g2_font_5x7_tr);
     u8g2.drawStr(2, 62, "SEL:Entrar BACK:Salir");
   } else if (mode == CFG_SPLASH) {

@@ -23,8 +23,6 @@ static const unsigned char image_Layer_9_bits[] PROGMEM = {
 
 
 // ---------- Configuracion ----------
-// El SSID es mutable y se guarda en NVS via Drivers/settings.h, para
-// poder cambiarlo desde la terminal de Ajustes (comando "portal ssid").
 static char AP_SSID[33] = "WiFi_Gratis1";
 static bool ssidLoaded  = false;
 
@@ -50,10 +48,6 @@ const char* captiveGetSSID() {
 static const char* AP_PASS = "";
 
 static const byte      DNS_PORT = 53;
-// La IP del AP es 8.8.8.8 a proposito: varios Android (Samsung sobre todo)
-// consultan un DNS fijo (8.8.8.8) para la sonda de portal cautivo e ignoran
-// el DNS que reparte el AP. Al ser nosotros 8.8.8.8, esa consulta llega aqui
-// y podemos redirigir. Asi Android tambien abre el portal.
 static const IPAddress AP_IP(8, 8, 8, 8);
 static const IPAddress AP_MASK(255, 255, 255, 0);
 static const char*     PORTAL_URL = "http://8.8.8.8/";
@@ -70,11 +64,6 @@ static WebServer webServer(80);
 static bool captiveRunning = false;
 static int  capturedCount  = 0;
 
-// De donde sale el html/css del portal. AUTO = lo de siempre (SD si el
-// archivo esta ahi, si no el embebido). Configurable con "portalsrc"
-// desde la terminal de Ajustes, para no depender de si el archivo
-// existe o no -- por ejemplo para forzar el embebido aunque haya algo
-// viejo en la SD, o para probar el portal guardado en LittleFS.
 static CaptivePortalSource portalSource = PORTAL_SRC_AUTO;
 
 void captiveSetPortalSource(CaptivePortalSource src) {
@@ -163,10 +152,6 @@ static bool serveFromSD(const char* path, const char* contentType) {
   return true;
 }
 
-// LittleFS: filesystem propio del ESP32, en la misma flash del chip.
-// No necesita SD -- sirve para llevar un portal personalizado sin
-// depender de que la tarjeta este puesta. begin(true) formatea solo
-// si hace falta (primera vez / particion corrupta).
 static bool fsReady() {
   static bool mounted = false;
   static bool tried = false;
@@ -189,19 +174,15 @@ static bool serveFromFS(const char* path, const char* contentType) {
   return true;
 }
 
-// Punto unico de decision: segun portalSource, intenta la fuente
-// puntual que se eligio desde la terminal de Ajustes; con AUTO se
-// mantiene el comportamiento de siempre (SD si esta, si no nada aca
-// y el que llama cae al html embebido).
 static bool servePortalFile(const char* path, const char* contentType) {
   switch (portalSource) {
     case PORTAL_SRC_EMBEDDED:
-      return false;   // fuerza el embebido: ni mira SD ni FS
+      return false;
     case PORTAL_SRC_SD:
       return serveFromSD(path, contentType);
     case PORTAL_SRC_FS:
       return serveFromFS(path, contentType);
-    default:   // AUTO
+    default:
       return serveFromSD(path, contentType) || serveFromFS(path, contentType);
   }
 }
@@ -306,8 +287,6 @@ static void handleSubmit() {
   webServer.send(302, "text/plain", "");
 }
 
-// Catch-all: sirve assets reales del portal; todo lo demas (incluidas
-// las sondas de deteccion de Android/iOS/Windows) se redirige al portal.
 static void handleCaptive() {
   String uri = webServer.uri();
 
@@ -344,13 +323,10 @@ void startCaptivePortal() {
   Serial.print(F("IP:   ")); Serial.println(WiFi.softAPIP());
   Serial.print(F("SSID: ")); Serial.println(AP_SSID);
 
-  // DNS: todos los dominios resuelven a nuestra IP.
-  // TTL 0 (no cachear) y NoError ayudan a que Android reintente la sonda.
   dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
   dnsServer.setTTL(0);
   dnsServer.start(DNS_PORT, "*", AP_IP);
 
-  // Rutas del portal.
   webServer.on("/",                    handleRoot);
   webServer.on("/index.html",          handleRoot);
   webServer.on("/portal/index.html",   handleRoot);
@@ -360,7 +336,6 @@ void startCaptivePortal() {
   webServer.on("/style.css",           handleStyle);
   webServer.on("/portal/style.css",    handleStyle);
 
-  // Todo lo demas (assets + sondas de deteccion).
   webServer.onNotFound(handleCaptive);
   webServer.begin();
 
@@ -459,8 +434,6 @@ void screenCaptiveLoop() {
     u8g2.drawStr(10, 36, "SSID:");
     u8g2.drawStr(40, 36, AP_SSID);
 
-    // En AUTO se muestra de donde sale de VERDAD el index.html (igual
-    // que resuelve servePortalFile); en modo forzado se muestra ese modo.
     char portalLbl[24];
     if (portalSource == PORTAL_SRC_AUTO) {
       if (sdReady() && SD.exists(PORTAL_INDEX))            strcpy(portalLbl, "Portal: SD");
@@ -478,13 +451,13 @@ void screenCaptiveLoop() {
     u8g2.setFont(u8g2_font_5x7_tr);
     u8g2.drawStr(5, 60, "SEL:Detener BACK:Salir");
   } else {
-    u8g2.drawStr(11, 19, "Estado: INACTIVO");
+    u8g2.drawStr(11, 21, "Estado: INACTIVO");
+
     u8g2.setFont(u8g2_font_5x7_tr);
-    u8g2.drawStr(12, 29, "Carpeta SD: /portal/");
-    u8g2.drawStr(13, 39, "Log: captive_log.txt");
-    u8g2.setFont(u8g2_font_6x10_tr);
-    u8g2.drawStr(1, 49, "SEL:Iniciar");
-    u8g2.drawStr(1, 58, "BACK:Salir");
+    u8g2.drawStr(12, 33, "Carpeta SD: /portal/");
+    u8g2.drawStr(13, 43, "Log: captive_log.txt");
+
+    u8g2.drawStr(1, 56, "SEL:Iniciar BACK:Salir");
   }
 
   u8g2.sendBuffer();
