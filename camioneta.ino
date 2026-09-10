@@ -27,8 +27,9 @@
 #include "Ajustes/screen_config.h"
 #include "Drivers/settings.h"
 #include "Apps/screen_blescan.h"
+#include "Ajustes/screen_btspam_config.h"
 
-// Pantallaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+// Pantalla
 U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE, PIN_SCL, PIN_SDA);
 
 // Neopixeles
@@ -52,7 +53,7 @@ void setup() {
   pinMode(PIN_BUZZER, OUTPUT);
 
   neopixelInit();
-  neopixelSetBrightness(settingsGetBrightness()); 
+  neopixelSetBrightness(settingsGetBrightness());  // aplica el brillo guardado (o "Medio" por defecto)
 
   u8g2.begin();
 }
@@ -91,7 +92,7 @@ void loop() {
       screenPCModeLoop();
       break;
 
-    case SCREEN_CAPTIVE:  
+    case SCREEN_CAPTIVE:  // Nueva pantalla
       screenCaptiveLoop();
       break;
 
@@ -149,6 +150,10 @@ void loop() {
 
     case SCREEN_AYUDA_TERM:
       screenAyudaTermLoop();
+      break;
+
+    case SCREEN_BTSPAM_CONFIG:
+      screenBtSpamConfigLoop();
       break;
   }
 

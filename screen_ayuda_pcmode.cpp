@@ -9,7 +9,7 @@ static const unsigned char image_download_bits[] PROGMEM = {
 };
 
 
-static const int TOTAL_PAGES = 4;// numero de paginas de ayuda 
+static const int TOTAL_PAGES = 5;// numero de paginas de ayuda
 static const char* PAGES[TOTAL_PAGES][4] = {
   {
     "help   - esta ayuda",
@@ -30,10 +30,16 @@ static const char* PAGES[TOTAL_PAGES][4] = {
     "logstats - estadisticas"
   },
   {
-    "clear - limpiar pantalla",
-    "exit  - salir de PC-Mode",
-    "",
-    ""
+    "uptime - tiempo activo",
+    "free   - memoria libre",
+    "whoami - usuario actual",
+    "uname  - info sistema/mcu"
+  },
+  {
+    "echo <txt> - repite texto",
+    "reboot - reinicia el equipo",
+    "clear  - limpiar pantalla",
+    "exit   - salir de PC-Mode"
   }
 };
 

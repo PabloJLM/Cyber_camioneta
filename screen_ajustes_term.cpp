@@ -3,6 +3,8 @@
 #include "Apps/screen_apflood.h"
 #include "Apps/screen_sniffer.h"
 #include "Apps/screen_captive.h"
+#include "Apps/screen_btspam.h"
+#include <esp_system.h>
 
 
 static const unsigned char image_gear_bits[] PROGMEM = {
@@ -149,9 +151,25 @@ static void showFloodMessages() {
   }
 }
 
+static void processFloodIntervalCommand(const String& cmd) {
+  String arg = cmd.substring(16);   // largo de "apflood interval"
+  arg.trim();
+  if (arg.length() == 0) {
+    Serial.println(F("  uso: apflood interval <ms>   (0 = lo mas rapido)"));
+    return;
+  }
+  long ms = arg.toInt();
+  if (ms < 0) ms = 0;
+  if (ms > 65535) ms = 65535;
+  apFloodSetInterval((uint16_t)ms);
+  Serial.print(F("  ok: intervalo de AP Flood -> "));
+  if (ms == 0) Serial.println(F("maximo (sin espera)"));
+  else { Serial.print(ms); Serial.println(F(" ms")); }
+}
+
 
 static void processSnifNameCommand(const String& cmd) {
-  String name = cmd.substring(9);  
+  String name = cmd.substring(9);
   name.trim();
   if (name.length() == 0) {
     Serial.println(F("  uso: snifname <nombre>   (ej: snifname captura)"));
@@ -168,16 +186,36 @@ static void processSnifNameCommand(const String& cmd) {
 }
 
 static void showSnifName() {
-  printSection("Sniffer: nombre base");
-  printRow("actual", snifferGetBaseName());
+  printSection("Sniffer: ajustes");
+  printRow("nombre base", snifferGetBaseName());
+  char ch[4];
+  snprintf(ch, sizeof(ch), "%d", snifferGetChannel());
+  printRow("canal inicial", ch);
   Serial.print(F("  siguiente:    "));
   Serial.print(snifferGetBaseName());
   Serial.println(F("<N>.pcap (el numero sube solo si ya existe en la SD)"));
 }
 
+static void processSnifChannelCommand(const String& cmd) {
+  String arg = cmd.substring(15);   // largo de "sniffer channel"
+  arg.trim();
+  if (arg.length() == 0) {
+    Serial.println(F("  uso: sniffer channel <1-13>"));
+    return;
+  }
+  int ch = arg.toInt();
+  if (ch < 1 || ch > 13) {
+    Serial.println(F("  error: el canal debe ser 1-13"));
+    return;
+  }
+  snifferSetChannel((uint8_t)ch);
+  Serial.print(F("  ok: canal inicial del sniffer -> "));
+  Serial.println(ch);
+}
+
 
 static void processPortalSrcCommand(const String& cmd) {
-  String mode = cmd.substring(10);  
+  String mode = cmd.substring(10);
   mode.trim();
   mode.toLowerCase();
 
@@ -197,11 +235,95 @@ static void processPortalSrcCommand(const String& cmd) {
   Serial.println(captivePortalSourceName());
 }
 
+static void processPortalSSIDCommand(const String& cmd) {
+  String name = cmd.substring(12);   // largo de "portal ssid "
+  name.trim();
+  if (name.length() == 0) {
+    Serial.println(F("  uso: portal ssid <nombre>   (ej: portal ssid WiFi_Casa)"));
+    return;
+  }
+  captiveSetSSID(name.c_str());
+  Serial.print(F("  ok: SSID del portal -> "));
+  Serial.println(captiveGetSSID());
+}
+
 static void showPortalSrc() {
-  printSection("Captive Portal: fuente del html/css");
-  printRow("modo", captivePortalSourceName());
+  printSection("Captive Portal: ajustes");
+  printRow("SSID", captiveGetSSID());
+  printRow("fuente html", captivePortalSourceName());
   Serial.println(F("  archivos esperados: /portal/index.html, /portal/style.css,"));
   Serial.println(F("                      /portal/success.html (SD o FS interno)"));
+}
+
+
+static void showBtSpamList() {
+  printSection("BT Spam: fabricantes en rotacion");
+  int total = btSpamGetTypeCount();
+  for (int i = 0; i < total; i++) {
+    char line[40];
+    const char* mark = btSpamIsTypeEnabled(i) ? "x" : " ";
+    const char* warn = btSpamIsTypeUnstable(i) ? "  (puede reiniciar el equipo)" : "";
+    snprintf(line, sizeof(line), "  [%s] %s%s", mark, btSpamGetTypeName(i), warn);
+    Serial.println(line);
+  }
+}
+
+static int findBtSpamTypeByName(const String& name) {
+  int total = btSpamGetTypeCount();
+  String lower = name;
+  lower.toLowerCase();
+  for (int i = 0; i < total; i++) {
+    String candidate = btSpamGetTypeName(i);
+    candidate.toLowerCase();
+    if (candidate == lower) return i;
+  }
+  return -1;
+}
+
+static void processBtSpamCommand(const String& cmd, bool enable) {
+  String name = cmd.substring(enable ? 14 : 15);   // "btspam enable "/"btspam disable "
+  name.trim();
+  if (name.length() == 0) {
+    Serial.println(F("  uso: btspam enable|disable <fabricante>"));
+    return;
+  }
+  int idx = findBtSpamTypeByName(name);
+  if (idx < 0) {
+    Serial.print(F("  error: fabricante desconocido: "));
+    Serial.println(name);
+    Serial.println(F("  usa 'btspam list' para ver los nombres validos"));
+    return;
+  }
+  btSpamSetTypeEnabled(idx, enable);
+  Serial.print(F("  ok: "));
+  Serial.print(btSpamGetTypeName(idx));
+  Serial.println(enable ? F(" -> activado") : F(" -> desactivado"));
+}
+
+
+// ---------- comandos tipo Linux ----------
+
+static void processEchoCommand(const String& cmd) {
+  Serial.println(cmd.substring(5));
+}
+
+static void showUptime() {
+  unsigned long s = millis() / 1000;
+  char up[32];
+  snprintf(up, sizeof(up), "%luh %02lum %02lus", s / 3600, (s % 3600) / 60, s % 60);
+  printSection("uptime");
+  printRow("activo desde", String(up));
+}
+
+static void showFree() {
+  printSection("memoria");
+  char v[16];
+  snprintf(v, sizeof(v), "%u", ESP.getFreeHeap());
+  printRow("heap libre", String(v) + " bytes");
+  snprintf(v, sizeof(v), "%u", ESP.getHeapSize());
+  printRow("heap total", String(v) + " bytes");
+  snprintf(v, sizeof(v), "%u", ESP.getMinFreeHeap());
+  printRow("heap minimo", String(v) + " bytes");
 }
 
 //comandos
@@ -218,25 +340,43 @@ static void processSerialCommand() {
         Serial.println();
 
         if (commandBuffer == "help") {
-          printSection("comandos de ajustes");
-          Serial.println(F("  help              esta ayuda"));
-          Serial.println(F("  status            resumen de la configuracion"));
-          Serial.println(F("  flood{...}        mensajes del AP Flood (max 6)"));
-          Serial.println(F("  floodshow         lista los mensajes activos"));
-          Serial.println(F("  snifname <nombre> nombre base de los .pcap del sniffer"));
-          Serial.println(F("  snifshow          muestra el nombre base actual"));
-          Serial.println(F("  portalsrc <modo>  auto|embebido|sd|fs"));
-          Serial.println(F("  portalshow        muestra la fuente activa del portal"));
-          Serial.println(F("  clear             limpiar pantalla"));
-          Serial.println(F("  exit              salir de la terminal de ajustes"));
+          printSection("comandos de ajustes (terminal avanzada)");
+          Serial.println(F("  help                    esta ayuda"));
+          Serial.println(F("  status                  resumen de toda la configuracion"));
+          Serial.println(F("  flood{...}              mensajes del AP Flood (max 6)"));
+          Serial.println(F("  floodshow               lista los mensajes activos"));
+          Serial.println(F("  apflood interval <ms>   intervalo entre tandas de beacons"));
+          Serial.println(F("  snifname <nombre>       nombre base de los .pcap del sniffer"));
+          Serial.println(F("  sniffer channel <1-13>  canal inicial del sniffer"));
+          Serial.println(F("  snifshow                ajustes actuales del sniffer"));
+          Serial.println(F("  portalsrc <modo>        auto|embebido|sd|fs"));
+          Serial.println(F("  portal ssid <nombre>    nombre de red del captive portal"));
+          Serial.println(F("  portalshow              ajustes actuales del captive portal"));
+          Serial.println(F("  btspam list             fabricantes activos en BT Spam"));
+          Serial.println(F("  btspam enable <nombre>  activa un fabricante"));
+          Serial.println(F("  btspam disable <nombre> desactiva un fabricante"));
+          Serial.println(F("  uptime                  tiempo activo desde el ultimo reinicio"));
+          Serial.println(F("  free                    memoria heap disponible"));
+          Serial.println(F("  echo <texto>            repite el texto"));
+          Serial.println(F("  reboot                  reinicia el equipo"));
+          Serial.println(F("  clear                   limpiar pantalla"));
+          Serial.println(F("  exit                    salir de la terminal de ajustes"));
         }
         else if (commandBuffer == "status") {
           printSection("resumen de ajustes");
           char n[8];
           snprintf(n, sizeof(n), "%d", apFloodGetMessageCount());
           printRow("flood: msgs", n);
+          uint16_t interval = apFloodGetInterval();
+          printRow("flood: intervalo", interval == 0 ? String("max") : String(interval) + " ms");
           printRow("sniffer: base", snifferGetBaseName());
+          printRow("sniffer: canal", String(snifferGetChannel()));
+          printRow("portal: SSID", captiveGetSSID());
           printRow("portal: fuente", captivePortalSourceName());
+          int enabled = 0;
+          int total = btSpamGetTypeCount();
+          for (int i = 0; i < total; i++) if (btSpamIsTypeEnabled(i)) enabled++;
+          printRow("btspam: activos", String(enabled) + "/" + String(total));
         }
         else if (commandBuffer.startsWith("flood{") && commandBuffer.endsWith("}")) {
           processFloodCommand(commandBuffer);
@@ -244,8 +384,14 @@ static void processSerialCommand() {
         else if (commandBuffer == "floodshow") {
           showFloodMessages();
         }
+        else if (commandBuffer.startsWith("apflood interval")) {
+          processFloodIntervalCommand(commandBuffer);
+        }
         else if (commandBuffer.startsWith("snifname ")) {
           processSnifNameCommand(commandBuffer);
+        }
+        else if (commandBuffer.startsWith("sniffer channel")) {
+          processSnifChannelCommand(commandBuffer);
         }
         else if (commandBuffer == "snifshow") {
           showSnifName();
@@ -253,8 +399,34 @@ static void processSerialCommand() {
         else if (commandBuffer.startsWith("portalsrc ")) {
           processPortalSrcCommand(commandBuffer);
         }
+        else if (commandBuffer.startsWith("portal ssid ")) {
+          processPortalSSIDCommand(commandBuffer);
+        }
         else if (commandBuffer == "portalshow") {
           showPortalSrc();
+        }
+        else if (commandBuffer == "btspam list") {
+          showBtSpamList();
+        }
+        else if (commandBuffer.startsWith("btspam enable ")) {
+          processBtSpamCommand(commandBuffer, true);
+        }
+        else if (commandBuffer.startsWith("btspam disable ")) {
+          processBtSpamCommand(commandBuffer, false);
+        }
+        else if (commandBuffer == "uptime") {
+          showUptime();
+        }
+        else if (commandBuffer == "free") {
+          showFree();
+        }
+        else if (commandBuffer.startsWith("echo ")) {
+          processEchoCommand(commandBuffer);
+        }
+        else if (commandBuffer == "reboot") {
+          Serial.println(F("  reiniciando..."));
+          delay(200);
+          ESP.restart();
         }
         else if (commandBuffer == "clear" || commandBuffer == "cls") {
           Serial.print(F("\033[2J\033[H"));
@@ -293,9 +465,9 @@ static void processSerialCommand() {
 
 static void printBanner() {
   Serial.println();
-  Serial.println(F("   Terminal de Ajustes"));
-  Serial.println(F("  Solo configuracion: AP Flood, nombre del sniffer"));
-  Serial.println(F("  y fuente del captive portal."));
+  Serial.println(F("   Terminal de Ajustes (avanzada)"));
+  Serial.println(F("  Configuracion de cada app: AP Flood, Sniffer,"));
+  Serial.println(F("  Captive Portal y BT Spam."));
   Serial.println(F("  Escribe 'help' para ver los comandos."));
 }
 

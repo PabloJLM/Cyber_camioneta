@@ -16,13 +16,13 @@
 #define PIN_GPSON       8
 #define PIN_CD          40
 
-// resolucion 
+// resolucion
 #define SCREEN_W        128
 #define SCREEN_H        64
 
 #define NUM_PIXELS      9
 
-//pantallas o estados 
+//pantallas o estados
 enum Screen {
   SCREEN_SPLASH,
   SCREEN_MENU,
@@ -35,21 +35,22 @@ enum Screen {
   SCREEN_FRASES,
   SCREEN_DESTINOS,
   SCREEN_NOMBRES,
-  SCREEN_CAPTIVE,  
-  SCREEN_APFLOOD,  
-  SCREEN_SNIFFER,  
-  SCREEN_BTSPAM,   
-  SCREEN_GPS,      
-  SCREEN_SDBROWSER, 
-  SCREEN_CONFIG,   
-  SCREEN_BLESCAN,  
+  SCREEN_CAPTIVE,
+  SCREEN_APFLOOD,
+  SCREEN_SNIFFER,
+  SCREEN_BTSPAM,
+  SCREEN_GPS,
+  SCREEN_SDBROWSER,
+  SCREEN_CONFIG,
+  SCREEN_BLESCAN,
   SCREEN_AYUDA_GPS,
   SCREEN_AYUDA_SD,
   SCREEN_AYUDA_RGB,
   SCREEN_AYUDA_QR,
   SCREEN_AJUSTES_TERM,  // Terminal serial exclusiva de Ajustes (flood, sniffer, portal)
   SCREEN_AYUDA_PCMODE,  // Ayuda: comandos de PC-Mode (Apps)
-  SCREEN_AYUDA_TERM     // Ayuda: comandos de la terminal de Ajustes
+  SCREEN_AYUDA_TERM,    // Ayuda: comandos de la terminal de Ajustes
+  SCREEN_BTSPAM_CONFIG  // Ajustes: checkbox de fabricantes activos en BT Spam
 };
 
 extern Screen currentScreen;

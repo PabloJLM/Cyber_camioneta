@@ -1,16 +1,18 @@
 # Camioneta
 
-Dispositivo de bolsillo para pruebas de seguridad WiFi y Bluetooth, basado en ESP32-C6. Tiene pantalla OLED, botonera de 4 botones, buzzer, NeoPixels, GPS y lector de SD. Todo se maneja desde el menu, sin necesidad de una PC.
+Dispositivo para pruebas de seguridad WiFi y Bluetooth, basado en ESP32-C6. 
+Tiene pantalla OLED, 4 botones, buzzer, NeoPixels, GPS y lector de SD. 
+No se necesita ninguna PC o conexion a internet
 
 ## Hardware
 
-- MCU: ESP32-C6-WROOM-1U-N8
+- MCU: ESP32-C6-WROOM-1U-N8/16
 - Pantalla: OLED SH1106 128x64, I2C
 - GPS: ATGM336H-6N-74, 115200 baudios
 - NeoPixel: 9 LEDs
 - Botonera: SELECT, UP, DOWN, BACK
 - Buzzer y lector de tarjeta SD
-- Queda un header libre sin usar: 3V3, TX, RX, GND, GPIO10, GND (es el UART del modulo principal, no el que usa el GPS)
+- Queda un header libre sin usar: 3V3, TX, RX, GND, GPIO10, GND para *add-ons* futuros
 
 ### Pines
 
@@ -36,8 +38,8 @@ MENU
 │   ├── Wifi Captive Portal
 │   ├── AP Flood
 │   ├── Bluetooth Spam
-│   ├── GPS Position
-│   ├── Wardriving       (todavia no hace nada)
+│   ├── GPS Position     (NO probado a fondo)
+│   ├── Wardriving       (aun no implementado)
 │   ├── Sniffer
 │   ├── PC-Mode
 │   └── BLE Scanner
@@ -52,15 +54,17 @@ MENU
 
 ## Apps
 
-**Wifi Captive Portal** — Crea una red WiFi con un portal cautivo, para pruebas de ingenieria social. El portal puede cargarse desde la SD o usar uno que ya trae por defecto.
+**Wifi Captive Portal** — Crea una red WiFi con un portal cautivo, para pruebas de ingenieria social. El portal puede cargarse desde la SD (con tu propio HTML y CSS) o usar uno que ya trae por defecto.
 
-**AP Flood** — Llena el entorno de redes WiFi falsas, con nombres que se pueden configurar.
+**AP Flood** — Llena el entorno de redes WiFi falsas, con nombres que se pueden configurar o se puede lanzar un AP FLood parametrico con la CLI 
 
-**Bluetooth Spam** — Manda anuncios Bluetooth que hacen aparecer los popups de emparejamiento de Apple, Microsoft y Samsung, como hacen herramientas como ESP32Marauder. Cada anuncio sale con una direccion distinta para que el celular lo vea como un dispositivo nuevo cada vez. Faltan dos fabricantes mas (Google y Flipper Zero) por un bug que sigue en revision, ver abajo. Ojo: no incluye el truco de hacerse pasar por un AirTag, eso se dejo fuera a proposito porque no es una simple molestia, es aprovecharse de una alerta de seguridad real que le avisa a la gente que la estan rastreando.
+**Bluetooth Spam** — Manda anuncios Bluetooth que hacen aparecer los popups de emparejamiento de Apple, Microsoft y Samsung, como hacen herramientas como ESP32Marauder. 
+Cada anuncio sale con una direccion distinta para que el celular lo vea como un dispositivo nuevo cada vez. 
+Faltan dos fabricantes mas (Google y Flipper Zero)
 
-**GPS Position** — Muestra la posicion en vivo que da el modulo GPS. Todavia no se ha probado bien, ver abajo.
+**GPS Position** — Muestra la posicion en vivo que da el modulo GPS. Todavia no se ha probado bien.
 
-**Sniffer** — Captura paquetes WiFi que andan por el aire.
+**Sniffer** — Captura paquetes WiFi del ambiente 
 
 **PC-Mode** — Se conecta la camioneta a una PC por cable y se maneja todo desde una terminal, con comandos para ver el estado del dispositivo, cambiar el color del NeoPixel, tocar el buzzer, ver archivos de la SD, armar la lista de redes falsas, y revisar el registro del portal cautivo.
 

@@ -57,7 +57,7 @@ static const unsigned char image_Layer_9_bits[] PROGMEM = {
 };
 
 static int menuSelection = 0;
-static const int MENU_ITEMS = 4;
+static const int MENU_ITEMS = 5;
 static unsigned long lastAnimTime = 0;
 static int animFrame = 0;
 
@@ -115,6 +115,7 @@ void screenAjustesLoop() {
       case 1: currentScreen = SCREEN_SDBROWSER; break;
       case 2: currentScreen = SCREEN_RGBNEO; break;
       case 3: currentScreen = SCREEN_AJUSTES_TERM; break;
+      case 4: currentScreen = SCREEN_BTSPAM_CONFIG; break;
     }
     return;
   }
@@ -147,8 +148,8 @@ void screenAjustesLoop() {
   u8g2.drawXBM(112, 1, 16, 14, image_Layer_9_bits);
   
   // Menu items
-  const char* items[] = {"Configuracion", "SD Storage", "NEOPIXEL", "Terminal"};
-  const int yPositions[] = {24, 36, 48, 60};
+  const char* items[] = {"Configuracion", "SD Storage", "NEOPIXEL", "Terminal Avz.", "BT Spam"};
+  const int yPositions[] = {22, 31, 40, 49, 58};
   
   for (int i = 0; i < MENU_ITEMS; i++) {
     if (i == menuSelection) {

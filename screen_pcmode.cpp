@@ -46,6 +46,42 @@ static void printRow(const char* key, const String& value) {
   Serial.println(value);
 }
 
+// ---------- comandos tipo Linux ----------
+
+static void showUptime() {
+  unsigned long s = millis() / 1000;
+  char up[32];
+  snprintf(up, sizeof(up), "%luh %02lum %02lus", s / 3600, (s % 3600) / 60, s % 60);
+  printSection("uptime");
+  printRow("activo desde", String(up));
+}
+
+static void showFree() {
+  printSection("memoria");
+  char v[16];
+  snprintf(v, sizeof(v), "%u", ESP.getFreeHeap());
+  printRow("heap libre", String(v) + " bytes");
+  snprintf(v, sizeof(v), "%u", ESP.getHeapSize());
+  printRow("heap total", String(v) + " bytes");
+  snprintf(v, sizeof(v), "%u", ESP.getMinFreeHeap());
+  printRow("heap minimo", String(v) + " bytes");
+}
+
+static void showWhoami() {
+  Serial.println(F("  root@camioneta"));
+}
+
+static void showUname() {
+  printSection("uname");
+  printRow("sistema", "camioneta-fw");
+  printRow("mcu", "ESP32-C6");
+  printRow("core", "arduino-esp32");
+}
+
+static void processEchoCommand(const String& cmd) {
+  Serial.println(cmd.substring(5));
+}
+
 
 void showCaptiveLog() {
   printSection("captive log (ultimos 5)");
@@ -416,6 +452,12 @@ void processSerialCommand() {
           Serial.println(F("  logfull    todos los logs"));
           Serial.println(F("  logclear   borrar log"));
           Serial.println(F("  logstats   estadisticas"));
+          Serial.println(F("  uptime     tiempo activo desde el ultimo reinicio"));
+          Serial.println(F("  free       memoria heap disponible"));
+          Serial.println(F("  whoami     usuario actual"));
+          Serial.println(F("  uname      info del sistema/mcu"));
+          Serial.println(F("  echo <txt> repite el texto"));
+          Serial.println(F("  reboot     reinicia el equipo"));
           Serial.println(F("  clear      limpiar pantalla"));
           Serial.println(F("  exit       salir del PC-Mode"));
         }
@@ -478,6 +520,18 @@ void processSerialCommand() {
         else if (commandBuffer == "logfull")  { showFullCaptiveLog(); }
         else if (commandBuffer == "logclear") { clearCaptiveLog(); }
         else if (commandBuffer == "logstats") { showCaptiveStats(); }
+        else if (commandBuffer == "uptime")   { showUptime(); }
+        else if (commandBuffer == "free")     { showFree(); }
+        else if (commandBuffer == "whoami")   { showWhoami(); }
+        else if (commandBuffer == "uname")    { showUname(); }
+        else if (commandBuffer.startsWith("echo ")) {
+          processEchoCommand(commandBuffer);
+        }
+        else if (commandBuffer == "reboot") {
+          Serial.println(F("  reiniciando..."));
+          delay(200);
+          ESP.restart();
+        }
         else if (commandBuffer == "clear" || commandBuffer == "cls") {
           Serial.print(F("\033[2J\033[H"));
         }

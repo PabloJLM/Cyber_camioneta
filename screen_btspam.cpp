@@ -1,5 +1,6 @@
 #include "Apps/screen_btspam.h"
 #include "Drivers/buzzer.h"
+#include "Drivers/settings.h"
 #include <WiFi.h>
 #include <BLEDevice.h>
 #include <BLEAdvertising.h>
@@ -64,16 +65,59 @@ static const char* TYPE_NAMES[SPAM_TYPE_COUNT] = {
 };
 
 // Google Fast Pair y Flipper Zero causaron "Stack smashing protect
-// failure!" en hardware real y estan desactivados por ahora hasta
-// diagnosticar bien la causa (ya no es un desborde de arreglo local --
-// se descarto a mano, byte por byte -- probablemente sea la pila del
-// task de loop() quedandose corta en esa parte del ciclo). El codigo
-// de sus payloads (addGooglePacket/addFlipperPacket) se deja intacto,
-// solo no se usa, para poder reactivarlos facil cuando se resuelva.
-// Microsoft (Swift Pair) nunca dio crash en las pruebas, asi que
-// rota junto con Apple/iOS y Samsung.
-static const SpamType ACTIVE_TYPES[] = { SPAM_APPLE, SPAM_MICROSOFT, SPAM_SAMSUNG };
-static const int ACTIVE_COUNT = sizeof(ACTIVE_TYPES) / sizeof(ACTIVE_TYPES[0]);
+// failure!" en hardware real. El codigo de sus payloads
+// (addGooglePacket/addFlipperPacket) sigue intacto abajo, pero por
+// defecto quedan apagados -- ver btSpamIsTypeUnstable().
+//
+// Que fabricantes rotan es configurable desde Ajustes -> BT Spam (una
+// pantalla de checkbox) o desde la terminal de Ajustes (comando
+// "btspam"), no un arreglo fijo en el codigo. El estado se guarda en
+// NVS como una mascara de bits (settingsGetBtSpamMask/SetBtSpamMask,
+// un bit por indice de SpamType) y se relee cada vez que se arranca
+// el spam, en rebuildActiveList().
+static SpamType activeList[SPAM_TYPE_COUNT];
+static int       activeCount = 0;
+
+static void rebuildActiveList() {
+  uint8_t mask = settingsGetBtSpamMask();
+  activeCount = 0;
+  for (int i = 0; i < SPAM_TYPE_COUNT; i++) {
+    if (mask & (1 << i)) {
+      activeList[activeCount++] = (SpamType)i;
+    }
+  }
+  if (activeCount == 0) {
+    // Si en Ajustes se desmarcaron todos, no dejar la rotacion vacia
+    // (division por cero mas abajo) -- usar Apple como respaldo.
+    activeList[0] = SPAM_APPLE;
+    activeCount   = 1;
+  }
+}
+
+int btSpamGetTypeCount() { return SPAM_TYPE_COUNT; }
+
+const char* btSpamGetTypeName(int i) {
+  if (i < 0 || i >= SPAM_TYPE_COUNT) return "";
+  return TYPE_NAMES[i];
+}
+
+bool btSpamIsTypeUnstable(int i) {
+  return i == SPAM_GOOGLE || i == SPAM_FLIPPER;
+}
+
+bool btSpamIsTypeEnabled(int i) {
+  if (i < 0 || i >= SPAM_TYPE_COUNT) return false;
+  uint8_t mask = settingsGetBtSpamMask();
+  return (mask & (1 << i)) != 0;
+}
+
+void btSpamSetTypeEnabled(int i, bool enabled) {
+  if (i < 0 || i >= SPAM_TYPE_COUNT) return;
+  uint8_t mask = settingsGetBtSpamMask();
+  if (enabled) mask |= (1 << i);
+  else         mask &= ~(uint8_t)(1 << i);
+  settingsSetBtSpamMask(mask);
+}
 
 static const unsigned long ROTATE_INTERVAL_MS = 1000; // Marauder throttlea "Sour Apple" a 1s
 
@@ -271,8 +315,9 @@ static void startSpam() {
     Serial.println(F("BT Spam: setOwnAddrType fallo, se sigue con la MAC publica"));
   }
 
+  rebuildActiveList();
   activeIndex = 0;
-  currentType = ACTIVE_TYPES[activeIndex];
+  currentType = activeList[activeIndex];
   applyPacket(currentType);
 
   spamming    = true;
@@ -336,8 +381,8 @@ void screenBtSpamLoop() {
   if (spamming && millis() - lastRotate >= ROTATE_INTERVAL_MS) {
     lastRotate = millis();
     pAdvertising->stop();
-    activeIndex = (activeIndex + 1) % ACTIVE_COUNT;
-    currentType = ACTIVE_TYPES[activeIndex];
+    activeIndex = (activeIndex + 1) % activeCount;
+    currentType = activeList[activeIndex];
     applyPacket(currentType);
   }
 

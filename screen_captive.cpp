@@ -1,5 +1,6 @@
 #include "Apps/screen_captive.h"
 #include "Drivers/buzzer.h"
+#include "Drivers/settings.h"
 #include <WiFi.h>
 #include <DNSServer.h>
 #include <WebServer.h>
@@ -22,8 +23,31 @@ static const unsigned char image_Layer_9_bits[] PROGMEM = {
 
 
 // ---------- Configuracion ----------
-static const char* AP_SSID = "WiFi_Gratis1";
-static const char* AP_PASS = "";               
+// El SSID es mutable y se guarda en NVS via Drivers/settings.h, para
+// poder cambiarlo desde la terminal de Ajustes (comando "portal ssid").
+static char AP_SSID[33] = "WiFi_Gratis1";
+static bool ssidLoaded  = false;
+
+static void loadSSIDIfNeeded() {
+  if (ssidLoaded) return;
+  settingsGetPortalSSID(AP_SSID, sizeof(AP_SSID));
+  ssidLoaded = true;
+}
+
+void captiveSetSSID(const char* ssid) {
+  if (!ssid || !ssid[0]) return;
+  strncpy(AP_SSID, ssid, sizeof(AP_SSID) - 1);
+  AP_SSID[sizeof(AP_SSID) - 1] = '\0';
+  settingsSetPortalSSID(AP_SSID);
+  ssidLoaded = true;
+}
+
+const char* captiveGetSSID() {
+  loadSSIDIfNeeded();
+  return AP_SSID;
+}
+
+static const char* AP_PASS = "";
 
 static const byte      DNS_PORT = 53;
 // La IP del AP es 8.8.8.8 a proposito: varios Android (Samsung sobre todo)
@@ -310,6 +334,7 @@ void startCaptivePortal() {
 
   Serial.println(F("\nCaptive Portal: iniciando"));
   setupSD();
+  loadSSIDIfNeeded();
 
   WiFi.mode(WIFI_AP);
   WiFi.softAPConfig(AP_IP, AP_IP, AP_MASK);

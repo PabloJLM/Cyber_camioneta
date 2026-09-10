@@ -9,7 +9,7 @@ static const unsigned char image_download_bits[] PROGMEM = {
 };
 
 
-static const int TOTAL_PAGES = 3;
+static const int TOTAL_PAGES = 5;
 static const char* PAGES[TOTAL_PAGES][4] = {
   {
     "help      - esta ayuda",
@@ -18,16 +18,28 @@ static const char* PAGES[TOTAL_PAGES][4] = {
     "floodshow - lista mensajes"
   },
   {
+    "apflood interval <ms>",
+    "  - pausa entre tandas",
     "snifname <n> - nombre sniffer",
-    "snifshow  - ver nombre base",
-    "portalsrc <m> - auto/embeb.",
-    "              /sd/fs"
+    "sniffer channel <1-13>"
   },
   {
-    "portalshow - ver fuente portal",
-    "clear      - limpiar pantalla",
-    "exit       - salir terminal",
-    ""
+    "snifshow  - ver ajustes sniff.",
+    "portalsrc <m> - auto/embeb.",
+    "              /sd/fs",
+    "portal ssid <n> - SSID portal"
+  },
+  {
+    "portalshow - ver ajustes port.",
+    "btspam list - fabricantes",
+    "btspam enable/disable <n>",
+    "uptime     - tiempo activo"
+  },
+  {
+    "free       - memoria libre",
+    "echo <txt> - repite texto",
+    "reboot     - reinicia equipo",
+    "clear/exit - limpia / salir"
   }
 };
 
