@@ -46,8 +46,6 @@ static void printRow(const char* key, const String& value) {
   Serial.println(value);
 }
 
-// ---------- comandos tipo Linux ----------
-
 static void showUptime() {
   unsigned long s = millis() / 1000;
   char up[32];
@@ -312,7 +310,7 @@ static int noteFreq(String n) {
   if (n == "SOL") return 392;
   if (n == "LA")  return 440;
   if (n == "SI")  return 494;
-  if (n == "DO2" || n == "DO+") return 523; // do de la octava superior
+  if (n == "DO2" || n == "DO+") return 523;
   if (n == "-" || n == "_")     return 0;   // mudaaaa
   return -1;
 }
@@ -422,7 +420,6 @@ static void processFloodCommand(const String& cmd) {
 }
 
 
-//comandos
 void processSerialCommand() {
   static String commandBuffer = "";
 

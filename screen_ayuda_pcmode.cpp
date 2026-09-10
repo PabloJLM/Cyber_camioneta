@@ -9,7 +9,7 @@ static const unsigned char image_download_bits[] PROGMEM = {
 };
 
 
-static const int TOTAL_PAGES = 5;// numero de paginas de ayuda
+static const int TOTAL_PAGES = 5;
 static const char* PAGES[TOTAL_PAGES][4] = {
   {
     "help   - esta ayuda",

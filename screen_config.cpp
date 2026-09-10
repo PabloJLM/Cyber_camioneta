@@ -116,7 +116,7 @@ void screenConfigLoop() {
         }
         case 2: {
           uint8_t stored = settingsGetBrightness();
-          int idx = 1;  // "Medio" por defecto si no matchea ningun preset
+          int idx = 1;
           for (int i = 0; i < BRIGHTNESS_COUNT; i++) {
             if (BRIGHTNESS_VALUES[i] == stored) { idx = i; break; }
           }
@@ -141,7 +141,7 @@ void screenConfigLoop() {
     if (isButtonJustPressed(PIN_SELECT)) {
       buzzerBeep();
       settingsFactoryReset();
-      neopixelSetBrightness(BRIGHTNESS_VALUES[1]);  // vuelve a "Medio"
+      neopixelSetBrightness(BRIGHTNESS_VALUES[1]);
       strcpy(savedMsg, "Config. reiniciada");
       mode = CFG_SAVED;
       savedFlashUntil = millis() + 900;

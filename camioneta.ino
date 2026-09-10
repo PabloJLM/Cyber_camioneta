@@ -29,18 +29,14 @@
 #include "Apps/screen_blescan.h"
 #include "Ajustes/screen_btspam_config.h"
 
-// Pantalla
 U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE, PIN_SCL, PIN_SDA);
 
-// Neopixeles
 Adafruit_NeoPixel strip(NUM_PIXELS, PIN_NEOPIXEL, NEO_GRB + NEO_KHZ800);
 
-// Variables globales para RGB NeoPixel control
 uint8_t neoR = 128;
 uint8_t neoG = 0;
 uint8_t neoB = 255;
 
-// siempre iniciar en splash
 Screen currentScreen = SCREEN_SPLASH;
 
 void setup() {
@@ -53,7 +49,7 @@ void setup() {
   pinMode(PIN_BUZZER, OUTPUT);
 
   neopixelInit();
-  neopixelSetBrightness(settingsGetBrightness());  // aplica el brillo guardado (o "Medio" por defecto)
+  neopixelSetBrightness(settingsGetBrightness());
 
   u8g2.begin();
 }
@@ -92,7 +88,7 @@ void loop() {
       screenPCModeLoop();
       break;
 
-    case SCREEN_CAPTIVE:  // Nueva pantalla
+    case SCREEN_CAPTIVE:
       screenCaptiveLoop();
       break;
 

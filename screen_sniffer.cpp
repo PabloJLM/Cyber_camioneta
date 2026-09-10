@@ -15,14 +15,14 @@ static const unsigned char image_Layer_9_bits[] PROGMEM = {
   0x7e,0x7e,0x7e,0x7e
 };
 
-#define SNAP_LEN   512   // bytes maximos guardados por paquete
-#define QUEUE_LEN  24    // paquetes en cola entre el callback y el loop
+#define SNAP_LEN   512
+#define QUEUE_LEN  24
 
 struct PktRec {
   uint32_t ts_sec;
   uint32_t ts_usec;
-  uint16_t capLen;   // bytes realmente guardados (<= SNAP_LEN)
-  uint16_t origLen;  // tamaño real de la trama en el aire (antes de recortar)
+  uint16_t capLen;
+  uint16_t origLen;
   int8_t   rssi;
   uint8_t  data[SNAP_LEN];
 };
@@ -68,14 +68,13 @@ void snifferSetBaseName(const char* name) {
     if (ok) pcapBaseName[j++] = c;
   }
   pcapBaseName[j] = '\0';
-  if (j == 0) strcpy(pcapBaseName, "cap");   // no dejar el nombre vacio
+  if (j == 0) strcpy(pcapBaseName, "cap");
 }
 
 const char* snifferGetBaseName() {
   return pcapBaseName;
 }
 
-// ---------- Estadisticas en vivo (solo en RAM) ----------
 static uint32_t pktCount    = 0;
 static uint32_t cntBeacon   = 0;
 static uint32_t cntProbe    = 0;
@@ -86,8 +85,6 @@ static int8_t   lastRssi    = -100;
 static char     lastProbeSsid[23] = "";
 static bool     hasProbeSsid = false;
 
-// ---------- Escritura PCAP ----------
-
 static void writePcapGlobalHeader(File& f) {
   uint32_t magic    = 0xa1b2c3d4;
   uint16_t vmajor   = 2;
@@ -95,7 +92,7 @@ static void writePcapGlobalHeader(File& f) {
   int32_t  thiszone = 0;
   uint32_t sigfigs  = 0;
   uint32_t snaplen  = SNAP_LEN;
-  uint32_t network  = 105;         // LINKTYPE_IEEE802_11
+  uint32_t network  = 105;
 
   f.write((uint8_t*)&magic,    4);
   f.write((uint8_t*)&vmajor,   2);
@@ -116,18 +113,16 @@ static void writePcapRecord(File& f, const PktRec& rec) {
   f.write(rec.data, rec.capLen);
 }
 
-// ---------- Estadisticas ----------
-
 static void classifyFrame(const uint8_t* d, uint16_t len) {
   if (len < 1) { cntOtros++; return; }
 
   uint8_t frameType    = (d[0] >> 2) & 0x03;
   uint8_t frameSubtype = (d[0] >> 4) & 0x0F;
 
-  if (frameType == 0) {                 // gestion
-    if (frameSubtype == 8) {                          // beacon
+  if (frameType == 0) {
+    if (frameSubtype == 8) {
       cntBeacon++;
-    } else if (frameSubtype == 4) {                   // probe request
+    } else if (frameSubtype == 4) {
       cntProbe++;
       if (len >= 26) {
         uint8_t ssidLen = d[25];
@@ -138,15 +133,15 @@ static void classifyFrame(const uint8_t* d, uint16_t len) {
           hasProbeSsid = true;
         }
       }
-    } else if (frameSubtype == 5) {                   // probe response
+    } else if (frameSubtype == 5) {
       cntProbe++;
     } else {
       cntOtros++;
     }
-  } else if (frameType == 2) {          // datos
+  } else if (frameType == 2) {
     cntData++;
     dataSeen = true;
-  } else {                              // control u otro
+  } else {
     cntOtros++;
   }
 }
@@ -166,15 +161,13 @@ static void resetStats() {
   lastRssi = -100;
 }
 
-// ---------- Callback de modo promiscuo ----------
-
 static void snifferCallback(void* buf, wifi_promiscuous_pkt_type_t type) {
   if (!capturing || pktQueue == NULL) return;
 
   const wifi_promiscuous_pkt_t* pkt = (wifi_promiscuous_pkt_t*)buf;
-  uint16_t origLen = pkt->rx_ctrl.sig_len;   // tamaño real en el aire
+  uint16_t origLen = pkt->rx_ctrl.sig_len;
   uint16_t capLen  = origLen;
-  if (capLen > SNAP_LEN) capLen = SNAP_LEN;  // recorte, si aplica
+  if (capLen > SNAP_LEN) capLen = SNAP_LEN;
 
   PktRec rec;
   int64_t us = esp_timer_get_time();
@@ -187,8 +180,6 @@ static void snifferCallback(void* buf, wifi_promiscuous_pkt_type_t type) {
 
   xQueueSend(pktQueue, &rec, 0);
 }
-
-// ---------- Control de captura ----------
 
 static void nextPcapName() {
   for (int i = 1; i < 10000; i++) {
@@ -257,8 +248,6 @@ static void stopCapture() {
   Serial.println(pktCount);
 }
 
-// ---------- Botones ----------
-
 static bool isButtonJustPressed(int pin) {
   static uint8_t lastStableState[4] = {HIGH, HIGH, HIGH, HIGH};
   static uint8_t lastReading[4]     = {HIGH, HIGH, HIGH, HIGH};
@@ -289,8 +278,6 @@ static bool isButtonJustPressed(int pin) {
   return false;
 }
 
-// ---------- Iconos ----------
-
 static void drawSignalIcon(int x, int baselineY, int8_t rssi) {
   int level;
   if      (rssi > -50) level = 4;
@@ -313,8 +300,6 @@ static void drawLockIcon(int x, int y) {
   u8g2.drawCircle(x + 3, y + 2, 3, U8G2_DRAW_UPPER_LEFT | U8G2_DRAW_UPPER_RIGHT);
   u8g2.drawBox(x, y + 2, 7, 6);
 }
-
-// ---------- Pantalla ----------
 
 static void drawDashboard() {
   char line[26];

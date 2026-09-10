@@ -19,7 +19,7 @@ static char ssidList[APFLOOD_MAX_MSGS][APFLOOD_MAX_SSIDLEN + 1] = {
   "And yes I'm talking 'bout your",
   "baby"
 };
-static int SSID_COUNT = 6;   // cuantas entradas de ssidList estan en uso
+static int SSID_COUNT = 6;
 
 int apFloodSetMessages(const char* const* msgs, int count) {
   if (count > APFLOOD_MAX_MSGS) count = APFLOOD_MAX_MSGS;
@@ -67,18 +67,17 @@ uint16_t apFloodGetInterval() {
   return floodIntervalMs;
 }
 
-// Plantilla de trama beacon. El SSID se inserta en el offset 38.
 static uint8_t beaconTemplate[128] = {
-  0x80, 0x00,                                     // Frame Control: beacon
-  0x00, 0x00,                                     // Duration
-  0xff, 0xff, 0xff, 0xff, 0xff, 0xff,             // Destino: broadcast
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,             // Origen (BSSID) - aleatorio
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,             // BSSID - aleatorio
-  0x00, 0x00,                                     // Seq
-  0x83, 0x51, 0xf7, 0x8f, 0x0f, 0x00, 0x00, 0x00, // Timestamp
-  0xe8, 0x03,                                     // Beacon interval
-  0x31, 0x04,                                     // Capabilities
-  0x00, 0x00                                      // Tag SSID: id=0, len (se rellena)
+  0x80, 0x00,
+  0x00, 0x00,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00,
+  0x83, 0x51, 0xf7, 0x8f, 0x0f, 0x00, 0x00, 0x00,
+  0xe8, 0x03,
+  0x31, 0x04,
+  0x00, 0x00
 };
 
 static void sendBeacon(const char* ssid) {
@@ -87,23 +86,21 @@ static void sendBeacon(const char* ssid) {
 
   uint8_t mac[6];
   for (int i = 0; i < 6; i++) mac[i] = random(256);
-  mac[0] = (mac[0] & 0xFE) | 0x02; // MAC localmente administrada
+  mac[0] = (mac[0] & 0xFE) | 0x02;
   memcpy(&packet[10], mac, 6);
   memcpy(&packet[16], mac, 6);
 
   int ssidLen = strlen(ssid);
   if (ssidLen > 32) ssidLen = 32;
-  packet[37] = ssidLen;                 // longitud del tag SSID
+  packet[37] = ssidLen;
   memcpy(&packet[38], ssid, ssidLen);
 
   int pos = 38 + ssidLen;
 
-  // Tag: supported rates
   const uint8_t rates[] = { 0x01, 0x08, 0x82, 0x84, 0x8b, 0x96, 0x24, 0x30, 0x48, 0x6c };
   memcpy(&packet[pos], rates, sizeof(rates));
   pos += sizeof(rates);
 
-  // Tag: DS parameter set (canal actual)
   packet[pos++] = 0x03;
   packet[pos++] = 0x01;
   packet[pos++] = channel;
@@ -131,8 +128,6 @@ static void stopFlood() {
   Serial.print(F("AP Flood: detenido. Beacons: "));
   Serial.println(beaconsSent);
 }
-
-// ---------- Botones ----------
 
 static bool isButtonJustPressed(int pin) {
   static uint8_t lastStableState[4] = {HIGH, HIGH, HIGH, HIGH};
@@ -164,8 +159,6 @@ static bool isButtonJustPressed(int pin) {
   return false;
 }
 
-// ---------- Pantalla ----------
-
 void screenApFloodLoop() {
   loadIntervalIfNeeded();
   if (flooding && (millis() - lastBeaconBatch >= floodIntervalMs)) {
@@ -173,7 +166,6 @@ void screenApFloodLoop() {
     for (int i = 0; i < SSID_COUNT; i++) {
       sendBeacon(ssidList[i]);
     }
-    // Rota entre canales 1, 6 y 11 (los que no se solapan).
     static const uint8_t hop[] = {1, 6, 11};
     static uint8_t hopIdx = 0;
     hopIdx = (hopIdx + 1) % 3;

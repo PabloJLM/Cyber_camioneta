@@ -13,7 +13,7 @@ static const unsigned char image_Layer_9_bits[] PROGMEM = {
   0x7e,0x7e,0x7e,0x7e
 };
 
-static int selectedSlider = 0; // 0=R, 1=G, 2=B
+static int selectedSlider = 0;
 static unsigned long lastUpdateTime = 0;
 
 static bool isButtonJustPressed(int pin) {
@@ -50,12 +50,10 @@ static bool isButtonJustPressed(int pin) {
   return false;
 }
 
-// Mapear valor 0-255 a posición X en pantalla (16 a 115 píxeles)
 int mapValueToX(uint8_t value) {
   return 16 + (value * 99 / 255);
 }
 
-// Aplicar el color actual a los NeoPixels
 void updateNeoPixels() {
   for (int i = 0; i < NUM_PIXELS; i++) {
     strip.setPixelColor(i, strip.Color(neoR, neoG, neoB));
@@ -67,7 +65,6 @@ void screenRGBNeoLoop() {
   unsigned long currentTime = millis();
   bool valueChanged = false;
 
-  // Navegar entre sliders con UP/DOWN
   if (isButtonJustPressed(PIN_UP)) {
     selectedSlider--;
     if (selectedSlider < 0) selectedSlider = 2;
@@ -80,18 +77,17 @@ void screenRGBNeoLoop() {
     buzzerClick();
   }
 
-  // Ajustar valores con SELECT (incrementar de 5 en 5)
   if (isButtonJustPressed(PIN_SELECT)) {
     switch(selectedSlider) {
-      case 0: // R
+      case 0:
         neoR += 5;
-        if (neoR < 5) neoR = 255; // Overflow wrap
+        if (neoR < 5) neoR = 255;
         break;
-      case 1: // G
+      case 1:
         neoG += 5;
         if (neoG < 5) neoG = 255;
         break;
-      case 2: // B
+      case 2:
         neoB += 5;
         if (neoB < 5) neoB = 255;
         break;
@@ -100,7 +96,6 @@ void screenRGBNeoLoop() {
     buzzerClick();
   }
 
-  // Mantener presionado para ajuste continuo
   if (!digitalRead(PIN_SELECT)) {
     if (currentTime - lastUpdateTime > 100) {
       switch(selectedSlider) {
@@ -125,17 +120,14 @@ void screenRGBNeoLoop() {
     return;
   }
 
-  // Actualizar NeoPixels si cambió algún valor
   if (valueChanged) {
     updateNeoPixels();
   }
 
-  // Dibujar pantalla
   u8g2.clearBuffer();
   u8g2.setFontMode(1);
   u8g2.setBitmapMode(1);
 
-  // Título
   u8g2.setFont(u8g2_font_6x10_tr);
   u8g2.setDrawColor(1);
   u8g2.drawBox(16, 1, 96, 14);
@@ -146,18 +138,15 @@ void screenRGBNeoLoop() {
   u8g2.drawXBM(0, 1, 16, 14, image_Layer_9_bits);
   u8g2.drawXBM(112, 1, 16, 14, image_Layer_9_bits);
 
-  // Labels
   u8g2.setFont(u8g2_font_6x13_tr);
   u8g2.drawStr(6, 34, "R");
   u8g2.drawStr(6, 45, "G");
   u8g2.drawStr(6, 57, "B");
 
-  // Líneas de los sliders
   u8g2.drawLine(17, 29, 120, 29);
   u8g2.drawLine(17, 40, 120, 40);
   u8g2.drawLine(17, 52, 120, 52);
 
-  // Dibujar los controles en sus posiciones
   int xPosR = mapValueToX(neoR);
   int xPosG = mapValueToX(neoG);
   int xPosB = mapValueToX(neoB);
@@ -166,11 +155,9 @@ void screenRGBNeoLoop() {
   u8g2.drawXBM(xPosG, 37, 7, 7, image_ButtonCenter_bits);
   u8g2.drawXBM(xPosB, 49, 7, 7, image_ButtonCenter_bits);
 
-  // Indicador de slider seleccionado (marco más grueso)
   int yIndicator[] = {26, 37, 49};
   int xPos[] = {xPosR, xPosG, xPosB};
 
-  // Dibujar marco alrededor del slider seleccionado
   u8g2.drawFrame(xPos[selectedSlider] - 1, yIndicator[selectedSlider] - 1, 9, 9);
 
   u8g2.sendBuffer();

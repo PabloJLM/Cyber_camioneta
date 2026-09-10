@@ -10,11 +10,11 @@ static const unsigned char image_Layer_9_bits[] PROGMEM = {
   0x7e,0x7e,0x7e,0x7e
 };
 
-static const int GPS_RX_PIN = 4;        // IO4 = "RX1"
-static const int GPS_TX_PIN = 5;        // IO5 = "TX1"
+static const int GPS_RX_PIN = 4;
+static const int GPS_TX_PIN = 5;
 static const unsigned long GPS_BAUD = 115200;
 
-static HardwareSerial GPSSerial(1);  // UART1: hardware separado del UART0/consola
+static HardwareSerial GPSSerial(1);
 static TinyGPSPlus gps;
 static bool gpsStarted = false;
 

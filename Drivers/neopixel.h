@@ -4,7 +4,6 @@
 
 extern Adafruit_NeoPixel strip;
 
-// Presets de color para el splash 
 struct BreathColor {
   const char* name;
   uint8_t r, g, b;

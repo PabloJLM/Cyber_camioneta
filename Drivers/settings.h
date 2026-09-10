@@ -1,8 +1,6 @@
 #pragma once
 #include <Arduino.h>
 
-// Configuracion global persistente en NVS (flash no volatil del ESP32)
-
 void settingsInit();
 
 uint8_t settingsGetSplashIndex();

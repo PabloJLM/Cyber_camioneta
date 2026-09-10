@@ -137,7 +137,6 @@ void screenAjustesLoop() {
   u8g2.setBitmapMode(1);
   u8g2.setFont(u8g2_font_6x10_tr);
   
-  // Header
   u8g2.setDrawColor(1);
   u8g2.drawBox(16, 1, 96, 14);
   u8g2.setDrawColor(2);
@@ -147,7 +146,6 @@ void screenAjustesLoop() {
   u8g2.drawXBM(0, 1, 16, 14, image_Layer_9_bits);
   u8g2.drawXBM(112, 1, 16, 14, image_Layer_9_bits);
   
-  // Menu items
   const char* items[] = {"Configuracion", "SD Storage", "NEOPIXEL", "Terminal Avz.", "BT Spam"};
   const int yPositions[] = {22, 31, 40, 49, 58};
   
@@ -158,7 +156,6 @@ void screenAjustesLoop() {
     u8g2.drawStr(37, yPositions[i], items[i]);
   }
   
-  // Animated truck
   switch(animFrame) {
     case 0: u8g2.drawXBM(85, 36, 32, 32, image_Layer_13_bits); break;
     case 1: u8g2.drawXBM(85, 36, 32, 32, image_Layer_15_bits); break;
@@ -167,7 +164,6 @@ void screenAjustesLoop() {
     case 4: u8g2.drawXBM(85, 36, 32, 32, image_Layer_20_bits); break;
   }
   
-  // Ellipses
   int ellipseFrame = (animFrame / 2) % 3;
   if (ellipseFrame >= 0) u8g2.drawEllipse(117, 56, 1, 1);
   if (ellipseFrame >= 1) u8g2.drawEllipse(121, 56, 1, 1);

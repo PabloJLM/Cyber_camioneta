@@ -301,8 +301,6 @@ static void processBtSpamCommand(const String& cmd, bool enable) {
 }
 
 
-// ---------- comandos tipo Linux ----------
-
 static void processEchoCommand(const String& cmd) {
   Serial.println(cmd.substring(5));
 }
@@ -326,7 +324,6 @@ static void showFree() {
   printRow("heap minimo", String(v) + " bytes");
 }
 
-//comandos
 
 static void processSerialCommand() {
   static String commandBuffer = "";

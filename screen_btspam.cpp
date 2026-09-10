@@ -13,28 +13,14 @@ static const unsigned char image_Layer_9_bits[] PROGMEM = {
   0x7e,0x7e,0x7e,0x7e
 };
 
-// esp_base_mac_addr_set() (randomizar la MAC del chip, como hace
-// Marauder) crashea en hardware real (ESP32-C6) con "Guru Meditation /
-// Store access fault". Se usa BLEDevice::setOwnAddr() en su lugar, que
-// solo cambia la direccion de anuncio sin tocar la identidad del chip.
-//
-// El tipo "Airtag" de Marauder no se implemento a proposito: a
-// diferencia de los otros 5 (que solo son popups molestos de
-// emparejamiento), Airtag dispara la alerta real anti-stalking de
-// iOS/Android, y no hay forma de que quien la reciba sepa que es una
-// demo y no un stalker de verdad. Ni siquiera en entorno controlado.
 
 enum SpamType { SPAM_APPLE, SPAM_MICROSOFT, SPAM_SAMSUNG, SPAM_GOOGLE, SPAM_FLIPPER, SPAM_TYPE_COUNT };
-// Fast Pair no es exclusivo de telefonos Google: es el protocolo que
-// trae integrado el sistema operativo Android, por eso dispara en
-// cualquier marca (Samsung, Xiaomi, etc), no solo Pixel.
+
 static const char* TYPE_NAMES[SPAM_TYPE_COUNT] = {
   "Apple", "Microsoft", "Samsung", "Fast Pair (Android)", "Flipper Zero"
 };
 
-// Fast Pair (Android) y Flipper Zero dan "Stack smashing protect
-// failure!" en hardware real -- quedan apagados por defecto, ver
-// btSpamIsTypeUnstable().
+
 static SpamType activeList[SPAM_TYPE_COUNT];
 static int       activeCount = 0;
 
@@ -47,8 +33,7 @@ static void rebuildActiveList() {
     }
   }
   if (activeCount == 0) {
-    // Si en Ajustes se desmarcaron todos, no dejar la rotacion vacia
-    // (division por cero mas abajo) -- usar Apple como respaldo.
+
     activeList[0] = SPAM_APPLE;
     activeCount   = 1;
   }
@@ -79,7 +64,7 @@ void btSpamSetTypeEnabled(int i, bool enabled) {
   settingsSetBtSpamMask(mask);
 }
 
-static const unsigned long ROTATE_INTERVAL_MS = 1000; // Marauder throttlea "Sour Apple" a 1s
+static const unsigned long ROTATE_INTERVAL_MS = 1000; 
 
 static BLEAdvertising* pAdvertising = nullptr;
 static bool           spamming     = false;
@@ -90,8 +75,7 @@ static uint32_t       packetsSent  = 0;
 
 static uint8_t rnd8() { return (uint8_t)(esp_random() & 0xFF); }
 
-// Dos bits mas significativos del primer byte en "11" = direccion
-// random "static" valida segun el spec de Bluetooth.
+
 static void generateRandomAddr(uint8_t addr[6]) {
   for (int i = 0; i < 6; i++) addr[i] = rnd8();
   addr[0] |= 0xC0; // top 2 bits = 11 -> static random address valida
@@ -103,10 +87,7 @@ static void randomName(char* out, uint8_t len) {
   out[len] = '\0';
 }
 
-// ---------- Payloads (bytes tal cual Marauder) ----------
 
-// Los arreglos "static" (no en la pila) son a proposito: el ESP32-C6
-// no tiene mucho stack y esta cadena de llamadas ya viene profunda.
 static void addApplePacket(BLEAdvertisementData &adv) {
   if (rnd8() % 10 != 0) {
     // "Accion" (Handoff/AirDrop) -- popup mas chico y rapido
@@ -190,7 +171,7 @@ static void addFlipperPacket(BLEAdvertisementData &adv) {
   adv.addData((char*)raw, i);
 }
 
-// ---------- Emitir un paquete (sin tocar el stack BLE) ----------
+
 static void applyPacket(int type) {
   // Timeout corto (50ms): esperar a que termine el advertising anterior
   // evita el EBUSY de setOwnAddr() que daba "setOwnAddr fallo".
@@ -247,15 +228,13 @@ static void stopSpam() {
   if (!spamming) return;
 
   if (pAdvertising) pAdvertising->stop();
-  // deinit(true) crasheaba en el siguiente init() -- deinit(false) es
-  // estable para prender/apagar el advertising varias veces.
+
   BLEDevice::deinit(false);
 
   spamming = false;
   Serial.println(F("BT Spam: detenido"));
 }
 
-// ---------- Botones ----------
 
 static bool isButtonJustPressed(int pin) {
   static uint8_t lastStableState[4] = {HIGH, HIGH, HIGH, HIGH};
@@ -287,7 +266,7 @@ static bool isButtonJustPressed(int pin) {
   return false;
 }
 
-// ---------- Pantalla ----------
+
 
 void screenBtSpamLoop() {
   if (spamming && millis() - lastRotate >= ROTATE_INTERVAL_MS) {

@@ -3,7 +3,6 @@
 
 #include <Arduino.h>
 
-// pines
 #define PIN_SDA         6
 #define PIN_SCL         7
 #define PIN_SELECT      1
@@ -16,13 +15,11 @@
 #define PIN_GPSON       8
 #define PIN_CD          40
 
-// resolucion
 #define SCREEN_W        128
 #define SCREEN_H        64
 
 #define NUM_PIXELS      9
 
-//pantallas o estados
 enum Screen {
   SCREEN_SPLASH,
   SCREEN_MENU,

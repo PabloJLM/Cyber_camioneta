@@ -22,12 +22,10 @@ void neopixelShow() {
   strip.show();
 }
 
-// Encender neopixeles con el color elegido 
 void neopixelSplashSequence(int &currentPixel, unsigned long &lastTime,
                              uint8_t r, uint8_t g, uint8_t b) {
   unsigned long currentTime = millis();
 
-  // Encender un pixel cada 200ms
   if (currentTime - lastTime > 200 && currentPixel < NUM_PIXELS) {
     neopixelSetPixel(currentPixel, r, g, b);
     strip.show();

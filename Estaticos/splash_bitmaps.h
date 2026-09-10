@@ -1,8 +1,6 @@
 #pragma once
 #include <Arduino.h>
 
-// Diccionario de splashes
-// Tamaño recomendado: igual o menor al del logo actual (65x33)
 
 struct SplashBitmap {
   const char* name;           

@@ -17,7 +17,7 @@ void buzzerBeep() {
 }
 
 void buzzerNote(unsigned int freq, unsigned int durationMs) {
-  if (freq == 0) {            // silencio / pausa
+  if (freq == 0) {
     delay(durationMs);
     return;
   }

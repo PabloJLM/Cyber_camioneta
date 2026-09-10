@@ -16,13 +16,6 @@ static const unsigned char image_Layer_9_bits[] PROGMEM = {
   0x7e,0x7e,0x7e,0x7e
 };
 
-//  Captive Portal
-//    - Android : http://connectivitycheck.../generate_204
-//    - iOS/mac : http://captive.apple.com/hotspot-detect.html
-//    - Windows : http://www.msftconnecttest.com/connecttest.txt
-
-
-// ---------- Configuracion ----------
 static char AP_SSID[33] = "WiFi_Gratis1";
 static bool ssidLoaded  = false;
 
@@ -52,13 +45,11 @@ static const IPAddress AP_IP(8, 8, 8, 8);
 static const IPAddress AP_MASK(255, 255, 255, 0);
 static const char*     PORTAL_URL = "http://8.8.8.8/";
 
-// Rutas de los archivos del portal en la SD
 static const char* PORTAL_INDEX = "/portal/index.html";
 static const char* PORTAL_CSS   = "/portal/style.css";
 static const char* PORTAL_OK    = "/portal/success.html";
 static const char* LOG_FILE     = "/captive_log.txt";
 
-// ---------- Estado ----------
 static DNSServer dnsServer;
 static WebServer webServer(80);
 static bool captiveRunning = false;
@@ -88,7 +79,6 @@ static bool sdReady() {
   return SD.begin(PIN_CD);
 }
 
-// Inicializa la SD y crea el archivo de log si no existe.
 static void setupSD() {
   pinMode(PIN_CD, OUTPUT);
   digitalWrite(PIN_CD, HIGH);
@@ -111,7 +101,6 @@ static void setupSD() {
   }
 }
 
-// Guarda un registro en el log.
 static void logVisitor(const String& correo, const String& telefono, const String& ip) {
   if (!sdReady()) return;
 
@@ -140,7 +129,6 @@ static const char* contentTypeFor(const String& path) {
   return "text/html";
 }
 
-// Envia un archivo de la SD. Devuelve false si no existe.
 static bool serveFromSD(const char* path, const char* contentType) {
   if (!sdReady() || !SD.exists(path)) return false;
 
@@ -186,8 +174,6 @@ static bool servePortalFile(const char* path, const char* contentType) {
       return serveFromSD(path, contentType) || serveFromFS(path, contentType);
   }
 }
-
-//  Paginas embebidas (tiene backup si la SD no tiene el portal html)
 
 static const char PAGE_PORTAL[] PROGMEM = R"HTML(<!DOCTYPE html>
 <html lang="es">
@@ -249,10 +235,6 @@ p{color:#666;margin:0;font-size:14px}
 </body>
 </html>)HTML";
 
-// ============================================================
-//  Handlers HTTP
-// ============================================================
-
 static void handleRoot() {
   if (!servePortalFile(PORTAL_INDEX, "text/html")) {
     webServer.send_P(200, "text/html", PAGE_PORTAL);
@@ -303,10 +285,6 @@ static void handleCaptive() {
   webServer.sendHeader("Location", PORTAL_URL, true);
   webServer.send(302, "text/plain", "");
 }
-
-// ============================================================
-//  Control del portal
-// ============================================================
 
 void startCaptivePortal() {
   if (captiveRunning) return;

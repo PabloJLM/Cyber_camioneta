@@ -228,8 +228,6 @@ tr:last-child td{border-bottom:0}
 #status{margin-top:10px;font-size:12px;color:var(--dim);min-height:16px}
 )CSS";
 
-// ---------- handlers HTTP ----------
-
 static const char* SDB_INDEX = "/sdbrowser/index.html";
 static const char* SDB_CSS   = "/sdbrowser/style.css";
 
@@ -518,8 +516,6 @@ void screenSDBrowserLoop() {
   } else {
     u8g2.drawStr(11, 19, "Estado: INACTIVO");
 
-    // Descripcion en 3 lineas cortas con mas aire entre ellas, en vez
-    // de 2 lineas largas apretadas (la segunda no cabia bien).
     u8g2.setFont(u8g2_font_5x7_tr);
     u8g2.drawStr(12, 30, "Ver, subir y borrar");
     u8g2.drawStr(12, 39, "archivos de la SD");

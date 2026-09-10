@@ -38,7 +38,7 @@ void settingsSetBreathColorIndex(uint8_t index) {
 
 uint8_t settingsGetBrightness() {
   prefs.begin(NS, true);
-  uint8_t v = prefs.getUChar("bright", 150);  // default: "Medio"
+  uint8_t v = prefs.getUChar("bright", 150);
   prefs.end();
   return v;
 }
