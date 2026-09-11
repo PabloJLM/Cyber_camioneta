@@ -224,7 +224,7 @@ static const SplashBitmap SPLASH_LIST[] = {
   { "Death DC", death, 65, 33 },
   { "Reze", Reze1, 60, 60 },
   { "Cyber", candado, 65, 33 },
-  { "Bomb", candado, 65, 65 },
+  { "Bomb", Reze2, 65, 65 },
   { "ESP32", ESP32, 60, 60 },
 };
 
