@@ -429,13 +429,13 @@ void screenCaptiveLoop() {
     u8g2.setFont(u8g2_font_5x7_tr);
     u8g2.drawStr(5, 60, "SEL:Detener BACK:Salir");
   } else {
-    u8g2.drawStr(11, 21, "Estado: INACTIVO");
+    u8g2.drawStr(12, 25, "Estado: INACTIVO");
 
     u8g2.setFont(u8g2_font_5x7_tr);
-    u8g2.drawStr(12, 33, "Carpeta SD: /portal/");
-    u8g2.drawStr(13, 43, "Log: captive_log.txt");
+    u8g2.drawStr(12, 37, "Carpeta SD: /portal/");
+    u8g2.drawStr(13, 47, "Log: captive_log.txt");
 
-    u8g2.drawStr(1, 56, "SEL:Iniciar BACK:Salir");
+    u8g2.drawStr(1, 60, "SEL:Iniciar BACK:Salir");
   }
 
   u8g2.sendBuffer();

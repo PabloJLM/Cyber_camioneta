@@ -24,4 +24,19 @@ void settingsSetSnifferChannel(uint8_t ch);
 void settingsGetPortalSSID(char* out, size_t outLen);
 void settingsSetPortalSSID(const char* ssid);
 
+uint8_t settingsGetRemoteMode();
+void settingsSetRemoteMode(uint8_t mode);
+
+void settingsGetWifiSSID(char* out, size_t outLen);
+void settingsSetWifiSSID(const char* ssid);
+
+void settingsGetWifiPass(char* out, size_t outLen);
+void settingsSetWifiPass(const char* pass);
+
+void settingsGetRemoteApSSID(char* out, size_t outLen);
+void settingsSetRemoteApSSID(const char* ssid);
+
+void settingsGetRemoteApPass(char* out, size_t outLen);
+void settingsSetRemoteApPass(const char* pass);
+
 void settingsFactoryReset();

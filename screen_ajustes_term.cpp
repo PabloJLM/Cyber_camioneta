@@ -4,6 +4,7 @@
 #include "Apps/screen_sniffer.h"
 #include "Apps/screen_captive.h"
 #include "Apps/screen_btspam.h"
+#include "Drivers/settings.h"
 #include <esp_system.h>
 
 
@@ -301,6 +302,78 @@ static void processBtSpamCommand(const String& cmd, bool enable) {
 }
 
 
+static void processWifiSSIDCommand(const String& cmd) {
+  String name = cmd.substring(10);   // largo de "wifi ssid "
+  name.trim();
+  if (name.length() == 0) {
+    Serial.println(F("  uso: wifi ssid <nombre>   (red a la que se une en modo STA)"));
+    return;
+  }
+  settingsSetWifiSSID(name.c_str());
+  Serial.print(F("  ok: SSID WiFi -> "));
+  Serial.println(name);
+}
+
+static void processWifiPassCommand(const String& cmd) {
+  String pass = cmd.substring(10);   // largo de "wifi pass "
+  pass.trim();
+  if (pass.length() == 0) {
+    Serial.println(F("  uso: wifi pass <clave>"));
+    return;
+  }
+  settingsSetWifiPass(pass.c_str());
+  Serial.println(F("  ok: clave WiFi guardada"));
+}
+
+static void processWifiModeCommand(const String& cmd) {
+  String mode = cmd.substring(10);   // largo de "wifi mode "
+  mode.trim();
+  mode.toLowerCase();
+  if (mode == "ap") {
+    settingsSetRemoteMode(0);
+    Serial.println(F("  ok: modo remoto -> AP propio (Camioneta-Remote)"));
+  } else if (mode == "sta") {
+    settingsSetRemoteMode(1);
+    Serial.println(F("  ok: modo remoto -> STA (se une a tu WiFi)"));
+  } else {
+    Serial.println(F("  uso: wifi mode ap|sta"));
+  }
+}
+
+static void processWifiApSSIDCommand(const String& cmd) {
+  String name = cmd.substring(12);   // largo de "wifi apssid "
+  name.trim();
+  if (name.length() == 0) {
+    Serial.println(F("  uso: wifi apssid <nombre>   (SSID del AP propio de la camioneta)"));
+    return;
+  }
+  settingsSetRemoteApSSID(name.c_str());
+  Serial.print(F("  ok: SSID del AP propio -> "));
+  Serial.println(name);
+}
+
+static void processWifiApPassCommand(const String& cmd) {
+  String pass = cmd.substring(12);   // largo de "wifi appass "
+  pass.trim();
+  if (pass.length() == 0) {
+    Serial.println(F("  uso: wifi appass <clave>   (min 8 caracteres)"));
+    return;
+  }
+  settingsSetRemoteApPass(pass.c_str());
+  Serial.println(F("  ok: clave del AP propio guardada"));
+}
+
+static void showWifi() {
+  printSection("WiFi remoto: ajustes");
+  char ssid[32];
+  char apSsid[32];
+  settingsGetWifiSSID(ssid, sizeof(ssid));
+  settingsGetRemoteApSSID(apSsid, sizeof(apSsid));
+  printRow("modo", settingsGetRemoteMode() == 1 ? "STA (WiFi existente)" : "AP propio");
+  printRow("SSID AP propio", apSsid);
+  printRow("SSID (modo STA)", strlen(ssid) ? String(ssid) : String("(sin configurar)"));
+}
+
 static void processEchoCommand(const String& cmd) {
   Serial.println(cmd.substring(5));
 }
@@ -352,6 +425,12 @@ static void processSerialCommand() {
           Serial.println(F("  btspam list             fabricantes activos en BT Spam"));
           Serial.println(F("  btspam enable <nombre>  activa un fabricante"));
           Serial.println(F("  btspam disable <nombre> desactiva un fabricante"));
+          Serial.println(F("  wifi ssid <nombre>      red WiFi a usar en modo STA"));
+          Serial.println(F("  wifi pass <clave>       clave de esa red"));
+          Serial.println(F("  wifi mode ap|sta        modo del terminal/FTP remoto"));
+          Serial.println(F("  wifi apssid <nombre>    SSID del AP propio de la camioneta"));
+          Serial.println(F("  wifi appass <clave>     clave del AP propio (min 8 caracteres)"));
+          Serial.println(F("  wifishow                ajustes actuales de WiFi remoto"));
           Serial.println(F("  uptime                  tiempo activo desde el ultimo reinicio"));
           Serial.println(F("  free                    memoria heap disponible"));
           Serial.println(F("  echo <texto>            repite el texto"));
@@ -374,6 +453,7 @@ static void processSerialCommand() {
           int total = btSpamGetTypeCount();
           for (int i = 0; i < total; i++) if (btSpamIsTypeEnabled(i)) enabled++;
           printRow("btspam: activos", String(enabled) + "/" + String(total));
+          printRow("wifi remoto", settingsGetRemoteMode() == 1 ? "STA" : "AP");
         }
         else if (commandBuffer.startsWith("flood{") && commandBuffer.endsWith("}")) {
           processFloodCommand(commandBuffer);
@@ -416,6 +496,24 @@ static void processSerialCommand() {
         }
         else if (commandBuffer == "free") {
           showFree();
+        }
+        else if (commandBuffer.startsWith("wifi ssid ")) {
+          processWifiSSIDCommand(commandBuffer);
+        }
+        else if (commandBuffer.startsWith("wifi pass ")) {
+          processWifiPassCommand(commandBuffer);
+        }
+        else if (commandBuffer.startsWith("wifi mode ")) {
+          processWifiModeCommand(commandBuffer);
+        }
+        else if (commandBuffer.startsWith("wifi apssid ")) {
+          processWifiApSSIDCommand(commandBuffer);
+        }
+        else if (commandBuffer.startsWith("wifi appass ")) {
+          processWifiApPassCommand(commandBuffer);
+        }
+        else if (commandBuffer == "wifishow") {
+          showWifi();
         }
         else if (commandBuffer.startsWith("echo ")) {
           processEchoCommand(commandBuffer);

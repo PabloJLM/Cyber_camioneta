@@ -57,7 +57,7 @@ static const unsigned char image_Layer_9_bits[] PROGMEM = {
 };
 
 static int menuSelection = 0;
-static const int MENU_ITEMS = 5;
+static const int MENU_ITEMS = 6;
 static unsigned long lastAnimTime = 0;
 static int animFrame = 0;
 
@@ -95,6 +95,8 @@ static bool isButtonJustPressed(int pin) {
   return false;
 }
 
+static const int VISIBLE_ITEMS = 5;
+
 void screenAjustesLoop() {
   if (isButtonJustPressed(PIN_UP)) {
     menuSelection--;
@@ -116,6 +118,7 @@ void screenAjustesLoop() {
       case 2: currentScreen = SCREEN_RGBNEO; break;
       case 3: currentScreen = SCREEN_AJUSTES_TERM; break;
       case 4: currentScreen = SCREEN_BTSPAM_CONFIG; break;
+      case 5: currentScreen = SCREEN_REMOTE; break;
     }
     return;
   }
@@ -146,14 +149,33 @@ void screenAjustesLoop() {
   u8g2.drawXBM(0, 1, 16, 14, image_Layer_9_bits);
   u8g2.drawXBM(112, 1, 16, 14, image_Layer_9_bits);
   
-  const char* items[] = {"Configuracion", "SD Storage", "NEOPIXEL", "Terminal Avz.", "BT Spam"};
-  const int yPositions[] = {22, 31, 40, 49, 58};
-  
-  for (int i = 0; i < MENU_ITEMS; i++) {
+  const char* items[] = {"Configuracion", "SD Storage", "NEOPIXEL", "Terminal Avz.", "BT Spam", "Con. Remota"};
+
+  int scrollTop = menuSelection - (VISIBLE_ITEMS - 1);
+  if (scrollTop < 0) scrollTop = 0;
+  int maxTop = MENU_ITEMS - VISIBLE_ITEMS;
+  if (maxTop < 0) maxTop = 0;
+  if (scrollTop > menuSelection) scrollTop = menuSelection;
+  if (scrollTop > maxTop) scrollTop = maxTop;
+
+  const int rowSpacing = 9;
+  const int firstY = 22;
+
+  for (int row = 0; row < VISIBLE_ITEMS; row++) {
+    int i = scrollTop + row;
+    if (i >= MENU_ITEMS) break;
+    int yy = firstY + row * rowSpacing;
     if (i == menuSelection) {
-      u8g2.drawXBM(30, yPositions[i] - 7, 4, 7, image_Layer_4_bits);
+      u8g2.drawXBM(30, yy - 7, 4, 7, image_Layer_4_bits);
     }
-    u8g2.drawStr(37, yPositions[i], items[i]);
+    u8g2.drawStr(37, yy, items[i]);
+  }
+
+  if (scrollTop > 0) {
+    u8g2.drawTriangle(122, 20, 126, 20, 124, 17);
+  }
+  if (scrollTop + VISIBLE_ITEMS < MENU_ITEMS) {
+    u8g2.drawTriangle(122, 54, 126, 54, 124, 57);
   }
   
   switch(animFrame) {

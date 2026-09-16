@@ -6,6 +6,8 @@ static const char* NS = "camioneta";
 
 static const uint8_t BTSPAM_MASK_DEFAULT = 0x07;
 static const char*   PORTAL_SSID_DEFAULT = "WiFi_Gratis1";
+static const char*   REMOTE_AP_SSID_DEFAULT = "Camioneta-Remote";
+static const char*   REMOTE_AP_PASS_DEFAULT = "camioneta1234";
 
 void settingsInit() {
 }
@@ -99,6 +101,75 @@ void settingsGetPortalSSID(char* out, size_t outLen) {
 void settingsSetPortalSSID(const char* ssid) {
   prefs.begin(NS, false);
   prefs.putString("portalssid", ssid);
+  prefs.end();
+}
+
+uint8_t settingsGetRemoteMode() {
+  prefs.begin(NS, true);
+  uint8_t v = prefs.getUChar("remmode", 0);
+  prefs.end();
+  return v;
+}
+
+void settingsSetRemoteMode(uint8_t mode) {
+  prefs.begin(NS, false);
+  prefs.putUChar("remmode", mode);
+  prefs.end();
+}
+
+void settingsGetWifiSSID(char* out, size_t outLen) {
+  prefs.begin(NS, true);
+  String v = prefs.getString("wifissid", "");
+  prefs.end();
+  strncpy(out, v.c_str(), outLen - 1);
+  out[outLen - 1] = '\0';
+}
+
+void settingsSetWifiSSID(const char* ssid) {
+  prefs.begin(NS, false);
+  prefs.putString("wifissid", ssid);
+  prefs.end();
+}
+
+void settingsGetWifiPass(char* out, size_t outLen) {
+  prefs.begin(NS, true);
+  String v = prefs.getString("wifipass", "");
+  prefs.end();
+  strncpy(out, v.c_str(), outLen - 1);
+  out[outLen - 1] = '\0';
+}
+
+void settingsSetWifiPass(const char* pass) {
+  prefs.begin(NS, false);
+  prefs.putString("wifipass", pass);
+  prefs.end();
+}
+
+void settingsGetRemoteApSSID(char* out, size_t outLen) {
+  prefs.begin(NS, true);
+  String v = prefs.getString("remapssid", REMOTE_AP_SSID_DEFAULT);
+  prefs.end();
+  strncpy(out, v.c_str(), outLen - 1);
+  out[outLen - 1] = '\0';
+}
+
+void settingsSetRemoteApSSID(const char* ssid) {
+  prefs.begin(NS, false);
+  prefs.putString("remapssid", ssid);
+  prefs.end();
+}
+
+void settingsGetRemoteApPass(char* out, size_t outLen) {
+  prefs.begin(NS, true);
+  String v = prefs.getString("remappass", REMOTE_AP_PASS_DEFAULT);
+  prefs.end();
+  strncpy(out, v.c_str(), outLen - 1);
+  out[outLen - 1] = '\0';
+}
+
+void settingsSetRemoteApPass(const char* pass) {
+  prefs.begin(NS, false);
+  prefs.putString("remappass", pass);
   prefs.end();
 }
 
