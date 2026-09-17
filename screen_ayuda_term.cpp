@@ -9,37 +9,43 @@ static const unsigned char image_download_bits[] PROGMEM = {
 };
 
 
-static const int TOTAL_PAGES = 5;
+static const int TOTAL_PAGES = 6;
 static const char* PAGES[TOTAL_PAGES][4] = {
   {
-    "help      - esta ayuda",
-    "status    - resumen ajustes",
-    "flood{...} - SSIDs AP Flood",
-    "floodshow - lista mensajes"
+    "help    - esta ayuda",
+    "status - ver ajustes",
+    "flood{...} - SSIDs AP",
+    "floodshow - ver msjs"
   },
   {
     "apflood interval <ms>",
-    "  - pausa entre tandas",
-    "snifname <n> - nombre sniffer",
-    "sniffer channel <1-13>"
+    "  - pausa flood (ms)",
+    "snifname <n> - nombre",
+    "sniff channel <1-13>"
   },
   {
-    "snifshow  - ver ajustes sniff.",
-    "portalsrc <m> - auto/embeb.",
-    "              /sd/fs",
-    "portal ssid <n> - SSID portal"
+    "snifshow - ver sniff.",
+    "portalsrc <modo>",
+    "  auto/embeb/sd/fs",
+    "portal ssid <n>"
   },
   {
-    "portalshow - ver ajustes port.",
-    "btspam list - fabricantes",
-    "btspam enable/disable <n>",
-    "uptime     - tiempo activo"
+    "portalshow - ver port.",
+    "btspam list - fabric.",
+    "btspam en/dis <nombre>",
+    "uptime - t. activo"
   },
   {
-    "free       - memoria libre",
-    "echo <txt> - repite texto",
-    "reboot     - reinicia equipo",
-    "clear/exit - limpia / salir"
+    "free - memoria libre",
+    "echo <txt> - repite",
+    "reboot - reinicia eq.",
+    "clear/exit - limp/sal"
+  },
+  {
+    "wifi mode ap|sta",
+    "wifi ssid/pass <val>",
+    "wifi apssid/appass <v>",
+    "wifishow - ver wifi"
   }
 };
 

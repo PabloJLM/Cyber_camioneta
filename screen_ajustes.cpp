@@ -166,9 +166,9 @@ void screenAjustesLoop() {
     if (i >= MENU_ITEMS) break;
     int yy = firstY + row * rowSpacing;
     if (i == menuSelection) {
-      u8g2.drawXBM(30, yy - 7, 4, 7, image_Layer_4_bits);
+      u8g2.drawXBM(2, yy - 7, 4, 7, image_Layer_4_bits);
     }
-    u8g2.drawStr(37, yy, items[i]);
+    u8g2.drawStr(12, yy, items[i]);
   }
 
   if (scrollTop > 0) {

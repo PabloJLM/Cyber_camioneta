@@ -122,7 +122,7 @@ void showCaptiveLog() {
         int mins = segundos / 60;
         int secs = segundos % 60;
 
-        Serial.printf("  %02d:%02d  %-22s  %s\n", mins, secs, correo.c_str(), ip.c_str());
+        Serial.printf("  %02d:%02d  %-22s  %s\r\n", mins, secs, correo.c_str(), ip.c_str());
         count++;
       }
     }
@@ -250,9 +250,9 @@ static void listSD() {
   File entry = root.openNextFile();
   while (entry) {
     if (entry.isDirectory()) {
-      Serial.printf("  [dir]  %s\n", entry.name());
+      Serial.printf("  [dir]  %s\r\n", entry.name());
     } else {
-      Serial.printf("  %8lu  %s\n", (unsigned long)entry.size(), entry.name());
+      Serial.printf("  %8lu  %s\r\n", (unsigned long)entry.size(), entry.name());
     }
     entry.close();
     entry = root.openNextFile();
@@ -488,7 +488,7 @@ void processSerialCommand() {
             neoR = r; neoG = g; neoB = b;
             for (int i = 0; i < NUM_PIXELS; i++) neopixelSetPixel(i, r, g, b);
             neopixelShow();
-            Serial.printf("  ok: rgb -> %d,%d,%d\n", r, g, b);
+            Serial.printf("  ok: rgb -> %d,%d,%d\r\n", r, g, b);
           } else {
             Serial.println(F("  error: usa rgb/R/G/B"));
           }
@@ -615,64 +615,33 @@ void processSerialCommand() {
 
 
 static void printBanner() {
-  //no sirve xd Serial.print(F("\033[2J\033[H")); // limpia pantalla
+  Serial.println(F("                                                                                "));
+  Serial.println(F("     ████████████████████████████████████         "));
+  Serial.println(F("    ██████████████████████████ ██████████         "));
+  Serial.println(F("  ███████████████████████████ ██████████          "));
+  Serial.println(F(" ██████████████████████████   █████████           "));
+  Serial.println(F("██████████████████████████   ██████████           "));
+  Serial.println(F("        ██████████          ██████████            "));
+  Serial.println(F("       ██████████           █████████             "));
+  Serial.println(F("       █████████           ██████████             "));
+  Serial.println(F("      ██████████  ███████████████████████████████ "));
+  Serial.println(F("     ██████████  ███████████████████████████████  "));
+  Serial.println(F("     █████████ ███████████████████████████████    "));
+  Serial.println(F("    █████████████████████████████████████████     "));
+  Serial.println(F("    ███████████████████████████████████████        "));
+  Serial.println(F("                                                                                "));
   Serial.println();
-  Serial.println(F("                      ***************++"));
-  Serial.println(F("                  ***+=::...... ....::-++**"));
-  Serial.println(F("               **+-:......................-+**"));
-  Serial.println(F("             **-......:......................-**"));
-  Serial.println(F("          +*+-.::::::::::::-+++**=-:...........-+*+"));
-  Serial.println(F("         *+=:::::::=****###%%%%%%%%#*=-:::.......-*+"));
-  Serial.println(F("        *+-::::::=###++*#@@@%%%%%%%%@%%#=::::::::::+*"));
-  Serial.println(F("      =*+:::::::=*##+++*#%@@@@@@%%%%%%%%#=::::::::::+*"));
-  Serial.println(F("      *+--------=*%%+===*#%@@@@@@@@@@@@%%#+-:::::::::+*"));
-  Serial.println(F("     ++-------::+%%@*=++=-..:----*%#==++++*+---::::::-++"));
-  Serial.println(F("    =+=-------:-+##%*=-=+*=:::::.-##-..:-++*=------:--=+="));
-  Serial.println(F("    ++--------::-*=+*=:---=#%%#+++*#%%##*=+**----------++"));
-  Serial.println(F("    +=-------:.:=#@#+=++**#%%%#**==-+**%%**%*----------=+"));
-  Serial.println(F("   =+=-=----=-.:=#%#==++*#@@@@%%=:....:%@%%%#=---------=+"));
-  Serial.println(F("   =+=-======-:-*%#=:::==++*#%@#*#####@%@@@@#+---------=+-"));
-  Serial.println(F("   -+=========-:+*++=-::=+**#%%###*=-:=#@@@%**====-----=+"));
-  Serial.println(F("    ++=======-.::-=******%%#*#@@*=*#*+=-*@@@+==========++"));
-  Serial.println(F("    =+========-:..-**##***#%%%@%#####%%#+%%@%+=========+="));
-  Serial.println(F("    :++=++++++:...:-=+#*+=*#####@@@@@@@@@@%%%%+=======++:"));
-  Serial.println(F("     =++++++++=:.:.:=-+++=*%@%@@@@@@@@@@@@@@@%#+======+="));
-  Serial.println(F("     -=+=+++++++=-..:-:-+=-#%#%%%@@%@@@%#%@@@@@%=====+=:"));
-  Serial.println(F("      :=+=+++++====..:::.:-++*@%%#@@@@@@@#*@@@@@+===+=:"));
-  Serial.println(F("        =+=========-:......--*#@@%%@%@@%%%%%%@@%+==+="));
-  Serial.println(F("         -==--::::--:.... ..:-=+==+=+*%+##*###%#+++-"));
-  Serial.println(F("          :==:.......  .. .  ..::-:::::-=-=-::-++=-"));
-  Serial.println(F("            :-=-.           ..          .....-+-."));
-  Serial.println(F("              :-==:...     .    ...     ..-==-:"));
-  Serial.println(F("                 :-===-:....     ....:-===-:"));
-  Serial.println(F("                     :---===========---:"));
+  Serial.println(F("░█░█░█▀█░▀█▀░█░█░█▀▀░█▀▄░█▀▀░▀█▀░█▀▄░█▀█░█▀▄"));
+  Serial.println(F("░█░█░█░█░░█░░▀▄▀░█▀▀░█▀▄░▀▀█░░█░░█░█░█▀█░█░█"));
+  Serial.println(F("░▀▀▀░▀░▀░▀▀▀░░▀░░▀▀▀░▀░▀░▀▀▀░▀▀▀░▀▀░░▀░▀░▀▀░"));
+  Serial.println(F("░█▀▀░█▀█░█░░░▀█▀░█░░░█▀▀░█▀█░                "));
+  Serial.println(F("░█░█░█▀█░█░░░░█░░█░░░█▀▀░█░█░                "));
+  Serial.println(F("░▀▀▀░▀░▀░▀▀▀░▀▀▀░▀▀▀░▀▀▀░▀▀▀░                  "));
+  Serial.println(F("░▀█▀░█▀▀░█▀▀░█░░░█▀█░░░█░░░█▀█░█▀▄          "));
+  Serial.println(F("░░█░░█▀▀░▀▀█░█░░░█▀█░░░█░░░█▀█░█▀▄          "));
+  Serial.println(F("░░▀░░▀▀▀░▀▀▀░▀▀▀░▀░▀░░░▀▀▀░▀░▀░▀▀░          "));
   Serial.println();
-  Serial.println(F(" ____    ______  __     ______   __       ____    _____"));
-  Serial.println(F("/\\  _`\\ /\\  _  \\/\\ \\   /\\__  _\\ /\\ \\     /\\  _`\\ /\\  __`\\"));
-  Serial.println(F("\\ \\ \\L\\_\\ \\ \\L\\ \\ \\ \\  \\/_/\\ \\/ \\ \\ \\    \\ \\ \\L\\_\\ \\ \\/\\ \\"));
-  Serial.println(F(" \\ \\ \\L_L\\ \\  __ \\ \\ \\  __\\ \\ \\  \\ \\ \\  __\\ \\  _\\L\\ \\ \\ \\ \\"));
-  Serial.println(F("  \\ \\ \\/, \\ \\ \\/\\ \\ \\ \\L\\ \\\\_\\ \\__\\ \\ \\L\\ \\\\ \\ \\L\\ \\ \\ \\_\\ \\"));
-  Serial.println(F("   \\ \\____/\\ \\_\\ \\_\\ \\____//\\_____\\\\ \\____/ \\ \\____/\\ \\_____\\"));
-  Serial.println(F("    \\/___/  \\/_/\\/_/\\/___/ \\/_____/ \\/___/   \\/___/  \\/_____/"));
-  Serial.println();
-  Serial.println(F(" _________  _______   ________  ___       ________"));
-  Serial.println(F("|\\___   ___\\\\  ___ \\ |\\   ____\\|\\  \\     |\\   __  \\"));
-  Serial.println(F("\\|___ \\  \\_\\ \\   __/|\\ \\  \\___|\\ \\  \\    \\ \\  \\|\\  \\"));
-  Serial.println(F("     \\ \\  \\ \\ \\  \\_|/_\\ \\_____  \\ \\  \\    \\ \\   __  \\"));
-  Serial.println(F("      \\ \\  \\ \\ \\  \\_|\\ \\|____|\\  \\ \\  \\____\\ \\  \\ \\  \\"));
-  Serial.println(F("       \\ \\__\\ \\ \\_______\\____\\_\\  \\ \\_______\\ \\__\\ \\__\\"));
-  Serial.println(F("        \\|__|  \\|_______|\\_________\\|_______|\\|__|\\|__|"));
-  Serial.println(F("                        \\|_________|"));
-  Serial.println(F(" ___       ________  ________"));
-  Serial.println(F("|\\  \\     |\\   __  \\|\\   __  \\"));
-  Serial.println(F("\\ \\  \\    \\ \\  \\|\\  \\ \\  \\|\\ /_"));
-  Serial.println(F(" \\ \\  \\    \\ \\   __  \\ \\   __  \\"));
-  Serial.println(F("  \\ \\  \\____\\ \\  \\ \\  \\ \\  \\|\\  \\"));
-  Serial.println(F("   \\ \\_______\\ \\__\\ \\__\\ \\_______\\"));
-  Serial.println(F("    \\|_______|\\|__|\\|__|\\|_______|"));
-  Serial.println();
-  Serial.println(F("Version 1.0  ::  PC-MODE / Serial Mode"));
-  Serial.println();
+  Serial.println(F("  Escribe 'help' para ver los comandos."));
 }
 
 void screenPCModeLoop() {

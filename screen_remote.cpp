@@ -82,9 +82,9 @@ static void listSD(WiFiClient& c) {
   File entry = root.openNextFile();
   while (entry) {
     if (entry.isDirectory()) {
-      c.printf("  [dir]  %s\n", entry.name());
+      c.printf("  [dir]  %s\r\n", entry.name());
     } else {
-      c.printf("  %8lu  %s\n", (unsigned long)entry.size(), entry.name());
+      c.printf("  %8lu  %s\r\n", (unsigned long)entry.size(), entry.name());
     }
     entry.close();
     entry = root.openNextFile();
@@ -366,7 +366,11 @@ void screenRemoteLoop() {
   u8g2.setDrawColor(1);
   u8g2.drawBox(16, 1, 96, 14);
   u8g2.setDrawColor(2);
-  u8g2.drawStr(20, 11, "Conexion Remota");
+  {
+    const char* title = "Con. Remota";
+    int tw = u8g2.getStrWidth(title);
+    u8g2.drawStr(16 + (96 - tw) / 2, 11, title);
+  }
   u8g2.setDrawColor(1);
 
   u8g2.drawXBM(0, 1, 16, 14, image_Layer_9_bits);
@@ -378,20 +382,19 @@ void screenRemoteLoop() {
     u8g2.drawStr(10, 24, "Estado: ACTIVO");
     u8g2.drawStr(10, 36, mode == 1 ? "Modo: STA" : "Modo: AP");
 
+    u8g2.setFont(u8g2_font_5x7_tr);
+
     IPAddress ip = (mode == 1) ? WiFi.localIP() : WiFi.softAPIP();
     char ipBuf[32];
     snprintf(ipBuf, sizeof(ipBuf), "%d.%d.%d.%d:%u", ip[0], ip[1], ip[2], ip[3], REMOTE_TERM_PORT);
-    u8g2.drawStr(10, 48, ipBuf);
+    u8g2.drawStr(8, 48, ipBuf);
 
-    u8g2.setFont(u8g2_font_5x7_tr);
     u8g2.drawStr(5, 60, "SEL:Detener BACK:Salir");
   } else {
-    u8g2.drawStr(11, 19, "Estado: INACTIVO");
+    u8g2.drawStr(11, 24, "Estado: INACTIVO");
 
     u8g2.setFont(u8g2_font_5x7_tr);
-    u8g2.drawStr(12, 30, "Terminal TCP por WiFi");
-    u8g2.drawStr(12, 39, mode == 1 ? "Modo: STA (tu WiFi)" : "Modo: AP propio");
-    u8g2.drawStr(12, 48, "Config: 'wifi' en term.");
+    u8g2.drawStr(12, 38, "Terminal por WiFi");
 
     u8g2.drawStr(1, 59, "SEL:Iniciar BACK:Salir");
   }
