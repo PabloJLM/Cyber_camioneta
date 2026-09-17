@@ -7,7 +7,7 @@ static const char* NS = "camioneta";
 static const uint8_t BTSPAM_MASK_DEFAULT = 0x07;
 static const char*   PORTAL_SSID_DEFAULT = "WiFi_Gratis1";
 static const char*   REMOTE_AP_SSID_DEFAULT = "Camioneta-Remote";
-static const char*   REMOTE_AP_PASS_DEFAULT = "camioneta1234";
+static const char*   REMOTE_AP_PASS_DEFAULT = "12345678";
 
 void settingsInit() {
 }

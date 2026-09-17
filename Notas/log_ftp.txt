@@ -1,0 +1,91 @@
+tesla@tesla-iMacUbuntu:~$ ftp 192.168.4.1
+Connected to 192.168.4.1.
+220 Camioneta FTP listo.
+Name (192.168.4.1:tesla): camioneta
+331 Password requerido.
+Password: 
+230 Login OK.
+Remote system type is UNIX.
+Using binary mode to transfer files.
+ftp> ls
+227 Entering Passive Mode (192,168,4,1,195,89).
+150 Listando.
+01-01-2026  00:00AM       <DIR>          System Volume Information
+01-01-2026  00:00AM  13470  cap0001.pcap
+01-01-2026  00:00AM  318  captive_log.txt
+01-01-2026  00:00AM  490285  cap1.pcap
+01-01-2026  00:00AM  354058  Camioneta.pdf
+01-01-2026  00:00AM  19835  images.jpeg
+226 Listo.
+ftp> pwd
+Remote directory: /
+ftp> cd Escritorio
+550 No existe.
+ftp> ls
+227 Entering Passive Mode (192,168,4,1,195,89).
+150 Listando.
+01-01-2026  00:00AM       <DIR>          System Volume Information
+01-01-2026  00:00AM  13470  cap0001.pcap
+01-01-2026  00:00AM  318  captive_log.txt
+01-01-2026  00:00AM  490285  cap1.pcap
+01-01-2026  00:00AM  354058  Camioneta.pdf
+01-01-2026  00:00AM  19835  images.jpeg
+226 Listo.
+ftp> pwd
+Remote directory: /
+ftp> !pwd
+/home/tesla
+ftp> !ls
+ Applications   Escritorio  'National Instruments'   Público
+ Arduino        Imágenes     openocd-for-py32f0xx    snap
+ Descargas      Música	     Plantillas		     Vídeos
+ Documentos     natinst      Pruenadaq.vi
+ftp> lcd Descargas
+Local directory now: /home/tesla/Descargas
+ftp> !ls
+ 0fe296bd6e179e3338468055144b9f3c.jpg
+ 1126400.jpg
+ 1344847.png
+ 1403574.png
+ 17812138.png
+'1D boolean to digital.vi'
+ 608014.jpg
+ 69cd116d79865d7c988afdc12833c91a.jpg
+'Addons Camioneta.pdf'
+ breath.hex
+ breath.zip
+ Camioneta.pdf
+ captive_log.txt
+ d145b3d0ecb956699ed406f4b3a01f33.jpg
+ deathdc.jpeg
+ _dotlrn-fs.Lecture_Notes_.zip
+ E13Co7sXEAAxyy4.jpg
+ guia_bolsillo_POO_java.pdf
+'images(1).jpeg'
+ images.jpeg
+'LOGO TESLA-09.png'
+'LOGO TESLA-12.png'
+'LOGO TESLAcut.png'
+ ni-labview-2026-community-26.3.0_linux
+ ni-labview-2026-community-26.3.0_linux.zip
+ NILinux2026Q3DeviceDrivers
+'NILinux2026Q3DeviceDrivers(1).zip'
+ NILinux2026Q3DeviceDrivers.zip
+ rezejpg
+ SCH_Schematic1_2026-08-27.pdf
+ sdbrowser_template_index.html
+ sdbrowser_template_style.css
+ stepper_1.png
+ stepper_2.png
+'WhatsApp Image 2026-08-24 at 2.03.10 PM.jpeg'
+ yB0xE3NR_400x400.jpg
+ftp> put deathdc.jpeg
+local: deathdc.jpeg remote: deathdc.jpeg
+227 Entering Passive Mode (192,168,4,1,195,89).
+150 Listo para recibir.
+100% |***********************************|  9830       12.43 MiB/s    00:00 ETA
+226 Transferencia completa.
+9830 bytes sent in 00:00 (63.37 KiB/s)
+ftp> bye
+221 Bye.
+tesla@tesla-iMacUbuntu:~$ 
