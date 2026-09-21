@@ -70,6 +70,35 @@ static void doPasv() {
     String(FTP_DATA_PORT >> 8) + "," + String(FTP_DATA_PORT & 255) + ").");
 }
 
+static void doNlst(String arg) {
+  String target = resolvePath(arg);
+  if (!validPath(target)) { ctrlClient.println("550 Ruta invalida."); return; }
+  ctrlClient.println("150 Listando.");
+  if (!openDataConnection()) { ctrlClient.println("425 No se pudo abrir conexion de datos."); return; }
+  if (!SD.begin(PIN_CD)) {
+    dataClient.stop();
+    ctrlClient.println("550 SD no disponible.");
+    return;
+  }
+  File dir = SD.open(target);
+  if (dir && dir.isDirectory()) {
+    File entry = dir.openNextFile();
+    while (entry) {
+      String name = entry.name();
+      int slash = name.lastIndexOf('/');
+      if (slash >= 0) name = name.substring(slash + 1);
+      if (entry.isDirectory()) name += "/";
+      dataClient.println(name);
+      entry.close();
+      entry = dir.openNextFile();
+    }
+    dir.close();
+  }
+  if (dir) dir.close();
+  dataClient.stop();
+  ctrlClient.println("226 Listo.");
+}
+
 static void doList(String arg) {
   String target = resolvePath(arg);
   if (!validPath(target)) { ctrlClient.println("550 Ruta invalida."); return; }
@@ -257,7 +286,8 @@ static void handleFtpCommand(const String& line) {
   else if (cmd == "CWD" || cmd == "XCWD") { doCwd(arg); }
   else if (cmd == "CDUP") { doCwd(".."); }
   else if (cmd == "PASV") { doPasv(); }
-  else if (cmd == "LIST" || cmd == "NLST") { doList(arg); }
+  else if (cmd == "LIST") { doList(arg); }
+  else if (cmd == "NLST") { doNlst(arg); }
   else if (cmd == "RETR") { doRetr(arg); }
   else if (cmd == "STOR") { doStor(arg); }
   else if (cmd == "DELE") { doDele(arg); }
