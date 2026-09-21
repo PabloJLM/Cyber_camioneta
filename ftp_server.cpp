@@ -87,10 +87,12 @@ static void doList(String arg) {
       String name = entry.name();
       int slash = name.lastIndexOf('/');
       if (slash >= 0) name = name.substring(slash + 1);
+      char sizeBuf[16];
+      snprintf(sizeBuf, sizeof(sizeBuf), "%10lu", (unsigned long)entry.size());
       if (entry.isDirectory()) {
-        dataClient.println("01-01-2026  00:00AM       <DIR>          " + name);
+        dataClient.println("drwxr-xr-x 1 camioneta camioneta " + String(sizeBuf) + " Jan 01 00:00 " + name);
       } else {
-        dataClient.println("01-01-2026  00:00AM  " + String(entry.size()) + "  " + name);
+        dataClient.println("-rw-r--r-- 1 camioneta camioneta " + String(sizeBuf) + " Jan 01 00:00 " + name);
       }
       entry.close();
       entry = dir.openNextFile();
