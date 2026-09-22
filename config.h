@@ -48,7 +48,8 @@ enum Screen {
   SCREEN_AYUDA_PCMODE,
   SCREEN_AYUDA_TERM,
   SCREEN_BTSPAM_CONFIG,
-  SCREEN_REMOTE
+  SCREEN_REMOTE,
+  SCREEN_YMODEM
 };
 
 extern Screen currentScreen;

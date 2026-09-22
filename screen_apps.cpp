@@ -1,5 +1,6 @@
 #include "Apps/screen_apps.h"
 #include "Drivers/buzzer.h"
+#include "config.h"
 
 
 static const unsigned char image_download_bits_wifi[] PROGMEM = {
@@ -121,7 +122,7 @@ static bool isButtonJustPressed(int pin) {
 
 
 static int appSelection = 0;
-static const int TOTAL_APPS = 8;
+static const int TOTAL_APPS = 9;
 
 
 void drawWifiCaptivePortal() {
@@ -207,6 +208,20 @@ void drawPCMode() {
   u8g2.drawDisc(76, 55, 2);
 }
 
+void drawYModem() {
+  u8g2.setFontMode(1);
+  u8g2.setBitmapMode(1);
+  u8g2.drawXBM(8, 40, 16, 8, image_download_bits);
+  u8g2.drawXBM(8, 23, 16, 8, image_download_1_bits);
+  u8g2.setFont(u8g2_font_6x10_tr);
+  u8g2.drawStr(48, 12, "YModem");
+  u8g2.drawFrame(40, 18, 48, 30);
+  u8g2.drawHLine(44, 26, 40);
+  u8g2.drawHLine(44, 34, 40);
+  u8g2.drawHLine(44, 42, 40);
+  u8g2.drawTriangle(58, 44, 66, 44, 62, 52);
+}
+
 void drawBleScan() {
   u8g2.setFontMode(1);
   u8g2.setBitmapMode(1);
@@ -271,6 +286,9 @@ void screenAppsLoop() {
         currentScreen = SCREEN_PCMODE;
         break;
       case 7:
+        currentScreen = SCREEN_YMODEM;
+        break;
+      case 8:
         currentScreen = SCREEN_BLESCAN;
         break;
     }
@@ -301,6 +319,9 @@ void screenAppsLoop() {
       drawPCMode();
       break;
     case 7:
+      drawYModem();
+      break;
+    case 8:
       drawBleScan();
       break;
   }
