@@ -214,12 +214,23 @@ void drawYModem() {
   u8g2.drawXBM(8, 40, 16, 8, image_download_bits);
   u8g2.drawXBM(8, 23, 16, 8, image_download_1_bits);
   u8g2.setFont(u8g2_font_6x10_tr);
-  u8g2.drawStr(48, 12, "YModem");
-  u8g2.drawFrame(40, 18, 48, 30);
-  u8g2.drawHLine(44, 26, 40);
-  u8g2.drawHLine(44, 34, 40);
-  u8g2.drawHLine(44, 42, 40);
-  u8g2.drawTriangle(58, 44, 66, 44, 62, 52);
+  u8g2.drawStr(43, 9, "YMODEM");
+  u8g2.drawFrame(50, 13, 22, 14);
+  u8g2.drawBox(54, 17, 5, 5);
+  u8g2.drawBox(63, 17, 5, 5);
+  u8g2.drawBox(66, 35, 0, 0);
+  u8g2.drawFrame(48, 26, 26, 28);
+  u8g2.drawBox(58, 53, 5, 16);
+  u8g2.drawBox(81, 34, 3, 12);
+  u8g2.drawDisc(60, 48, 2);
+  u8g2.drawDisc(55, 38, 1);
+  u8g2.drawVLine(60, 30, 18);
+  u8g2.drawLine(60, 29, 62, 31);
+  u8g2.drawLine(60, 29, 58, 31);
+  u8g2.drawLine(60, 29, 58, 31);
+  u8g2.drawLine(60, 41, 65, 35);
+  u8g2.drawLine(60, 45, 55, 39);
+  u8g2.drawTriangle(78, 35, 86, 35, 82, 29);
 }
 
 void drawBleScan() {
