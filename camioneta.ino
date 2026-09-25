@@ -3,6 +3,7 @@
 #include "config.h"
 #include "Drivers/neopixel.h"
 #include "Drivers/buzzer.h"
+#include "Drivers/mesh.h"
 #include "Estaticos/screen_splash.h"
 #include "Apps/screen_menu.h"
 #include "Apps/screen_apps.h"
@@ -30,6 +31,8 @@
 #include "Ajustes/screen_btspam_config.h"
 #include "Ajustes/screen_remote.h"
 #include "Apps/screen_ymodem.h"
+#include "Apps/screen_msgpreset.h"
+#include "Apps/screen_meshterm.h"
 
 U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE, PIN_SCL, PIN_SDA);
 
@@ -160,6 +163,14 @@ void loop() {
 
     case SCREEN_YMODEM:
       screenYmodemLoop();
+      break;
+
+    case SCREEN_MSGPRESET:
+      screenMsgPresetLoop();
+      break;
+
+    case SCREEN_MESHTERM:
+      screenMeshTermLoop();
       break;
   }
 

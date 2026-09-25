@@ -122,7 +122,7 @@ static bool isButtonJustPressed(int pin) {
 
 
 static int appSelection = 0;
-static const int TOTAL_APPS = 9;
+static const int TOTAL_APPS = 11;
 
 
 void drawWifiCaptivePortal() {
@@ -248,6 +248,31 @@ void drawBleScan() {
   u8g2.drawLine(74, 42, 84, 50);
 }
 
+void drawMsgPreset() {
+  u8g2.setFontMode(1);
+  u8g2.setBitmapMode(1);
+  u8g2.drawXBM(8, 40, 16, 8, image_download_bits);
+  u8g2.drawXBM(8, 23, 16, 8, image_download_1_bits);
+  u8g2.setFont(u8g2_font_6x10_tr);
+  u8g2.drawStr(30, 11, "Msj.");
+  u8g2.drawStr(30, 20, "Preescritos");
+  u8g2.drawXBM(45, 27, 38, 32, image_download_bits_wifi);
+}
+
+void drawMeshTerm() {
+  u8g2.setFontMode(1);
+  u8g2.setBitmapMode(1);
+  u8g2.drawXBM(8, 40, 16, 8, image_download_bits);
+  u8g2.drawXBM(8, 23, 16, 8, image_download_1_bits);
+  u8g2.setFont(u8g2_font_6x10_tr);
+  u8g2.drawStr(35, 9, "Terminal");
+  u8g2.drawStr(45, 18, "Chat");
+  u8g2.drawFrame(38, 22, 52, 24);
+  u8g2.drawHLine(42, 30, 44);
+  u8g2.drawHLine(42, 36, 30);
+  u8g2.drawHLine(42, 42, 38);
+}
+
 
 
 void screenAppsLoop() {
@@ -302,6 +327,12 @@ void screenAppsLoop() {
       case 8:
         currentScreen = SCREEN_BLESCAN;
         break;
+      case 9:
+        currentScreen = SCREEN_MSGPRESET;
+        break;
+      case 10:
+        currentScreen = SCREEN_MESHTERM;
+        break;
     }
   }
 
@@ -334,6 +365,12 @@ void screenAppsLoop() {
       break;
     case 8:
       drawBleScan();
+      break;
+    case 9:
+      drawMsgPreset();
+      break;
+    case 10:
+      drawMeshTerm();
       break;
   }
 
