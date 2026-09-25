@@ -514,12 +514,12 @@ void screenSDBrowserLoop() {
     u8g2.setFont(u8g2_font_5x7_tr);
     u8g2.drawStr(5, 60, "SEL:Detener BACK:Salir");
   } else {
-    u8g2.drawStr(11, 19, "Estado: INACTIVO");
+    u8g2.drawStr(11, 24, "Estado: INACTIVO");
 
     u8g2.setFont(u8g2_font_5x7_tr);
-    u8g2.drawStr(12, 30, "Ver, subir y borrar");
-    u8g2.drawStr(12, 39, "archivos de la SD");
-    u8g2.drawStr(12, 48, "por WiFi");
+    u8g2.drawStr(12, 33, "Ver, subir y borrar");
+    u8g2.drawStr(12, 42, "archivos de la SD");
+    u8g2.drawStr(12, 50, "por WiFi");
 
     u8g2.drawStr(1, 59, "SEL:Iniciar BACK:Salir");
   }
