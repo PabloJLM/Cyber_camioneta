@@ -261,6 +261,7 @@ void drawMsgPreset() {
   u8g2.drawLine(66, 43, 93, 23);
   u8g2.drawLine(66, 44, 93, 24);
   u8g2.drawBox(65, 41, 4, 4);
+  u8g2.drawFrame(41, 23, 52, 33);
 }
 
 void drawMeshTerm() {
@@ -279,6 +280,7 @@ void drawMeshTerm() {
   u8g2.drawLine(41, 49, 52, 39);
   u8g2.drawLine(41, 48, 52, 38);
   u8g2.drawBox(55, 48, 25, 3);
+  u8g2.drawFrame(38, 24, 52, 33);
 }
 
 
