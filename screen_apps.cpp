@@ -177,8 +177,9 @@ void drawWardriving() {
   u8g2.drawXBM(8, 23, 16, 8, image_download_1_bits);
   u8g2.setFont(u8g2_font_6x10_tr);
   u8g2.drawStr(33, 11, "Wardriving");
-  u8g2.drawXBM(46, 27, 19, 16, image_wifi_bits);
-  u8g2.drawXBM(68, 27, 13, 16, image_location_bits);
+  u8g2.drawXBM(46, 18, 19, 16, image_wifi_bits);
+  u8g2.drawXBM(67, 18, 13, 16, image_location_bits);
+  u8g2.drawStr(28, 44, "NO implementado");
 }
 
 void drawSniffer() {
