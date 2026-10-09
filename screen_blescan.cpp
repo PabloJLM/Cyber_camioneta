@@ -56,6 +56,43 @@ static bool isButtonJustPressed(int pin) {
   return false;
 }
 
+static const char* companyName(uint16_t id) { //https://gist.github.com/kongmunist/033a50237cdeb67af5666aa4435afd19
+  switch (id) {
+    case 0x004C: return "Apple";
+    case 0x0006: return "Microsoft";
+    case 0x0075: return "Samsung";
+    case 0x00E0: return "Google";
+    case 0x038F: return "Xiaomi";
+    case 0x0157: return "Amazfit/Huami";
+    case 0x0171: return "Amazon";
+    case 0x0059: return "Nordic Semi";
+    case 0x000F: return "Broadcom";
+    case 0x0002: return "Intel";
+    case 0x0078: return "Nike";
+    default: return nullptr;
+  }
+}
+
+static String fallbackLabel(BLEAdvertisedDevice &d) {
+  if (d.haveManufacturerData()) {
+    String md = d.getManufacturerData();
+    if (md.length() >= 2) {
+      uint16_t companyId = (uint8_t)md[0] | ((uint8_t)md[1] << 8);
+      const char* nm = companyName(companyId);
+      if (nm) return String(nm);
+      char buf[16];
+      snprintf(buf, sizeof(buf), "MFR:%04X", companyId);
+      return String(buf);
+    }
+  }
+  if (d.haveServiceUUID()) {
+    String uuid = String(d.getServiceUUID().toString().c_str());
+    if (uuid.length() > 8) uuid = uuid.substring(0, 8);
+    return "UUID:" + uuid;
+  }
+  return String("(sin nombre)");
+}
+
 static void runScan() {
   BLEScan* pBLEScan = BLEDevice::getScan();
   BLEScanResults* results = pBLEScan->start(BLESCAN_DURATION_S, false);
@@ -66,11 +103,11 @@ static void runScan() {
     BLEAdvertisedDevice d = results->getDevice(i);
     BleDeviceInfo &e = devices[deviceCount];
 
-    String nm = d.haveName() ? d.getName() : String("(sin nombre)");
+    String nm = d.haveName() ? String(d.getName().c_str()) : fallbackLabel(d);
     strncpy(e.name, nm.c_str(), sizeof(e.name) - 1);
     e.name[sizeof(e.name) - 1] = '\0';
 
-    String mac = d.getAddress().toString();
+    String mac = String(d.getAddress().toString().c_str());
     strncpy(e.mac, mac.c_str(), sizeof(e.mac) - 1);
     e.mac[sizeof(e.mac) - 1] = '\0';
 
@@ -91,8 +128,9 @@ static void startScanning() {
   BLEDevice::init("");
   BLEScan* pBLEScan = BLEDevice::getScan();
   pBLEScan->setActiveScan(true);
+
   pBLEScan->setInterval(100);
-  pBLEScan->setWindow(90);
+  pBLEScan->setWindow(100);
   bleReady = true;
 
   scanning = true;
