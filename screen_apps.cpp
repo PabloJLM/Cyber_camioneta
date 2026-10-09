@@ -122,7 +122,7 @@ static bool isButtonJustPressed(int pin) {
 
 
 static int appSelection = 0;
-static const int TOTAL_APPS = 11;
+static const int TOTAL_APPS = 12;
 
 
 void drawWifiCaptivePortal() {
@@ -286,6 +286,20 @@ void drawMeshTerm() {
 
 
 
+void drawRiscvDemo() {
+  u8g2.setFontMode(1);
+  u8g2.setBitmapMode(1);
+  u8g2.drawXBM(8, 40, 16, 8, image_download_bits);
+  u8g2.drawXBM(8, 23, 16, 8, image_download_1_bits);
+  u8g2.setFont(u8g2_font_6x10_tr);
+  u8g2.drawStr(38, 11, "RISC-V");
+  u8g2.drawStr(30, 20, "Subrutina asm");
+  u8g2.drawFrame(44, 26, 40, 30);
+  u8g2.drawStr(48, 37, "jal");
+  u8g2.drawStr(48, 47, "ret");
+  u8g2.drawVLine(64, 26, 30);
+}
+
 void screenAppsLoop() {
   if (isButtonJustPressed(PIN_BACK)) {
     buzzerClick();
@@ -344,6 +358,9 @@ void screenAppsLoop() {
       case 10:
         currentScreen = SCREEN_MESHTERM;
         break;
+      case 11:
+        currentScreen = SCREEN_RISCVDEMO;
+        break;
     }
   }
 
@@ -382,6 +399,9 @@ void screenAppsLoop() {
       break;
     case 10:
       drawMeshTerm();
+      break;
+    case 11:
+      drawRiscvDemo();
       break;
   }
 
