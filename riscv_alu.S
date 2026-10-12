@@ -1,9 +1,3 @@
-//   ALU de 8 bits ejecutada con instrucciones RISC-V reales.
-//   Entrada:  a0 = A, a1 = B, a2 = operacion
-//   Salida:   a0 = resultado (8 bits)
-//             a1 = bit0: acarreo/prestamo/bit desplazado, bit1: overflow con signo
-//   (uint64_t en C: a0 = parte baja, a1 = parte alta)
-//
 //   op: 0 add, 1 sub, 2 and, 3 or, 4 xor, 5 sll, 6 srl, 7 sltu
 
     .text
@@ -29,16 +23,16 @@ riscv_alu_asm:
     beqz    a2, alu_srl
     addi    a2, a2, -1
     beqz    a2, alu_sltu
-    j       alu_add              // op invalida -> add
+    j       alu_add              // op invalida 
 
 alu_add:
     add     t1, a0, a1
     andi    t3, t1, 255          // resultado
     srli    t2, t1, 8
-    andi    t2, t2, 1            // acarreo = bit 8
+    andi    t2, t2, 1            // acarreo
     xor     t4, a0, t3
     xor     t5, a1, t3
-    and     t4, t4, t5           // overflow: A y B con igual signo, resultado distinto
+    and     t4, t4, t5           // overflow
     srli    t4, t4, 7
     andi    t4, t4, 1
     slli    t4, t4, 1
@@ -76,7 +70,7 @@ alu_xor:
     ret
 
 alu_sll:
-    andi    t0, a1, 7            // desplazamiento 0..7
+    andi    t0, a1, 7            // desplazamiento 0 a 7
     sll     t1, a0, t0
     beqz    t0, alu_sll_nc
     li      t2, 8

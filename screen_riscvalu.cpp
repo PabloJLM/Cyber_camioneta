@@ -3,12 +3,10 @@
 #include <stdint.h>
 #include <string.h>
 
-// ALU de 8 bits: la operacion la ejecuta una subrutina real en ensamblador
-// RISC-V (riscv_alu.S). Devuelve a0 = resultado, a1 = flags (uint64_t):
-//   bit0 = acarreo/prestamo, bit1 = overflow con signo.
+// ALU de 8 bits
 extern "C" uint64_t riscv_alu_asm(uint32_t a, uint32_t b, uint32_t op);
 
-#define ALU_EXEC_MS 350   // duracion de la "animacion" al ejecutar
+#define ALU_EXEC_MS 350   
 
 static const char *const ALU_MNEM[8] = {"ADD", "SUB", "AND", "OR", "XOR", "SLL", "SRL", "SLTU"};
 static const char *const ALU_FORM[8] = {"A + B", "A - B", "A & B", "A | B", "A ^ B", "A << B", "A >> B", "A < B"};
@@ -57,7 +55,6 @@ static bool isButtonJustPressed(int pin) {
   return false;
 }
 
-// ---------- ejecucion ----------
 
 static void bin8(char *out, uint8_t v) {
   for (int i = 7, k = 0; i >= 0; i--) out[k++] = ((v >> i) & 1) ? '1' : '0';
@@ -78,7 +75,7 @@ static void asciiRender() {
 }
 
 static void aluExecute() {
-  uint64_t r = riscv_alu_asm(aVal, bVal, aluOp);   // <- instrucciones RISC-V reales
+  uint64_t r = riscv_alu_asm(aVal, bVal, aluOp);   
   resVal    = (uint8_t)(r & 0xFF);
   carryFlag = (uint8_t)((r >> 32) & 1);
   ovfFlag   = (uint8_t)((r >> 33) & 1);
@@ -87,7 +84,7 @@ static void aluExecute() {
   asciiRender();
 }
 
-// ---------- dibujo ----------
+
 
 static void drawItem(int x, int y, int w, int h, const char *t, bool sel) {
   if (sel) {
@@ -111,14 +108,14 @@ static void drawMain() {
   bool show = hasResult && (millis() - execMs) > ALU_EXEC_MS;
   bool busy = hasResult && !show;
 
-  // cables de entrada
+ 
   u8g2.drawHLine(38, 17, 12);   // A -> ALU
   u8g2.drawHLine(38, 45, 12);   // B -> ALU
   u8g2.drawVLine(68, 11, 5);    // OP -> ALU
   u8g2.drawLine(65, 12, 68, 15);
   u8g2.drawLine(71, 12, 68, 15);
 
-  // cuerpo de la ALU (con muesca a la izquierda)
+ 
   u8g2.drawLine(50, 13, 50, 26);
   u8g2.drawLine(50, 26, 58, 33);
   u8g2.drawLine(58, 33, 50, 40);
@@ -138,7 +135,7 @@ static void drawMain() {
   }
   u8g2.setFont(u8g2_font_5x7_tr);
 
-  // entradas (seleccionables)
+
   snprintf(buf, sizeof(buf), "A %3d", aVal);
   drawItem(2, 12, 37, 11, buf, mainSel == 0);
   snprintf(buf, sizeof(buf), "B %3d", bVal);
@@ -147,7 +144,7 @@ static void drawMain() {
   drawItem(44, 0, 48, 11, buf, mainSel == 2);
   drawItem(2, 53, 37, 11, "LISTO", mainSel == 3);
 
-  // salidas
+
   const int ys[3] = {25, 35, 45};
   for (int i = 0; i < 3; i++) {
     u8g2.drawHLine(87, ys[i], 3);
@@ -179,13 +176,13 @@ static void drawValueEdit() {
   u8g2.drawStr(64 - u8g2.getStrWidth(buf) / 2, 42, buf);
   u8g2.setFont(u8g2_font_5x7_tr);
 
-  // flechas arriba/abajo a los lados
+  
   u8g2.drawTriangle(12, 28, 24, 28, 18, 20);
   u8g2.drawTriangle(12, 34, 24, 34, 18, 42);
   u8g2.drawTriangle(104, 28, 116, 28, 110, 20);
   u8g2.drawTriangle(104, 34, 116, 34, 110, 42);
 
-  // bits
+  
   for (int i = 7; i >= 0; i--) {
     int x = 36 + (7 - i) * 7;
     if ((editVal >> i) & 1) u8g2.drawBox(x, 48, 6, 6);
@@ -220,12 +217,11 @@ static void drawOpEdit() {
       u8g2.drawStr(4, y + 8, buf);
     }
   }
-  // barra de scroll
+  
   u8g2.drawVLine(125, 11, 52);
   u8g2.drawBox(124, 11 + editOp * 6, 3, 10);
 }
 
-// ---------- control ----------
 
 static void holdRepeat(int pin, int idx, int dir) {
   if (digitalRead(pin) != LOW) { holdStart[idx] = 0; return; }
@@ -245,7 +241,6 @@ void screenRiscvAluLoop() {
   bool down = isButtonJustPressed(PIN_DOWN);
   bool back = isButtonJustPressed(PIN_BACK);
 
-  // teclado por serie: w/s/e/q = arriba/abajo/seleccionar/atras
   while (Serial.available()) {
     char c = Serial.read();
     if (c == 'w' || c == 'W') up = true;
@@ -278,10 +273,10 @@ void screenRiscvAluLoop() {
       break;
 
     case VIEW_VALUE:
-      if (back) { view = VIEW_MAIN; break; }          // cancelar
+      if (back) { view = VIEW_MAIN; break; }         
       if (up)   editVal++;
       if (down) editVal--;
-      holdRepeat(PIN_UP, 0, +1);                       // mantener = repetir/acelerar
+      holdRepeat(PIN_UP, 0, +1);                       
       holdRepeat(PIN_DOWN, 1, -1);
       if (sel) {
         if (editTarget) bVal = editVal; else aVal = editVal;

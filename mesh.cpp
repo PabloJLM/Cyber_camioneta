@@ -5,9 +5,7 @@
 #include <esp_wifi.h>
 #include <string.h>
 
-// ============================================================
-//  Constantes internas
-// ============================================================
+
 #define MESH_MAGIC    0xA5
 #define MESH_VERSION  1
 
@@ -17,9 +15,7 @@ static const uint8_t BROADCAST_MAC[6] = {0xFF,0xFF,0xFF,0xFF,0xFF,0xFF};
 
 #define PING_WINDOW   1500   // ms que esperamos respuestas de un ping
 
-// ============================================================
-//  Identidad propia
-// ============================================================
+// MAC Propia
 static uint8_t  myMac[6];
 static uint16_t myId  = 0;
 static char     myName[8];
@@ -37,11 +33,7 @@ void meshFormatId(uint16_t id, char* out, size_t n) {
   snprintf(out, n, "%04X", id);
 }
 
-// ============================================================
-//  Cola de recepcion (el callback de ESP-NOW solo copia aqui;
-//  todo el trabajo pesado se hace en meshLoop(), fuera del
-//  contexto de la tarea de WiFi)
-// ============================================================
+
 #define RXQ_SIZE 16
 typedef struct {
   MeshPacket pkt;
@@ -54,9 +46,7 @@ static volatile RxItem   rxq[RXQ_SIZE];
 static volatile uint8_t  rxHead = 0;   // escribe el callback
 static volatile uint8_t  rxTail = 0;   // lee meshLoop
 
-// ============================================================
-//  Cache anti-duplicados (origen, secuencia)
-// ============================================================
+
 #define SEEN_SIZE 64
 typedef struct { uint16_t id; uint16_t seq; } SeenEntry;
 static SeenEntry seen[SEEN_SIZE];
@@ -74,9 +64,7 @@ static void markSeen(uint16_t id, uint16_t seq) {
   seenPos = (seenPos + 1) % SEEN_SIZE;
 }
 
-// ============================================================
-//  Tabla de nodos
-// ============================================================
+//lista de nodos
 static MeshNode nodes[MAX_NODES];
 
 static MeshNode* findNode(uint16_t id) {
@@ -115,7 +103,7 @@ static void updateNode(uint16_t id, const uint8_t* mac,
     n->hops       = 1;
     n->lastDirect = now;
   } else {
-    // Si hace rato que no lo oimos directo, deja de ser "directo".
+
     if (now - n->lastDirect > NODE_TIMEOUT) n->direct = false;
     if (!n->direct) {
       // guarda la ruta mas corta conocida
@@ -124,41 +112,36 @@ static void updateNode(uint16_t id, const uint8_t* mac,
   }
 }
 
-// ============================================================
-//  Metricas
-// ============================================================
+
 static MeshMetrics metrics;
 static uint32_t ppsWindowStart = 0;
 static uint16_t ppsCounter     = 0;
 
-// ============================================================
-//  Estado de envio / secuencia
-// ============================================================
+
 static uint16_t txSeq = 0;
 static uint32_t lastHello = 0;
 
-// ---- ping ----
+
 static bool     pingActive     = false;
 static uint32_t pingStart      = 0;
 static uint16_t pingNonce      = 0;
 static uint16_t pingResponders[MAX_NODES];
 static int      pingRespCount  = 0;
 
-// ---- pong pendiente (respuesta con jitter para evitar colisiones) ----
+
 static bool     pongPending    = false;
 static uint32_t pongDue        = 0;
 static uint16_t pongNonce      = 0;
 
-// ---- texto recibido ----
+
 static bool     newText        = false;
 static char     lastText[MESH_MAX_PAYLOAD + 1];
 static uint16_t lastTextFrom   = 0;
 
-// ---- quien nos hizo ping a nosotros ----
 static uint16_t lastPingFromId = 0;
 static uint32_t lastPingFromAt = 0;
 
-// ---- historial de mensajes, ring buffer ----
+
 static MeshMsgItem msgHist[MSG_HIST_SIZE];
 static int         msgHistCount = 0;
 static int         msgHistHead  = 0;
@@ -174,7 +157,7 @@ static void pushHist(uint16_t from, uint16_t to, const char* text) {
   if (msgHistCount < MSG_HIST_SIZE) msgHistCount++;
 }
 
-// ---- catalogo de mensajes prehechos (menu de las apps) ----
+
 static const char* CANNED_MSGS[] = {
   "Todo OK", "Necesito ayuda", "Reagrupar aqui",
   "Objetivo visto", "Retirada", "Cargando bateria"
@@ -187,9 +170,7 @@ const char* meshCannedAt(int idx) {
   return CANNED_MSGS[idx];
 }
 
-// ============================================================
-//  Envio de bajo nivel
-// ============================================================
+
 static void rawSend(MeshPacket* p, uint8_t payloadLen) {
   uint8_t total = HEADER_SIZE + payloadLen;
   if (total > sizeof(MeshPacket)) total = sizeof(MeshPacket);
@@ -219,9 +200,6 @@ static void originate(uint8_t type, uint16_t dstId,
   rawSend(&p, payloadLen);
 }
 
-// ============================================================
-//  Callback de recepcion (contexto WiFi: solo copiar y salir)
-// ============================================================
 static void onRecv(const esp_now_recv_info_t* info,
                    const uint8_t* data, int len) {
   if (len < (int)HEADER_SIZE || len > (int)sizeof(MeshPacket)) return;
@@ -238,18 +216,16 @@ static void onRecv(const esp_now_recv_info_t* info,
   rxHead = next;
 }
 
-// ============================================================
-//  Procesamiento de un paquete (en meshLoop)
-// ============================================================
+
 static void handleApp(const MeshPacket* p);
 
 static void processPacket(RxItem* it) {
   MeshPacket* p = &it->pkt;
 
-  // Ignora lo que originamos nosotros (por si vuelve rebotado).
+
   if (p->srcId == myId) return;
 
-  // Anti-duplicado.
+
   if (seenBefore(p->srcId, p->seq)) { metrics.dup++; return; }
   markSeen(p->srcId, p->seq);
 
@@ -257,19 +233,19 @@ static void processPacket(RxItem* it) {
   ppsCounter++;
   metrics.lastRssi = it->rssi;
 
-  // ---- actualizar tabla de nodos ----
+
   uint16_t senderId = idFromMac(it->senderMac);
-  // El emisor inmediato siempre es un vecino directo.
+
   updateNode(senderId, it->senderMac, true, it->rssi, 1);
-  // El origen puede estar a varios saltos.
+
   if (p->srcId != senderId) {
     updateNode(p->srcId, p->srcMac, false, 0, p->hops + 1);
   }
 
-  // ---- logica de aplicacion ----
+
   handleApp(p);
 
-  // ---- reenvio (multi-salto) ----
+
   if (p->ttl > 0) {
     MeshPacket fwd = *p;
     fwd.ttl--;
@@ -282,11 +258,11 @@ static void processPacket(RxItem* it) {
 static void handleApp(const MeshPacket* p) {
   switch (p->type) {
     case MT_HELLO:
-      // La tabla ya se actualizo; nada mas que hacer.
+
       break;
 
     case MT_PING: {
-      // Nos piden reportarnos: programa un PONG con jitter.
+
       uint16_t nonce = (p->payloadLen >= 2)
                        ? ((uint16_t)p->payload[0] | ((uint16_t)p->payload[1] << 8))
                        : 0;
@@ -304,7 +280,7 @@ static void handleApp(const MeshPacket* p) {
                          ? ((uint16_t)p->payload[0] | ((uint16_t)p->payload[1] << 8))
                          : 0;
         if (nonce == pingNonce) {
-          // registra respondedor unico
+
           bool known = false;
           for (int i = 0; i < pingRespCount; i++)
             if (pingResponders[i] == p->srcId) { known = true; break; }
@@ -316,8 +292,7 @@ static void handleApp(const MeshPacket* p) {
     }
 
     case MT_TEXT: {
-      // Solo "se muestra" si es para todos o especificamente para mi;
-      // igual se reenvia siempre (eso ya lo hace processPacket).
+
       bool forMe = (p->dstId == 0xFFFF || p->dstId == myId);
       if (!forMe) break;
       uint8_t n = p->payloadLen;
@@ -331,9 +306,7 @@ static void handleApp(const MeshPacket* p) {
     }
 
     case MT_BUZZ: {
-      // Solo suena si es para todos o especificamente para mi. El nodo
-      // que lo origina NUNCA lo recibe de vuelta (processPacket ignora
-      // p->srcId == myId), asi que solo suena el destino.
+
       bool forMe = (p->dstId == 0xFFFF || p->dstId == myId);
       if (!forMe) break;
       if (p->payloadLen >= 4) {
@@ -346,9 +319,7 @@ static void handleApp(const MeshPacket* p) {
   }
 }
 
-// ============================================================
-//  API publica
-// ============================================================
+
 void meshBegin() {
   if (meshRunning) return;
 
@@ -409,7 +380,6 @@ void meshLoop() {
   if (!meshRunning) return;
   uint32_t now = millis();
 
-  // 1) drenar cola de recepcion
   while (rxTail != rxHead) {
     RxItem local;
     memcpy(&local, (const void*)&rxq[rxTail], sizeof(RxItem));
@@ -417,25 +387,24 @@ void meshLoop() {
     processPacket(&local);
   }
 
-  // 2) HELLO periodico
+
   if (now - lastHello >= HELLO_INTERVAL) {
     lastHello = now;
     originate(MT_HELLO, 0xFFFF, nullptr, 0);
   }
 
-  // 3) PONG pendiente (respuesta a ping con jitter)
+
   if (pongPending && now >= pongDue) {
     pongPending = false;
     uint8_t pl[2] = { (uint8_t)(pongNonce & 0xFF), (uint8_t)(pongNonce >> 8) };
     originate(MT_PONG, 0xFFFF, pl, 2);
   }
 
-  // 4) cerrar ventana de ping
+
   if (pingActive && now - pingStart > PING_WINDOW) {
     pingActive = false;
   }
 
-  // 5) recalcular pps cada segundo
   if (now - ppsWindowStart >= 1000) {
     metrics.pps    = ppsCounter;
     ppsCounter     = 0;
@@ -516,7 +485,7 @@ void        meshClearNewText() { newText = false; }
 int meshMsgHistCount() { return msgHistCount; }
 
 const MeshMsgItem* meshMsgHistAt(int idx) {
-  // idx=0 -> el mas reciente
+
   if (idx < 0 || idx >= msgHistCount) return nullptr;
   int i = (msgHistHead - 1 - idx + MSG_HIST_SIZE * 4) % MSG_HIST_SIZE;
   return &msgHist[i];

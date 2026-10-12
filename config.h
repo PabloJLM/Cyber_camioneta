@@ -20,28 +20,25 @@
 
 #define NUM_PIXELS      9
 
-// ==================== MENSAJERIA ESP-NOW (Msj. Preescritos / Terminal Chat) ====================
-// Todas las camionetas DEBEN estar en el mismo canal WiFi para verse.
+//todas DEBEN ESTAR EN EL MISMO CANAL 
 #define MESH_CHANNEL    1
 
-// Saltos maximos que puede recorrer un mensaje antes de morir.
+
 #define MESH_TTL        6
 
-// Cada cuanto se anuncia "sigo viva" mientras la mensajeria esta activa (ms).
+
 #define HELLO_INTERVAL  2000
 
-// Tras cuanto sin oir a una camioneta se considera "caida" (ms).
+
 #define NODE_TIMEOUT    8000
 
-// Capacidad de la tabla de nodos conocidos.
+
 #define MAX_NODES       24
 
-// Tamano maximo de payload de texto (para mensajes multi-salto).
+
 #define MESH_MAX_PAYLOAD  64
 
-// Nombre corto opcional de esta camioneta. Si se deja "" se usa el id
-// hexadecimal derivado de la MAC (unico por placa, no hay que tocar
-// el codigo por unidad).
+
 #define NODE_NAME       ""
 
 enum Screen {
