@@ -292,12 +292,29 @@ void drawRiscvDemo() {
   u8g2.drawXBM(8, 40, 16, 8, image_download_bits);
   u8g2.drawXBM(8, 23, 16, 8, image_download_1_bits);
   u8g2.setFont(u8g2_font_6x10_tr);
-  u8g2.drawStr(38, 11, "RISC-V");
-  u8g2.drawStr(30, 20, "Subrutina asm");
-  u8g2.drawFrame(44, 26, 40, 30);
-  u8g2.drawStr(48, 37, "jal");
-  u8g2.drawStr(48, 47, "ret");
-  u8g2.drawVLine(64, 26, 30);
+  u8g2.drawStr(54, 10, "DEMO");
+  u8g2.drawStr(48, 20, "RISC V");
+  u8g2.drawBox(55, 29, 25, 25);
+  u8g2.setDrawColor(0);
+  u8g2.setDrawColor(1);
+  u8g2.drawBox(57, 25, 2, 5);
+  u8g2.drawBox(51, 32, 5, 2);
+  u8g2.drawBox(80, 50, 5, 2);
+  u8g2.drawBox(80, 44, 5, 2);
+  u8g2.drawBox(80, 38, 5, 2);
+  u8g2.drawBox(80, 32, 5, 2);
+  u8g2.drawBox(51, 38, 5, 2);
+  u8g2.drawBox(51, 44, 5, 2);
+  u8g2.drawBox(51, 50, 5, 2);
+  u8g2.drawBox(57, 53, 2, 5);
+  u8g2.drawBox(63, 53, 2, 5);
+  u8g2.drawBox(63, 25, 2, 5);
+  u8g2.drawBox(70, 53, 2, 5);
+  u8g2.drawBox(70, 25, 2, 5);
+  u8g2.drawBox(76, 53, 2, 6);
+  u8g2.drawBox(76, 25, 2, 6);
+  u8g2.setDrawColor(0);
+  u8g2.setDrawColor(1);
 }
 
 void screenAppsLoop() {
