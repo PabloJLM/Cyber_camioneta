@@ -1,23 +1,25 @@
 #include "Apps/screen_riscvalu.h"
 #include "Drivers/buzzer.h"
+#include "Drivers/riscv_alu_core.h"
 #include <stdint.h>
 #include <string.h>
 
-// ALU de 8 bits
-extern "C" uint64_t riscv_alu_asm(uint32_t a, uint32_t b, uint32_t op);
+// Pantalla OLED de la ALU de 8 bits (modo simple). La operacion la ejecuta
+// una subrutina real en ensamblador RISC-V (riscv_alu.S), via el nucleo
+// compartido Drivers/riscv_alu_core. Para los comandos de terminal (serie
+// de Ajustes y TCP remoto, con dibujo ASCII, "alu all", eco de asm/registros)
+// ver Drivers/riscv_alu_terminal.
+//
+// Protocolo serie simple para LabVIEW, activo mientras esta pantalla esta
+// abierta (independiente de la terminal de Ajustes):
+//   entrada:  "A,B,OP\n"      A,B en 0-255; OP en 0-7 (ALU_OP_* de riscv_alu_core.h)
+//   salida:   "R,Z,OVF,C\n"   R=resultado 0-255; Z/OVF/C = 0 o 1
 
-#define ALU_EXEC_MS 350   
-
-static const char *const ALU_MNEM[8] = {"ADD", "SUB", "AND", "OR", "XOR", "SLL", "SRL", "SLTU"};
-static const char *const ALU_FORM[8] = {"A + B", "A - B", "A & B", "A | B", "A ^ B", "A << B", "A >> B", "A < B"};
-static const char *const ALU_INST[8] = {"add a0,a1,a2", "sub a0,a1,a2", "and a0,a1,a2", "or a0,a1,a2",
-                                        "xor a0,a1,a2", "sll a0,a1,a2", "srl a0,a1,a2", "sltu a0,a1,a2"};
+#define ALU_EXEC_MS 350   // duracion de la animacion al ejecutar desde el OLED
 
 enum AluView { VIEW_MAIN, VIEW_VALUE, VIEW_OP };
 static AluView view = VIEW_MAIN;
 
-static uint8_t aVal = 0, bVal = 0, aluOp = 0;
-static uint8_t resVal = 0, carryFlag = 0, ovfFlag = 0;
 static bool hasResult = false;
 static unsigned long execMs = 0;
 
@@ -27,6 +29,7 @@ static uint8_t editVal = 0;
 static uint8_t editOp = 0;
 
 static unsigned long holdStart[2] = {0, 0}, lastRep[2] = {0, 0};
+static String simpleLine;
 
 static bool isButtonJustPressed(int pin) {
   static uint8_t lastStableState[4] = {HIGH, HIGH, HIGH, HIGH};
@@ -55,36 +58,49 @@ static bool isButtonJustPressed(int pin) {
   return false;
 }
 
-
-static void bin8(char *out, uint8_t v) {
-  for (int i = 7, k = 0; i >= 0; i--) out[k++] = ((v >> i) & 1) ? '1' : '0';
-  out[8] = 0;
-}
-
-static void asciiRender() {
-  char ab[9], bb[9], rb[9];
-  bin8(ab, aVal); bin8(bb, bVal); bin8(rb, resVal);
-
-  Serial.println();
-  Serial.printf("=== ALU RISC-V 8 bits ===   (%s)\n\n", ALU_INST[aluOp]);
-  Serial.printf(" A  = %3u (%s) ---\\\n", aVal, ab);
-  Serial.printf("                         \\\n");
-  Serial.printf(" OP = %-4s ------------>  [ ALU ] ---> Zero     : %d\n", ALU_MNEM[aluOp], resVal == 0);
-  Serial.printf("                         /           Result   : %u (%s)\n", resVal, rb);
-  Serial.printf(" B  = %3u (%s) ---/            Overflow : %d   (acarreo: %d)\n", bVal, bb, ovfFlag, carryFlag);
-}
+// ---------- ejecucion ----------
 
 static void aluExecute() {
-  uint64_t r = riscv_alu_asm(aVal, bVal, aluOp);   
-  resVal    = (uint8_t)(r & 0xFF);
-  carryFlag = (uint8_t)((r >> 32) & 1);
-  ovfFlag   = (uint8_t)((r >> 33) & 1);
+  AluResult r = aluCoreRun();     // <- instrucciones RISC-V reales
   hasResult = true;
   execMs = millis();
-  asciiRender();
+  Serial.print(r.result); Serial.print(',');
+  Serial.print(r.zero ? 1 : 0); Serial.print(',');
+  Serial.print(r.overflow ? 1 : 0); Serial.print(',');
+  Serial.println(r.carry ? 1 : 0);
 }
 
+// Protocolo simple: "A,B,OP\n" -> fija A/B/OP, ejecuta e imprime "R,Z,OVF,C\n".
+// Solo numeros, comas y el fin de linea; cualquier otro caracter se ignora
+// (para no romperse si alguien escribe texto suelto en este puerto).
+static void simpleSerialProtocol() {
+  while (Serial.available()) {
+    char c = Serial.read();
+    if (c == '\n' || c == '\r') {
+      if (simpleLine.length() > 0) {
+        int c1 = simpleLine.indexOf(',');
+        int c2 = simpleLine.indexOf(',', c1 + 1);
+        if (c1 > 0 && c2 > c1) {
+          long a  = simpleLine.substring(0, c1).toInt();
+          long b  = simpleLine.substring(c1 + 1, c2).toInt();
+          long op = simpleLine.substring(c2 + 1).toInt();
+          if (a < 0) a = 0; if (a > 255) a = 255;
+          if (b < 0) b = 0; if (b > 255) b = 255;
+          if (op < 0) op = 0; if (op > 7) op = 7;
+          aluCoreSetA((uint8_t)a);
+          aluCoreSetB((uint8_t)b);
+          aluCoreSetOp((uint8_t)op);
+          aluExecute();
+        }
+        simpleLine = "";
+      }
+    } else if ((c >= '0' && c <= '9') || c == ',' || c == '-') {
+      simpleLine += c;
+    }
+  }
+}
 
+// ---------- dibujo ----------
 
 static void drawItem(int x, int y, int w, int h, const char *t, bool sel) {
   if (sel) {
@@ -105,17 +121,18 @@ static void drawDot(int x, int y, bool on) {
 
 static void drawMain() {
   char buf[16];
+  AluResult r = aluCoreLastResult();
   bool show = hasResult && (millis() - execMs) > ALU_EXEC_MS;
   bool busy = hasResult && !show;
 
- 
+  // cables de entrada
   u8g2.drawHLine(38, 17, 12);   // A -> ALU
   u8g2.drawHLine(38, 45, 12);   // B -> ALU
   u8g2.drawVLine(68, 11, 5);    // OP -> ALU
   u8g2.drawLine(65, 12, 68, 15);
   u8g2.drawLine(71, 12, 68, 15);
 
- 
+  // cuerpo de la ALU (con muesca a la izquierda)
   u8g2.drawLine(50, 13, 50, 26);
   u8g2.drawLine(50, 26, 58, 33);
   u8g2.drawLine(58, 33, 50, 40);
@@ -135,16 +152,16 @@ static void drawMain() {
   }
   u8g2.setFont(u8g2_font_5x7_tr);
 
-
-  snprintf(buf, sizeof(buf), "A %3d", aVal);
+  // entradas (seleccionables)
+  snprintf(buf, sizeof(buf), "A %3d", aluCoreGetA());
   drawItem(2, 12, 37, 11, buf, mainSel == 0);
-  snprintf(buf, sizeof(buf), "B %3d", bVal);
+  snprintf(buf, sizeof(buf), "B %3d", aluCoreGetB());
   drawItem(2, 40, 37, 11, buf, mainSel == 1);
-  snprintf(buf, sizeof(buf), "OP %s", ALU_MNEM[aluOp]);
+  snprintf(buf, sizeof(buf), "OP %s", aluCoreMnemonic(aluCoreGetOp()));
   drawItem(44, 0, 48, 11, buf, mainSel == 2);
   drawItem(2, 53, 37, 11, "LISTO", mainSel == 3);
 
-
+  // salidas
   const int ys[3] = {25, 35, 45};
   for (int i = 0; i < 3; i++) {
     u8g2.drawHLine(87, ys[i], 3);
@@ -152,13 +169,13 @@ static void drawMain() {
     u8g2.drawLine(88, ys[i] + 2, 90, ys[i]);
   }
   u8g2.drawStr(92, 28, "Zero");
-  drawDot(122, 25, show && resVal == 0);
+  drawDot(122, 25, show && r.zero);
   u8g2.drawStr(92, 38, "Res");
-  if (show) snprintf(buf, sizeof(buf), "%3d", resVal);
+  if (show) snprintf(buf, sizeof(buf), "%3d", r.result);
   else      snprintf(buf, sizeof(buf), hasResult ? "..." : "---");
   u8g2.drawStr(110, 38, buf);
   u8g2.drawStr(92, 48, "Ovf");
-  drawDot(122, 45, show && ovfFlag);
+  drawDot(122, 45, show && r.overflow);
 
   u8g2.drawStr(46, 61, "UP/DN  SEL");
 }
@@ -176,13 +193,13 @@ static void drawValueEdit() {
   u8g2.drawStr(64 - u8g2.getStrWidth(buf) / 2, 42, buf);
   u8g2.setFont(u8g2_font_5x7_tr);
 
-  
+  // flechas arriba/abajo a los lados
   u8g2.drawTriangle(12, 28, 24, 28, 18, 20);
   u8g2.drawTriangle(12, 34, 24, 34, 18, 42);
   u8g2.drawTriangle(104, 28, 116, 28, 110, 20);
   u8g2.drawTriangle(104, 34, 116, 34, 110, 42);
 
-  
+  // bits
   for (int i = 7; i >= 0; i--) {
     int x = 36 + (7 - i) * 7;
     if ((editVal >> i) & 1) u8g2.drawBox(x, 48, 6, 6);
@@ -207,7 +224,7 @@ static void drawOpEdit() {
   for (int r = 0; r < 5; r++) {
     int i = first + r;
     int y = 11 + r * 10;
-    snprintf(buf, sizeof(buf), "%-5s %s", ALU_MNEM[i], ALU_FORM[i]);
+    snprintf(buf, sizeof(buf), "%-5s %s", aluCoreMnemonic(i), aluCoreFormula(i));
     if (i == editOp) {
       u8g2.drawBox(0, y, 122, 10);
       u8g2.setDrawColor(0);
@@ -217,11 +234,12 @@ static void drawOpEdit() {
       u8g2.drawStr(4, y + 8, buf);
     }
   }
-  
+  // barra de scroll
   u8g2.drawVLine(125, 11, 52);
   u8g2.drawBox(124, 11 + editOp * 6, 3, 10);
 }
 
+// ---------- control ----------
 
 static void holdRepeat(int pin, int idx, int dir) {
   if (digitalRead(pin) != LOW) { holdStart[idx] = 0; return; }
@@ -241,13 +259,7 @@ void screenRiscvAluLoop() {
   bool down = isButtonJustPressed(PIN_DOWN);
   bool back = isButtonJustPressed(PIN_BACK);
 
-  while (Serial.available()) {
-    char c = Serial.read();
-    if (c == 'w' || c == 'W') up = true;
-    else if (c == 's' || c == 'S') down = true;
-    else if (c == 'e' || c == 'E') sel = true;
-    else if (c == 'q' || c == 'Q') back = true;
-  }
+  simpleSerialProtocol();
 
   if (sel) buzzerBeep();
   else if (up || down || back) buzzerClick();
@@ -260,11 +272,11 @@ void screenRiscvAluLoop() {
       if (sel) {
         if (mainSel <= 1) {
           editTarget = mainSel;
-          editVal = mainSel ? bVal : aVal;
+          editVal = mainSel ? aluCoreGetB() : aluCoreGetA();
           holdStart[0] = holdStart[1] = 0;
           view = VIEW_VALUE;
         } else if (mainSel == 2) {
-          editOp = aluOp;
+          editOp = aluCoreGetOp();
           view = VIEW_OP;
         } else {
           aluExecute();
@@ -273,13 +285,13 @@ void screenRiscvAluLoop() {
       break;
 
     case VIEW_VALUE:
-      if (back) { view = VIEW_MAIN; break; }         
+      if (back) { view = VIEW_MAIN; break; }          // cancelar
       if (up)   editVal++;
       if (down) editVal--;
-      holdRepeat(PIN_UP, 0, +1);                       
+      holdRepeat(PIN_UP, 0, +1);                       // mantener = repetir/acelerar
       holdRepeat(PIN_DOWN, 1, -1);
       if (sel) {
-        if (editTarget) bVal = editVal; else aVal = editVal;
+        if (editTarget) aluCoreSetB(editVal); else aluCoreSetA(editVal);
         hasResult = false;
         view = VIEW_MAIN;
       }
@@ -290,7 +302,7 @@ void screenRiscvAluLoop() {
       if (up)   editOp = (editOp + 7) & 7;
       if (down) editOp = (editOp + 1) & 7;
       if (sel) {
-        aluOp = editOp;
+        aluCoreSetOp(editOp);
         hasResult = false;
         view = VIEW_MAIN;
       }

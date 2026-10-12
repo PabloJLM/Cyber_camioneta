@@ -5,6 +5,7 @@
 #include "Apps/screen_captive.h"
 #include "Apps/screen_btspam.h"
 #include "Drivers/settings.h"
+#include "Drivers/riscv_alu_terminal.h"
 #include <esp_system.h>
 
 
@@ -434,6 +435,7 @@ static void processSerialCommand() {
           Serial.println(F("  uptime                  tiempo activo desde el ultimo reinicio"));
           Serial.println(F("  free                    memoria heap disponible"));
           Serial.println(F("  echo <texto>            repite el texto"));
+          Serial.println(F("  alu ...                 ALU RISC-V (alu help)"));
           Serial.println(F("  reboot                  reinicia el equipo"));
           Serial.println(F("  clear                   limpiar pantalla"));
           Serial.println(F("  exit                    salir de la terminal de ajustes"));
@@ -517,6 +519,9 @@ static void processSerialCommand() {
         }
         else if (commandBuffer.startsWith("echo ")) {
           processEchoCommand(commandBuffer);
+        }
+        else if (commandBuffer == "alu" || commandBuffer.startsWith("alu ")) {
+          aluTerminalHandle(Serial, commandBuffer);
         }
         else if (commandBuffer == "reboot") {
           Serial.println(F("  reiniciando..."));
