@@ -76,7 +76,7 @@ enum Screen {
   SCREEN_YMODEM,
   SCREEN_MSGPRESET,
   SCREEN_MESHTERM,
-  SCREEN_RISCVDEMO
+  SCREEN_RISCVALU
 };
 
 extern Screen currentScreen;

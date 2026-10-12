@@ -286,35 +286,25 @@ void drawMeshTerm() {
 
 
 
-void drawRiscvDemo() {
+void drawRiscvAlu() {
   u8g2.setFontMode(1);
   u8g2.setBitmapMode(1);
   u8g2.drawXBM(8, 40, 16, 8, image_download_bits);
   u8g2.drawXBM(8, 23, 16, 8, image_download_1_bits);
   u8g2.setFont(u8g2_font_6x10_tr);
-  u8g2.drawStr(54, 10, "DEMO");
+  u8g2.drawStr(56, 10, "ALU");
   u8g2.drawStr(48, 20, "RISC V");
-  u8g2.drawBox(55, 29, 25, 25);
-  u8g2.setDrawColor(0);
-  u8g2.setDrawColor(1);
-  u8g2.drawBox(57, 25, 2, 5);
-  u8g2.drawBox(51, 32, 5, 2);
-  u8g2.drawBox(80, 50, 5, 2);
-  u8g2.drawBox(80, 44, 5, 2);
-  u8g2.drawBox(80, 38, 5, 2);
-  u8g2.drawBox(80, 32, 5, 2);
-  u8g2.drawBox(51, 38, 5, 2);
-  u8g2.drawBox(51, 44, 5, 2);
-  u8g2.drawBox(51, 50, 5, 2);
-  u8g2.drawBox(57, 53, 2, 5);
-  u8g2.drawBox(63, 53, 2, 5);
-  u8g2.drawBox(63, 25, 2, 5);
-  u8g2.drawBox(70, 53, 2, 5);
-  u8g2.drawBox(70, 25, 2, 5);
-  u8g2.drawBox(76, 53, 2, 6);
-  u8g2.drawBox(76, 25, 2, 6);
-  u8g2.setDrawColor(0);
-  u8g2.setDrawColor(1);
+  u8g2.drawVLine(52, 23, 5);
+  u8g2.drawVLine(76, 23, 5);
+  u8g2.drawLine(44, 28, 58, 28);
+  u8g2.drawLine(58, 28, 64, 33);
+  u8g2.drawLine(64, 33, 70, 28);
+  u8g2.drawLine(70, 28, 84, 28);
+  u8g2.drawLine(84, 28, 74, 48);
+  u8g2.drawLine(74, 48, 54, 48);
+  u8g2.drawLine(54, 48, 44, 28);
+  u8g2.drawStr(61, 44, "+");
+  u8g2.drawVLine(64, 49, 8);
 }
 
 void screenAppsLoop() {
@@ -376,7 +366,7 @@ void screenAppsLoop() {
         currentScreen = SCREEN_MESHTERM;
         break;
       case 11:
-        currentScreen = SCREEN_RISCVDEMO;
+        currentScreen = SCREEN_RISCVALU;
         break;
     }
   }
@@ -418,7 +408,7 @@ void screenAppsLoop() {
       drawMeshTerm();
       break;
     case 11:
-      drawRiscvDemo();
+      drawRiscvAlu();
       break;
   }
 
