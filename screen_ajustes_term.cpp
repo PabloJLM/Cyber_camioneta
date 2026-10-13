@@ -6,6 +6,7 @@
 #include "Apps/screen_btspam.h"
 #include "Drivers/settings.h"
 #include "Drivers/riscv_alu_terminal.h"
+#include "Drivers/aes_demo_terminal.h"
 #include <esp_system.h>
 
 
@@ -436,6 +437,7 @@ static void processSerialCommand() {
           Serial.println(F("  free                    memoria heap disponible"));
           Serial.println(F("  echo <texto>            repite el texto"));
           Serial.println(F("  alu ...                 ALU RISC-V (alu help)"));
+          Serial.println(F("  aes ...                 AES-128 real (aes help)"));
           Serial.println(F("  reboot                  reinicia el equipo"));
           Serial.println(F("  clear                   limpiar pantalla"));
           Serial.println(F("  exit                    salir de la terminal de ajustes"));
@@ -522,6 +524,9 @@ static void processSerialCommand() {
         }
         else if (commandBuffer == "alu" || commandBuffer.startsWith("alu ")) {
           aluTerminalHandle(Serial, commandBuffer);
+        }
+        else if (commandBuffer == "aes" || commandBuffer.startsWith("aes ")) {
+          aesTerminalHandle(Serial, commandBuffer);
         }
         else if (commandBuffer == "reboot") {
           Serial.println(F("  reiniciando..."));

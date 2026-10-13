@@ -34,6 +34,7 @@
 #include "Apps/screen_msgpreset.h"
 #include "Apps/screen_meshterm.h"
 #include "Apps/screen_riscvalu.h"
+#include "Apps/screen_aes.h"
 
 U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE, PIN_SCL, PIN_SDA);
 
@@ -176,6 +177,10 @@ void loop() {
 
     case SCREEN_RISCVALU:
       screenRiscvAluLoop();
+      break;
+
+    case SCREEN_AESDEMO:
+      screenAesLoop();
       break;
   }
 

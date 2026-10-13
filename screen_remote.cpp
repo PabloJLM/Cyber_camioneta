@@ -4,6 +4,7 @@
 #include "Drivers/settings.h"
 #include "Drivers/ftp_server.h"
 #include "Drivers/riscv_alu_terminal.h"
+#include "Drivers/aes_demo_terminal.h"
 #include "Apps/screen_apflood.h"
 #include "Apps/screen_sniffer.h"
 #include "Apps/screen_captive.h"
@@ -795,6 +796,7 @@ static void printHelpAdvanced(WiFiClient& c) {
   c.println("  free                    memoria heap disponible");
   c.println("  echo <texto>            repite el texto");
   c.println("  alu ...                 ALU RISC-V (alu help)");
+  c.println("  aes ...                 AES-128 real (aes help)");
   c.println("  reboot                  reinicia el equipo");
   c.println("  clear                   limpiar pantalla");
   c.println("  exit                    volver al menu de terminal");
@@ -845,6 +847,7 @@ static void handleAdvancedCommand(WiFiClient& c, String cmd) {
   else if (cmd == "free") showFree(c);
   else if (cmd.startsWith("echo ")) processEchoCommand(c, cmd);
   else if (cmd == "alu" || cmd.startsWith("alu ")) aluTerminalHandle(c, cmd);
+  else if (cmd == "aes" || cmd.startsWith("aes ")) aesTerminalHandle(c, cmd);
   else if (cmd == "reboot") {
     c.println("  reiniciando...");
     c.flush();

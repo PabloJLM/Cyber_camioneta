@@ -122,7 +122,7 @@ static bool isButtonJustPressed(int pin) {
 
 
 static int appSelection = 0;
-static const int TOTAL_APPS = 12;
+static const int TOTAL_APPS = 13;
 
 
 void drawWifiCaptivePortal() {
@@ -307,6 +307,24 @@ void drawRiscvAlu() {
   u8g2.drawVLine(64, 49, 8);
 }
 
+void drawAesDemo() {
+  u8g2.setFontMode(1);
+  u8g2.setBitmapMode(1);
+  u8g2.drawXBM(8, 40, 16, 8, image_download_bits);
+  u8g2.drawXBM(8, 23, 16, 8, image_download_1_bits);
+  u8g2.setFont(u8g2_font_6x10_tr);
+  u8g2.drawStr(54, 10, "AES");
+  u8g2.drawStr(44, 20, "HARDWARE");
+  // candado: cuerpo + arco (shackle)
+  u8g2.drawFrame(52, 37, 24, 18);
+  u8g2.drawCircle(64, 33, 8, U8G2_DRAW_UPPER_LEFT | U8G2_DRAW_UPPER_RIGHT);
+  u8g2.drawVLine(56, 33, 8);
+  u8g2.drawVLine(72, 33, 8);
+  u8g2.drawBox(61, 43, 6, 6);
+
+  u8g2.setFont(u8g2_font_6x10_tr);
+}
+
 void screenAppsLoop() {
   if (isButtonJustPressed(PIN_BACK)) {
     buzzerClick();
@@ -368,6 +386,9 @@ void screenAppsLoop() {
       case 11:
         currentScreen = SCREEN_RISCVALU;
         break;
+      case 12:
+        currentScreen = SCREEN_AESDEMO;
+        break;
     }
   }
 
@@ -409,6 +430,9 @@ void screenAppsLoop() {
       break;
     case 11:
       drawRiscvAlu();
+      break;
+    case 12:
+      drawAesDemo();
       break;
   }
 
