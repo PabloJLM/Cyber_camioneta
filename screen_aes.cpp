@@ -65,7 +65,15 @@ static void printPrompt() {
 
 static void printBanner() {
   Serial.println();
-  Serial.println(F("   AES-128"));
+  Serial.println(F(" █████╗ ███████╗███████╗"));
+  Serial.println(F("██╔══██╗██╔════╝██╔════╝"));
+  Serial.println(F("███████║█████╗  ███████╗"));
+  Serial.println(F("██╔══██║██╔══╝  ╚════██║"));
+  Serial.println(F("██║  ██║███████╗███████║"));
+  Serial.println(F("╚═╝  ╚═╝╚══════╝╚══════╝"));
+  Serial.println(F("Escribe help para ver los comandos"));
+  Serial.println();
+
 }
 
 // Igual que un comando de las otras terminales, pero sin exigir el
