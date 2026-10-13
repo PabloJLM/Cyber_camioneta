@@ -71,6 +71,12 @@ static void printBanner() {
 // Igual que un comando de las otras terminales, pero sin exigir el
 // prefijo "aes " porque esta pantalla ya es exclusivamente de AES.
 static void dispatchLine(const String &line) {
+  if (line == "clear" || line == "cls") {
+    Serial.print(F("\033[2J\033[H"));
+    printPrompt();
+    return;
+  }
+
   Serial.println();
   if (line.length() == 0) { printPrompt(); return; }
 
