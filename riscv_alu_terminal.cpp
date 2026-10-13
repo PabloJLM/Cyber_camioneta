@@ -13,8 +13,6 @@ static void hex2(Print &c, uint8_t v) {
   c.print(v, HEX);
 }
 
-// Dibujo ASCII de la ALU: A y B entrando, la operacion, el resultado y las
-// flags saliendo.
 static void printDiagram(Print &c, uint8_t a, uint8_t b, uint8_t op, const AluResult &r) {
   char ab[9], bb[9], rb[9];
   bin8(ab, a); bin8(bb, b); bin8(rb, r.result);
@@ -31,8 +29,7 @@ static void printDiagram(Print &c, uint8_t a, uint8_t b, uint8_t op, const AluRe
   c.print(F("  C=")); c.println(r.carry ? 1 : 0);
 }
 
-// Eco del codigo RISC-V ejecutado y de los registros de entrada/salida de
-// riscv_alu_asm (los que de verdad entran y salen de la subrutina real).
+
 static void printAsmEcho(Print &c, uint8_t a, uint8_t b, uint8_t op, const AluResult &r) {
   c.println(F("   --- riscv_alu.S ---"));
   c.print(F("   entrada   a0="));  hex2(c, a);

@@ -2,9 +2,8 @@
 #include <string.h>
 #include <stdlib.h>
 
-// Subrutina real en ensamblador RISC-V (riscv_alu.S).
+// Llama al archivo en ensamblador riscv_alu.S
 // Entrada: a0=A, a1=B, a2=op. Salida (uint64_t): a0=resultado, a1=flags
-// (bit0=acarreo/prestamo/bit desplazado, bit1=overflow con signo).
 extern "C" uint64_t riscv_alu_asm(uint32_t a, uint32_t b, uint32_t op);
 
 static const char *const MNEM[ALU_OP_COUNT]    = {"ADD","SUB","AND","OR","XOR","SLL","SRL","SLTU"};
@@ -19,7 +18,7 @@ static AluResult lastResult = {0, false, false, true, false};
 static bool      hasResult = false;
 
 AluResult aluCoreCompute(uint8_t a, uint8_t b, uint8_t op) {
-  uint64_t r = riscv_alu_asm(a, b, op & 7);   // <- instrucciones RISC-V reales
+  uint64_t r = riscv_alu_asm(a, b, op & 7);   
   AluResult out;
   out.result   = (uint8_t)(r & 0xFF);
   out.carry    = (bool)((r >> 32) & 1);
