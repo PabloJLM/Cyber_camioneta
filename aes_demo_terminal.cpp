@@ -92,7 +92,7 @@ static void printSteps(Print &c) {
   aesStepsKeyExpansion(key, words);
 
   c.println();
-  c.println(F("   === AES-128: cifrado ronda por ronda (implementacion de libro) ==="));
+  c.println(F("   === AES-128 paso a paso ==="));
   c.print(F("   mensaje: \"")); c.print(aesDemoGetMessageText()); c.println('"');
   c.print(F("   clave:   ")); hexLine(c, key, AES_BLOCK_LEN);
   c.println();

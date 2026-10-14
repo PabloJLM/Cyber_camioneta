@@ -86,7 +86,7 @@ static void printAll(Print &c) {
 
 static void printHelp(Print &c) {
   c.println();
-  c.println(F("   == comandos ALU (RISC-V real, riscv_alu.S) =="));
+  c.println(F("   == comandos de ALU  =="));
   c.println(F("   alu a <0-255>     fija el operando A"));
   c.println(F("   alu b <0-255>     fija el operando B"));
   c.println(F("   alu op <nombre>   add|sub|and|or|xor|sll|srl|sltu"));
