@@ -1,5 +1,10 @@
 # Camioneta (Nombre pendiente)
 
+![Platform](https://img.shields.io/badge/platform-ESP32--C6-blue?logo=espressif&logoColor=white)
+![Framework](https://img.shields.io/badge/framework-Arduino-00979D?logo=arduino&logoColor=white)
+![Language](https://img.shields.io/badge/lenguaje-C%2B%2B-00599C?logo=cplusplus&logoColor=white)
+[![Wiki](https://img.shields.io/badge/docs-wiki-informational)](https://github.com/PabloJLM/Cyber_camioneta/wiki)
+
 Dispositivo para pruebas de seguridad WiFi y Bluetooth, basado en ESP32-C6. 
 
 Tiene pantalla OLED, 4 botones, buzzer, NeoPixels, GPS y lector de SD. 
