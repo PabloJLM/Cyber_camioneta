@@ -84,17 +84,17 @@ Se navega la SD con un browser en pantalla para elegir que enviar, o se elige re
 
 ## Ajustes
 
-**Configuracion** —> Ajustes generales del dispositivo.
+**Configuracion** -> Ajustes generales del dispositivo.
 
-**SD Storage** —> Para navegar los archivos de la SD.
+**SD Storage** -> Para navegar los archivos de la SD.
 
-**NEOPIXEL** —> Para cambiar el color de los NeoPixels a mano.
+**NEOPIXEL** -> Para cambiar el color de los NeoPixels a mano.
 
-**Terminal** —> Otra terminal por cable, separada de la de PC-Mode, pensada para controlar el AP Flood, el Sniffer y el Captive Portal.
+**Terminal** -> Otra terminal por cable, separada de la de PC-Mode, pensada para controlar el AP Flood, el Sniffer y el Captive Portal.
 
-**Conexion Remota y Servidor FTP** —> Levanta un servidor FTP, se puede utilizar curl, ftp, filezilla o un gestor en LabVIEW para usarlo como interfaz.
+**Conexion Remota y Servidor FTP** -> Levanta un servidor FTP, se puede utilizar curl, ftp, filezilla o el explorador de archivos de windows
 
-**Conexion Remota** —> Inicia un AP y levanta una terminal remota por TCP (puerto 2323), para manejarla sin cable como si fuera la terminal serial  
+**Conexion Remota** -> Inicia un AP y levanta una terminal remota por TCP (puerto 2323), para manejarla sin cable como si fuera la terminal serial  
 
 ## Problemas conocidos
 
