@@ -18,13 +18,21 @@ static AluResult lastResult = {0, false, false, true, false};
 static bool      hasResult = false;
 
 AluResult aluCoreCompute(uint8_t a, uint8_t b, uint8_t op) {
-  uint64_t r = riscv_alu_asm(a, b, op & 7);   
+  uint64_t r = riscv_alu_asm(a, b, op & 7);
+  op &= 7;
   AluResult out;
   out.result   = (uint8_t)(r & 0xFF);
   out.carry    = (bool)((r >> 32) & 1);
-  out.overflow = (bool)((r >> 33) & 1);
   out.zero     = (out.result == 0);
-  out.negative = (bool)((out.result >> 7) & 1);
+
+  // Overflow: unicamente ADD, y unicamente si A+B supera 255 (se sale del
+  // rango de 8 bits sin signo). El resto de operaciones nunca lo activan.
+  out.overflow = (op == ALU_OP_ADD) && (((uint16_t)a + (uint16_t)b) > 255);
+
+  // Negative: unicamente SUB, y unicamente si el resultado real (A - B) es
+  // negativo, es decir A < B. El resto de operaciones nunca dan negativo.
+  out.negative = (op == ALU_OP_SUB) && (a < b);
+
   return out;
 }
 
