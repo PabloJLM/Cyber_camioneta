@@ -37,6 +37,18 @@ No se necesita ninguna PC o conexion a internet
 | GPS ON     | 8   |
 | CD (SD)    | 40  |
 
+## Compilar y flashear
+
+Proyecto en PlatformIO (framework Arduino), environment `esp32-c6-devkitc-1`.
+
+```
+pio run              # compilar
+pio run -t upload    # compilar y flashear
+pio device monitor   # monitor serial (115200 baudios)
+```
+
+Partición `huge_app.csv` (3MB app, sin OTA)
+
 ## Estructura del menu
 
 ```
