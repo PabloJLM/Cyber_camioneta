@@ -2,6 +2,7 @@
 #include "buzzer.h"
 #include <TinyGPSPlus.h>
 #include <string.h>
+#include <stdlib.h>
 
 static const unsigned char image_Layer_9_bits[] PROGMEM = {
   0x7e,0x7e,0x7e,0x7e,0x99,0x99,0x99,0x99,
@@ -18,18 +19,26 @@ static HardwareSerial GPSSerial(1);
 static TinyGPSPlus gps;
 static bool gpsStarted = false;
 
-static char antennaStatus[24] = "Modulo: detectando...";
-static char lineBuf[96];
-static uint8_t lineLen = 0;
+// Satelites en vista (se llena aunque todavia no haya fix; confirma que la
+// antena si esta captando algo, sin depender del "ANTENNA OPEN/SHORT" del
+// modulo, que en esta placa no aplica (ver LNA externo AT2659 en el hardware).
+// Se escuchan todos los talkers de GSV posibles porque el modulo puede
+// mandar GPGSV, GNGSV (combinado), GLGSV, GAGSV o GBGSV segun que
+// constelaciones tenga activas - no asumimos cual usa.
+static TinyGPSCustom gpSatsInView(gps, "GPGSV", 3);
+static TinyGPSCustom gnSatsInView(gps, "GNGSV", 3);
+static TinyGPSCustom glSatsInView(gps, "GLGSV", 3);
+static TinyGPSCustom gaSatsInView(gps, "GAGSV", 3);
+static TinyGPSCustom gbSatsInView(gps, "GBGSV", 3);
 
-static void checkAntennaLine(const char* line) {
-  if (strstr(line, "ANTENNA OPEN")) {
-    strcpy(antennaStatus, "Modulo dice: OPEN");
-  } else if (strstr(line, "ANTENNA SHORT")) {
-    strcpy(antennaStatus, "Modulo dice: SHORT");
-  } else if (strstr(line, "ANTENNA OK") || strstr(line, "ANTENNA ON")) {
-    strcpy(antennaStatus, "Modulo dice: OK");
-  }
+static int getSatsInView() {
+  int total = 0;
+  total += atoi(gpSatsInView.value());
+  total += atoi(gnSatsInView.value());
+  total += atoi(glSatsInView.value());
+  total += atoi(gaSatsInView.value());
+  total += atoi(gbSatsInView.value());
+  return total;
 }
 
 static bool isButtonJustPressed(int pin) {
@@ -64,25 +73,32 @@ static bool isButtonJustPressed(int pin) {
 
 static void gpsFeed() {
   while (GPSSerial.available()) {
-    char c = GPSSerial.read();
-    gps.encode(c);
-
-    if (c == '\n' || lineLen >= sizeof(lineBuf) - 1) {
-      lineBuf[lineLen] = '\0';
-      checkAntennaLine(lineBuf);
-      lineLen = 0;
-    } else if (c != '\r') {
-      lineBuf[lineLen++] = c;
-    }
+    gps.encode(GPSSerial.read());
   }
+}
+
+// Mismos comandos PMTK que usa Minino (gps_hw_configure_advanced) para el
+// ATGM336H: fuerza multi-constelacion y que sentencias NMEA manda, por si el
+// modulo por default no estaba mandando GSV (de ahi que "Sats en vista" se
+// quedara en 0 aunque el UART ya estuviera recibiendo datos validos).
+static void gpsConfigure() {
+  // PMTK353: habilita GPS,GLONASS,Galileo,BeiDou,QZSS
+  GPSSerial.print("$PMTK353,1,1,1,1,1,0,0,0,0*2A\r\n");
+  delay(100);
+  // PMTK314: habilita GLL,RMC,VTG,GGA,GSA,GSV en cada fix (incluye GSV)
+  GPSSerial.print("$PMTK314,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0*28\r\n");
+  delay(100);
 }
 
 void screenGPSLoop() {
   if (!gpsStarted) {
-  
-    pinMode(PIN_GPSON, INPUT);
+
+    pinMode(PIN_GPSON, OUTPUT);
+    digitalWrite(PIN_GPSON, HIGH);  // enciende el modulo GPS (antes quedaba como INPUT, nunca se energizaba)
+    delay(300);                     // da tiempo a que arranque antes de leer el UART
 
     GPSSerial.begin(GPS_BAUD, SERIAL_8N1, GPS_RX_PIN, GPS_TX_PIN);
+    gpsConfigure();
     gpsStarted = true;
 
     Serial.println();
@@ -138,7 +154,9 @@ void screenGPSLoop() {
   } else {
     u8g2.drawStr(2, 24, "Buscando senal GPS...");
 
-    u8g2.drawStr(2, 34, antennaStatus);
+    char svLine[24];
+    snprintf(svLine, sizeof(svLine), "Sats en vista: %d", getSatsInView());
+    u8g2.drawStr(2, 34, svLine);
 
     snprintf(line, sizeof(line), "Satelites: %d",
               gps.satellites.isValid() ? gps.satellites.value() : 0);
