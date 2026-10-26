@@ -4,6 +4,7 @@
 #include "screen_apflood.h"
 #include <SD.h>
 #include <SPI.h>
+#include <WiFi.h>
 #include "config.h"
 
 static const unsigned char image_terminal_bits[] PROGMEM = {
@@ -31,6 +32,8 @@ static void processPiano(String in);
 static void printPianoHelp();
 static int  noteFreq(String n);
 static void processFloodCommand(const String& cmd);
+static void showWifiScan();
+static void showSdInfo();
 
 static void printSection(const char* title) {
   Serial.println();
@@ -263,6 +266,55 @@ static void listSD() {
   if (n == 0) Serial.println(F("  (vacio)"));
 }
 
+static void showWifiScan() {
+  printSection("wifi: redes cercanas");
+  int n = WiFi.scanNetworks();
+  if (n <= 0) {
+    Serial.println(F("  no se encontraron redes"));
+    return;
+  }
+  for (int i = 0; i < n; i++) {
+    Serial.printf("  %2d) %-28s  %4ddBm  ch%-2d  %s\r\n",
+      i + 1,
+      WiFi.SSID(i).c_str(),
+      WiFi.RSSI(i),
+      WiFi.channel(i),
+      (WiFi.encryptionType(i) == WIFI_AUTH_OPEN) ? "abierta" : "cifrada");
+  }
+  WiFi.scanDelete();
+}
+
+static void showSdInfo() {
+  printSection("sd: info de la tarjeta");
+
+  if (!SD.begin(PIN_CD)) {
+    Serial.println(F("  SD no disponible"));
+    return;
+  }
+
+  uint8_t type = SD.cardType();
+  const char* typeStr = "desconocido";
+  if (type == CARD_MMC)      typeStr = "MMC";
+  else if (type == CARD_SD)  typeStr = "SDSC";
+  else if (type == CARD_SDHC) typeStr = "SDHC/SDXC";
+  else if (type == CARD_NONE) typeStr = "sin tarjeta";
+
+  printRow("tipo", typeStr);
+
+  uint64_t totalBytes = SD.totalBytes();
+  uint64_t usedBytes = SD.usedBytes();
+  char buf[24];
+
+  snprintf(buf, sizeof(buf), "%llu MB", totalBytes / (1024ULL * 1024ULL));
+  printRow("total", String(buf));
+
+  snprintf(buf, sizeof(buf), "%llu MB", usedBytes / (1024ULL * 1024ULL));
+  printRow("usado", String(buf));
+
+  snprintf(buf, sizeof(buf), "%llu MB", (totalBytes - usedBytes) / (1024ULL * 1024ULL));
+  printRow("libre", String(buf));
+}
+
 static void catFile(String path) {
   path.trim();
   if (path.length() == 0) {
@@ -444,6 +496,8 @@ void processSerialCommand() {
           Serial.println(F("  piano      mini piano por serial"));
           Serial.println(F("  ls         listar archivos de la SD"));
           Serial.println(F("  cat <arch> ver un archivo de la SD"));
+          Serial.println(F("  sdinfo     tipo y espacio de la SD"));
+          Serial.println(F("  wifiscan   escanea redes WiFi cercanas"));
           Serial.println(F("  flood{...} SSIDs del AP Flood (max 6)"));
           Serial.println(F("  logcap     ultimos 5 logs del portal"));
           Serial.println(F("  logfull    todos los logs"));
@@ -510,6 +564,8 @@ void processSerialCommand() {
         else if (commandBuffer.startsWith("cat ")) {
           catFile(commandBuffer.substring(4));
         }
+        else if (commandBuffer == "sdinfo")   { showSdInfo(); }
+        else if (commandBuffer == "wifiscan") { showWifiScan(); }
         else if (commandBuffer.startsWith("flood{") && commandBuffer.endsWith("}")) {
           processFloodCommand(commandBuffer);
         }
@@ -607,8 +663,10 @@ void processSerialCommand() {
       }
     }
     else if (c >= 32 && c <= 126) {
-      commandBuffer += c;
-      Serial.write(c);
+      if (commandBuffer.length() < 120) {
+        commandBuffer += c;
+        Serial.write(c);
+      }
     }
   }
 }
@@ -646,6 +704,7 @@ static void printBanner() {
 
 void screenPCModeLoop() {
   if (!pcModeInitialized) {
+    while (Serial.available() > 0) Serial.read();  // descarta basura pendiente (USB CDC)
     printBanner();
     printPrompt();
     pcModeInitialized = true;

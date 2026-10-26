@@ -61,7 +61,6 @@ MENU
 │   ├── Wardriving       (aun no implementado)
 │   ├── Sniffer
 │   ├── PC-Mode
-│   ├── YModem
 │   └── BLE Scanner
 ├── AJUSTES
 │   ├── Configuracion
@@ -87,10 +86,7 @@ Cada anuncio sale con una direccion distinta para que el celular lo vea como un 
 
 **Sniffer**: Captura paquetes WiFi del ambiente 
 
-**PC-Mode**: Se conecta la camioneta a una PC por cable y se maneja todo desde una terminal, con comandos para ver el estado del dispositivo, cambiar el color del NeoPixel, tocar el buzzer, ver archivos de la SD, armar la lista de redes falsas, y revisar el registro del portal cautivo.
-
-**YModem**: Transfiere archivos entre la SD y una PC usando el protocolo YMODEM real. 
-Se navega la SD con un browser en pantalla para elegir que enviar, o se elige recibir un archivo nuevo desde la PC.
+**PC-Mode**: Se conecta la camioneta a una PC por cable y se maneja todo desde una terminal, con comandos para ver el estado del dispositivo, cambiar el color del NeoPixel, tocar el buzzer, ver archivos e info de la SD, escanear redes WiFi cercanas, armar la lista de redes falsas, y revisar el registro del portal cautivo.
 
 **BLE Scanner**: Busca y muestra los dispositivos Bluetooth que hay cerca (la MAC)
 

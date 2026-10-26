@@ -412,19 +412,9 @@ void screenCaptiveLoop() {
     u8g2.drawStr(10, 36, "SSID:");
     u8g2.drawStr(40, 36, AP_SSID);
 
-    char portalLbl[24];
-    if (portalSource == PORTAL_SRC_AUTO) {
-      if (sdReady() && SD.exists(PORTAL_INDEX))            strcpy(portalLbl, "Portal: SD");
-      else if (fsReady() && LittleFS.exists(PORTAL_INDEX)) strcpy(portalLbl, "Portal: FS");
-      else                                                  strcpy(portalLbl, "Portal: interno");
-    } else {
-      snprintf(portalLbl, sizeof(portalLbl), "Portal: %s", captivePortalSourceName());
-    }
-    u8g2.drawStr(10, 48, portalLbl);
-
     char buffer[20];
     snprintf(buffer, sizeof(buffer), "Logs: %d", capturedCount);
-    u8g2.drawStr(80, 48, buffer);
+    u8g2.drawStr(10, 48, buffer);
 
     u8g2.setFont(u8g2_font_5x7_tr);
     u8g2.drawStr(5, 60, "SEL:Detener BACK:Salir");
@@ -432,8 +422,7 @@ void screenCaptiveLoop() {
     u8g2.drawStr(12, 25, "Estado: INACTIVO");
 
     u8g2.setFont(u8g2_font_5x7_tr);
-    u8g2.drawStr(12, 37, "Carpeta SD: /portal/");
-    u8g2.drawStr(13, 47, "Log: captive_log.txt");
+    u8g2.drawStr(6, 37, "Carpeta SD: /portal/");
 
     u8g2.drawStr(1, 60, "SEL:Iniciar BACK:Salir");
   }

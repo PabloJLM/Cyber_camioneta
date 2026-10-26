@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <SPI.h>
 #include <U8g2lib.h>
 #include <Adafruit_NeoPixel.h>
 #include "config.h"
@@ -31,7 +32,6 @@
 #include "screen_blescan.h"
 #include "screen_btspam_config.h"
 #include "screen_remote.h"
-#include "screen_ymodem.h"
 #include "screen_msgpreset.h"
 #include "screen_meshterm.h"
 #include "screen_riscvalu.h"
@@ -49,6 +49,7 @@ Screen currentScreen = SCREEN_SPLASH;
 
 void setup() {
   Serial.begin(115200);
+  SPI.begin(PIN_SD_SCK, PIN_SD_MISO, PIN_SD_MOSI, PIN_CD);
 
   pinMode(PIN_SELECT, INPUT_PULLUP);
   pinMode(PIN_UP, INPUT_PULLUP);
@@ -162,10 +163,6 @@ void loop() {
 
     case SCREEN_REMOTE:
       screenRemoteLoop();
-      break;
-
-    case SCREEN_YMODEM:
-      screenYmodemLoop();
       break;
 
     case SCREEN_MSGPRESET:

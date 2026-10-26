@@ -122,7 +122,7 @@ static bool isButtonJustPressed(int pin) {
 
 
 static int appSelection = 0;
-static const int TOTAL_APPS = 13;
+static const int TOTAL_APPS = 12;
 
 
 void drawWifiCaptivePortal() {
@@ -209,30 +209,6 @@ void drawPCMode() {
   u8g2.drawDisc(76, 55, 2);
 }
 
-void drawYModem() {
-  u8g2.setFontMode(1);
-  u8g2.setBitmapMode(1);
-  u8g2.drawXBM(8, 40, 16, 8, image_download_bits);
-  u8g2.drawXBM(8, 23, 16, 8, image_download_1_bits);
-  u8g2.setFont(u8g2_font_6x10_tr);
-  u8g2.drawStr(43, 9, "YMODEM");
-  u8g2.drawFrame(50, 13, 22, 14);
-  u8g2.drawBox(54, 17, 5, 5);
-  u8g2.drawBox(63, 17, 5, 5);
-  u8g2.drawBox(66, 35, 0, 0);
-  u8g2.drawFrame(48, 26, 26, 28);
-  u8g2.drawBox(58, 53, 5, 16);
-  u8g2.drawBox(81, 34, 3, 12);
-  u8g2.drawDisc(60, 48, 2);
-  u8g2.drawDisc(55, 38, 1);
-  u8g2.drawVLine(60, 30, 18);
-  u8g2.drawLine(60, 29, 62, 31);
-  u8g2.drawLine(60, 29, 58, 31);
-  u8g2.drawLine(60, 29, 58, 31);
-  u8g2.drawLine(60, 41, 65, 35);
-  u8g2.drawLine(60, 45, 55, 39);
-  u8g2.drawTriangle(78, 35, 86, 35, 82, 29);
-}
 
 void drawBleScan() {
   u8g2.setFontMode(1);
@@ -372,21 +348,18 @@ void screenAppsLoop() {
         currentScreen = SCREEN_PCMODE;
         break;
       case 7:
-        currentScreen = SCREEN_YMODEM;
-        break;
-      case 8:
         currentScreen = SCREEN_BLESCAN;
         break;
-      case 9:
+      case 8:
         currentScreen = SCREEN_MSGPRESET;
         break;
-      case 10:
+      case 9:
         currentScreen = SCREEN_MESHTERM;
         break;
-      case 11:
+      case 10:
         currentScreen = SCREEN_RISCVALU;
         break;
-      case 12:
+      case 11:
         currentScreen = SCREEN_AESDEMO;
         break;
     }
@@ -417,21 +390,18 @@ void screenAppsLoop() {
       drawPCMode();
       break;
     case 7:
-      drawYModem();
-      break;
-    case 8:
       drawBleScan();
       break;
-    case 9:
+    case 8:
       drawMsgPreset();
       break;
-    case 10:
+    case 9:
       drawMeshTerm();
       break;
-    case 11:
+    case 10:
       drawRiscvAlu();
       break;
-    case 12:
+    case 11:
       drawAesDemo();
       break;
   }

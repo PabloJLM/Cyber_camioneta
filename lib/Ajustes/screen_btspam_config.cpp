@@ -103,7 +103,7 @@ void screenBtSpamConfigLoop() {
     y += 8;
   }
 
-  u8g2.drawStr(2, 62, "! = puede reiniciar el equipo");
+  u8g2.drawStr(2, 62, "! = reinicia el equipo");
 
   u8g2.sendBuffer();
 }

@@ -13,7 +13,10 @@
 #define PIN_BUZZER      2
 #define PIN_LED1        3
 #define PIN_GPSON       8
-#define PIN_CD          40
+#define PIN_CD          18   
+#define PIN_SD_SCK      21
+#define PIN_SD_MISO     20
+#define PIN_SD_MOSI     19
 
 #define SCREEN_W        128
 #define SCREEN_H        64
@@ -70,7 +73,6 @@ enum Screen {
   SCREEN_AYUDA_TERM,
   SCREEN_BTSPAM_CONFIG,
   SCREEN_REMOTE,
-  SCREEN_YMODEM,
   SCREEN_MSGPRESET,
   SCREEN_MESHTERM,
   SCREEN_RISCVALU,
