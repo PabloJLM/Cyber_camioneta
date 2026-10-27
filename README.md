@@ -1,4 +1,4 @@
-# Minino Reforjado
+# Minino Reforjado - en GT
 
 ![Platform](https://img.shields.io/badge/platform-ESP32--C6-blue?logo=espressif&logoColor=white)
 ![Framework](https://img.shields.io/badge/framework-Arduino-00979D?logo=arduino&logoColor=white)
