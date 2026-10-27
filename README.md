@@ -1,4 +1,4 @@
-# Camioneta (Nombre pendiente)
+# Minino Reforjado
 
 ![Platform](https://img.shields.io/badge/platform-ESP32--C6-blue?logo=espressif&logoColor=white)
 ![Framework](https://img.shields.io/badge/framework-Arduino-00979D?logo=arduino&logoColor=white)
@@ -35,7 +35,7 @@ No se necesita ninguna PC o conexion a internet
 | BUZZER     | 2   |
 | LED1       | 3   |
 | GPS ON     | 8   |
-| CD (SD)    | 40  |
+| CD    | 18  |
 
 ## Compilar y flashear
 
@@ -44,7 +44,7 @@ Proyecto en PlatformIO (framework Arduino), environment `esp32-c6-devkitc-1`.
 ```
 pio run              # compilar
 pio run -t upload    # compilar y flashear
-pio device monitor   # monitor serial (115200 baudios)
+pio device monitor   # monitor serial 
 ```
 
 Partición `huge_app.csv` (3MB app, sin OTA)
