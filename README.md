@@ -11,6 +11,8 @@ Tiene pantalla OLED, 4 botones, buzzer, NeoPixels, GPS y lector de SD.
 
 No se necesita ninguna PC o conexion a internet
 
+> **Nota sobre el nombre:** este proyecto se llamó antes *camioneta* — el nombre hacía referencia a la forma del layout, parecida a una camioneta de Guatemala. Ahora se llama **Minino Reforjado**.
+
 ## Hardware
 
 - MCU: ESP32-C6-WROOM-1U-N8/16
