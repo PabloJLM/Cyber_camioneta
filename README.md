@@ -17,8 +17,9 @@ No se necesita ninguna PC o conexion a internet
 - Pantalla: OLED SH1106 128x64, I2C
 - GPS: ATGM336H-6N-74, 115200 baudios
 - NeoPixel: 9 LEDs
-- Botonera: SELECT, UP, DOWN, BACK
-- Buzzer y lector de tarjeta SD
+- Botones: SELECT, UP, DOWN, BACK
+- Buzzer 
+- Lector de tarjeta SD
 - Queda un header libre sin usar: 3V3, TX, RX, GND, GPIO10, GND para *add-ons* 
 
 ### Pines
@@ -41,12 +42,20 @@ No se necesita ninguna PC o conexion a internet
 
 Proyecto en PlatformIO (framework Arduino), environment `esp32-c6-devkitc-1`.
 
+Compilar
 ```
-pio run              # compilar
-pio run -t upload    # compilar y flashear
-pio device monitor   # monitor serial 
+pio run             
 ```
 
+Compilar y flashear
+```
+pio run -t upload    
+```
+
+Abrir monitor serial
+```
+pio device monitor   
+```
 Partición `huge_app.csv` (3MB app, sin OTA)
 
 ## Estructura del menu
