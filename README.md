@@ -3,7 +3,7 @@
 ![Platform](https://img.shields.io/badge/platform-ESP32--C6-blue?logo=espressif&logoColor=white)
 ![Framework](https://img.shields.io/badge/framework-Arduino-00979D?logo=arduino&logoColor=white)
 ![Language](https://img.shields.io/badge/lenguaje-C%2B%2B-00599C?logo=cplusplus&logoColor=white)
-[![Wiki](https://img.shields.io/badge/docs-wiki-informational)](https://github.com/PabloJLM/Cyber_camioneta/wiki)
+[![Wiki](https://img.shields.io/badge/docs-wiki-informational)](https://github.com/PabloJLM/Minino_Reforjado/wiki)
 
 Dispositivo para pruebas de seguridad WiFi y Bluetooth, basado en ESP32-C6. 
 
@@ -95,7 +95,7 @@ Cada anuncio sale con una direccion distinta para que el celular lo vea como un 
 
 **Sniffer**: Captura paquetes WiFi del ambiente 
 
-**PC-Mode**: Se conecta la camioneta a una PC por cable y se maneja todo desde una terminal, con comandos para ver el estado del dispositivo, cambiar el color del NeoPixel, tocar el buzzer, ver archivos e info de la SD, escanear redes WiFi cercanas, armar la lista de redes falsas, y revisar el registro del portal cautivo.
+**PC-Mode**: Se conecta el Minino Reforjado a una PC por cable y se maneja todo desde una terminal, con comandos para ver el estado del dispositivo, cambiar el color del NeoPixel, tocar el buzzer, ver archivos e info de la SD, escanear redes WiFi cercanas, armar la lista de redes falsas, y revisar el registro del portal cautivo.
 
 **BLE Scanner**: Busca y muestra los dispositivos Bluetooth que hay cerca (la MAC)
 

@@ -334,7 +334,7 @@ void ftpServerLoop() {
         ctrlClient = ctrlServer.available();
         cwd = "/";
         cmdLine = "";
-        ctrlClient.println("220 Camioneta FTP listo.");
+        ctrlClient.println("220 Minino Reforjado FTP listo.");
         state = FTP_WAIT_USER;
       }
     }

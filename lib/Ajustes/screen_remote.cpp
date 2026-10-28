@@ -63,6 +63,8 @@ static bool isButtonJustPressed(int pin) {
   return false;
 }
 
+// ---------- helpers compartidos ----------
+
 static void printSection(WiFiClient& c, const char* title) {
   c.println();
   c.print("== ");
@@ -78,11 +80,11 @@ static void printRow(WiFiClient& c, const char* key, const String& value) {
 }
 
 static void printPromptRegular(WiFiClient& c) {
-  c.print(pianoMode ? "piano> " : "camioneta:~$ ");
+  c.print(pianoMode ? "piano> " : "minino:~$ ");
 }
 
 static void printPromptAdvanced(WiFiClient& c) {
-  c.print("camioneta-adv:~$ ");
+  c.print("minino-adv:~$ ");
 }
 
 static void listSD(WiFiClient& c) {
@@ -150,12 +152,12 @@ static void showFree(WiFiClient& c) {
 }
 
 static void showWhoami(WiFiClient& c) {
-  c.println("  root@camioneta (remoto)");
+  c.println("  root@minino (remoto)");
 }
 
 static void showUname(WiFiClient& c) {
   printSection(c, "uname");
-  printRow(c, "sistema", "camioneta-fw");
+  printRow(c, "sistema", "minino-fw");
   printRow(c, "mcu", "ESP32-C6");
   printRow(c, "core", "arduino-esp32");
 }
@@ -222,6 +224,8 @@ static void processFloodCommand(WiFiClient& c, const String& cmd) {
     c.println(")");
   }
 }
+
+// ---------- terminal REGULAR (equivalente a PC-Mode) ----------
 
 static int noteFreq(String n) {
   n.trim();
@@ -478,7 +482,7 @@ static void handleRegularCommand(WiFiClient& c, String cmd) {
   }
   else if (cmd == "info") {
     printSection(c, "device info");
-    printRow(c, "proyecto", "Camioneta");
+    printRow(c, "proyecto", "Minino Reforjado");
     printRow(c, "version", "1.0");
     printRow(c, "autor", "Pablo Lopez");
     printRow(c, "lab", "Tesla Lab");
@@ -559,6 +563,8 @@ static void handleRegularCommand(WiFiClient& c, String cmd) {
   c.println();
   printPromptRegular(c);
 }
+
+// ---------- terminal AVANZADA (equivalente a Ajustes Term) ----------
 
 static void showFloodMessages(WiFiClient& c) {
   printSection(c, "AP Flood: mensajes activos");
@@ -871,6 +877,8 @@ static void handleAdvancedCommand(WiFiClient& c, String cmd) {
   printPromptAdvanced(c);
 }
 
+// ---------- seleccion de terminal ----------
+
 static void printSelectMenu(WiFiClient& c) {
   c.println();
   c.println("Elegi terminal:");
@@ -901,12 +909,14 @@ static void handleSelect(WiFiClient& c, String raw) {
   }
 }
 
+// ---------- servicio de conexion ----------
+
 static void serviceTerminal() {
   if (!termClient || !termClient.connected()) {
     WiFiClient incoming = termServer.available();
     if (incoming) {
       if (termClient && termClient.connected()) {
-        incoming.println("camioneta: ya hay una sesion activa, intenta luego.");
+        incoming.println("minino: ya hay una sesion activa, intenta luego.");
         incoming.stop();
       } else {
         termClient = incoming;
@@ -914,7 +924,7 @@ static void serviceTerminal() {
         termMode = RTERM_SELECT;
         pianoMode = false;
         termClient.println();
-        termClient.println("Camioneta - Terminal remota");
+        termClient.println("Minino Reforjado - Terminal remota");
         printSelectMenu(termClient);
       }
     }

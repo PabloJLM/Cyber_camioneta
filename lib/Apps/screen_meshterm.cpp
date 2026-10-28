@@ -3,6 +3,10 @@
 #include "mesh.h"
 #include <stdlib.h>
 
+// App "Terminal Chat": misma idea que PC-Mode/Con.Remota (dueña total
+// de la pantalla mientras esta activa), pero para chatear por ESP-NOW
+// con uno o mas Mininos Reforjados usando el monitor serial como interfaz.
+
 static const unsigned char image_terminal_bits[] PROGMEM = {
   0x00,0x00,0x00,0x00,0xfe,0xff,0xff,0x7f,0x02,0x00,0x00,0x40,0x02,0x00,0x00,0x40,
   0x02,0x00,0x00,0x40,0x02,0x00,0x00,0x40,0x72,0x00,0x00,0x40,0x8a,0x00,0x00,0x40,
@@ -31,8 +35,8 @@ static void printBanner() {
   Serial.println(id);
   Serial.println(F("Comandos:"));
   Serial.println(F("  send <texto>             manda a TODAS"));
-  Serial.println(F("  sendto <id_hex> <texto>  manda a una camioneta especifica"));
-  Serial.println(F("  nodes / ls               camionetas vivas"));
+  Serial.println(F("  sendto <id_hex> <texto>  manda a un Minino Reforjado especifico"));
+  Serial.println(F("  nodes / ls               Mininos Reforjados vivos"));
   Serial.println(F("  clear / cls              limpia pantalla"));
   Serial.println(F("  exit                     vuelve al menu"));
   Serial.println();
@@ -40,7 +44,7 @@ static void printBanner() {
 
 static void printNodesList() {
   int n = meshNodeCount();
-  if (n == 0) { Serial.println(F("  ninguna camioneta vista todavia")); return; }
+  if (n == 0) { Serial.println(F("  ningun Minino Reforjado visto todavia")); return; }
   for (int i = 0; i < MAX_NODES; i++) {
     const MeshNode* nd = meshNodeAt(i);
     if (!meshNodeAlive(nd)) continue;
@@ -57,6 +61,8 @@ static void printNodesList() {
   }
 }
 
+// parte el siguiente token separado por espacio de 'p'; deja *p
+// apuntando al resto de la linea.
 static void nextToken(char*& p, char* buf, size_t n) {
   while (*p == ' ') p++;
   size_t i = 0;
@@ -150,6 +156,7 @@ static void processChatCommand() {
   }
 }
 
+// Imprime en vivo lo que llega dirigido a mi/todas (mesh.cpp ya lo filtra).
 static void checkIncoming() {
   if (meshHasNewText()) {
     char from[10]; meshFormatId(meshLastTextFrom(), from, sizeof(from));
@@ -198,7 +205,7 @@ void screenMeshTermLoop() {
 
   meshLoop();
   processChatCommand();
-  if (currentScreen != SCREEN_MESHTERM) return;
+  if (currentScreen != SCREEN_MESHTERM) return;   // 'exit' ya nos saco
 
   checkIncoming();
 
