@@ -2,7 +2,6 @@
 #include "buzzer.h"
 #include "config.h"
 
-
 static const unsigned char image_download_bits_wifi[] PROGMEM = {
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
 	0xc0, 0x03, 0x00, 0x00, 0x00, 0xfe, 0x7f, 0x00, 0x00, 0x80, 0xff, 0xff, 0x01, 0x00, 0xe0, 0xff, 
@@ -85,7 +84,6 @@ static const unsigned char image_download_bits[] PROGMEM = {
   0xff,0xff,0xff,0xff,0xfc,0x3f,0xfc,0x3f,0xf0,0x0f,0xf0,0x0f,0xc0,0x03,0xc0,0x03
 };
 
-
 static bool isButtonJustPressed(int pin) {
   static uint8_t lastStableState[4] = {HIGH, HIGH, HIGH, HIGH};
   static uint8_t lastReading[4]     = {HIGH, HIGH, HIGH, HIGH};
@@ -120,10 +118,8 @@ static bool isButtonJustPressed(int pin) {
   return false;
 }
 
-
 static int appSelection = 0;
 static const int TOTAL_APPS = 12;
-
 
 void drawWifiCaptivePortal() {
   u8g2.setFontMode(1);
@@ -209,7 +205,6 @@ void drawPCMode() {
   u8g2.drawDisc(76, 55, 2);
 }
 
-
 void drawBleScan() {
   u8g2.setFontMode(1);
   u8g2.setBitmapMode(1);
@@ -260,8 +255,6 @@ void drawMeshTerm() {
   u8g2.drawFrame(38, 24, 52, 33);
 }
 
-
-
 void drawRiscvAlu() {
   u8g2.setFontMode(1);
   u8g2.setBitmapMode(1);
@@ -291,7 +284,6 @@ void drawAesDemo() {
   u8g2.setFont(u8g2_font_6x10_tr);
   u8g2.drawStr(54, 10, "AES");
   u8g2.drawStr(44, 20, "HARDWARE");
-  // candado: cuerpo + arco (shackle)
   u8g2.drawFrame(52, 37, 24, 18);
   u8g2.drawCircle(64, 33, 8, U8G2_DRAW_UPPER_LEFT | U8G2_DRAW_UPPER_RIGHT);
   u8g2.drawVLine(56, 33, 8);

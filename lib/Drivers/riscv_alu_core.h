@@ -1,7 +1,6 @@
 #pragma once
 #include <stdint.h>
 
-
 #define ALU_OP_ADD   0
 #define ALU_OP_SUB   1
 #define ALU_OP_AND   2
@@ -12,7 +11,7 @@
 #define ALU_OP_SLTU  7
 #define ALU_OP_COUNT 8
 
-struct AluResult { //flags y resultado
+struct AluResult {
   uint8_t result;
   bool carry;      
   bool overflow;    
@@ -20,9 +19,7 @@ struct AluResult { //flags y resultado
   bool negative;
 };
 
-
 AluResult aluCoreCompute(uint8_t a, uint8_t b, uint8_t op);
-
 
 void      aluCoreSetA(uint8_t v);
 void      aluCoreSetB(uint8_t v);
@@ -35,7 +32,7 @@ AluResult aluCoreRun();
 AluResult aluCoreLastResult();
 bool      aluCoreHasResult();
 
-bool        aluCoreOpFromName(const char *name, uint8_t *outOp);  // "add".."sltu" tira la operacion a realizar 
+bool        aluCoreOpFromName(const char *name, uint8_t *outOp);
 const char *aluCoreMnemonic(uint8_t op);
 const char *aluCoreFormula(uint8_t op);
 const char *aluCoreAsmInstr(uint8_t op);

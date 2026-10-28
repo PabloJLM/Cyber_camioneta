@@ -26,19 +26,17 @@ void screenSplashLoop() {
   }
   const BreathColor &breath = BREATH_PRESETS[breathIdx];
 
- 
   bool bounceVertical = (splash.h <= 45);
 
   static int x = (SCREEN_W - splash.w) / 2;
   static int y = (SCREEN_H - splash.h) / 2;
-  static float vx = 1.5;//velocidad jsjs
+  static float vx = 1.5;
   static float vy = bounceVertical ? 1.5 : 0;
   static int currentPixel = 0;
   static unsigned long lastPixelTime = 0;
   static uint8_t brightness = 50;
   static int8_t direction = 1;
   static unsigned long lastBreatheTime = 0;
-
 
   x += vx;
   if (bounceVertical) y += vy;
@@ -51,13 +49,11 @@ void screenSplashLoop() {
   u8g2.drawXBM(x, y, splash.w, splash.h, splash.bits);
   u8g2.sendBuffer();
 
-
   if (currentPixel < NUM_PIXELS) {
     neopixelSplashSequence(currentPixel, lastPixelTime, breath.r, breath.g, breath.b);
   } else {
     neopixelBreathe(brightness, direction, lastBreatheTime, breath.r, breath.g, breath.b);
   }
-
 
   if (anyButtonPressed()) {
     neopixelFadeOut(breath.r, breath.g, breath.b);

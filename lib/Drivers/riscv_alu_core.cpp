@@ -2,8 +2,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-// Llama al archivo en ensamblador riscv_alu.S
-// Entrada: a0=A, a1=B, a2=op. Salida (uint64_t): a0=resultado, a1=flags
 extern "C" uint64_t riscv_alu_asm(uint32_t a, uint32_t b, uint32_t op);
 
 static const char *const MNEM[ALU_OP_COUNT]    = {"ADD","SUB","AND","OR","XOR","SLL","SRL","SLTU"};
@@ -25,12 +23,8 @@ AluResult aluCoreCompute(uint8_t a, uint8_t b, uint8_t op) {
   out.carry    = (bool)((r >> 32) & 1);
   out.zero     = (out.result == 0);
 
-  // Overflow: unicamente ADD, y unicamente si A+B supera 255 (se sale del
-  // rango de 8 bits sin signo). El resto de operaciones nunca lo activan.
   out.overflow = (op == ALU_OP_ADD) && (((uint16_t)a + (uint16_t)b) > 255);
 
-  // Negative: unicamente SUB, y unicamente si el resultado real (A - B) es
-  // negativo, es decir A < B. El resto de operaciones nunca dan negativo.
   out.negative = (op == ALU_OP_SUB) && (a < b);
 
   return out;

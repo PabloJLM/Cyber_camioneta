@@ -12,9 +12,6 @@ static void hexLine(Print &c, const uint8_t *data, int n) {
   c.println();
 }
 
-// Igual que hexLine pero devuelve el texto "legible" de un bloque:
-// los bytes imprimibles se muestran tal cual, el resto como '.'
-// (sirve para mostrar que un descifrado con clave incorrecta da basura).
 static void legibleLine(Print &c, const uint8_t *data, int n) {
   char t[17];
   int m = n > 16 ? 16 : n;
@@ -26,8 +23,6 @@ static void legibleLine(Print &c, const uint8_t *data, int n) {
   c.print('"'); c.print(t); c.print('"');
 }
 
-// Imprime el estado de 16 bytes como grid 4x4 (orden columna-mayor, igual
-// que la especificacion: fila = indice%4, columna = indice/4).
 static void printGrid(Print &c, const uint8_t state[16]) {
   for (int r = 0; r < 4; r++) {
     c.print(F("     "));
@@ -73,10 +68,10 @@ static void printRun(Print &c) {
   c.print(F("   1. mensaje (16 bytes):  \"")); c.print(aesDemoGetMessageText()); c.println('"');
   c.print(F("   2. clave (128 bits):    ")); hexLine(c, key, AES_BLOCK_LEN);
 
-  aesDemoEncrypt(key, plain, cipher);           // <- AES real
+  aesDemoEncrypt(key, plain, cipher);
   c.print(F("   3. cifrado:             ")); hexLine(c, cipher, AES_BLOCK_LEN);
 
-  aesDemoDecrypt(key, cipher, back);            // <- AES real
+  aesDemoDecrypt(key, cipher, back);
   char t[AES_BLOCK_LEN + 1];
   memcpy(t, back, AES_BLOCK_LEN);
   t[AES_BLOCK_LEN] = 0;
@@ -142,7 +137,7 @@ static void printSteps(Print &c) {
   c.print(F("   cifrado final: ")); hexLine(c, state, AES_BLOCK_LEN);
 
   uint8_t realCipher[AES_BLOCK_LEN];
-  aesDemoEncrypt(key, plain, realCipher);          // <- AES real (hardware), para verificar
+  aesDemoEncrypt(key, plain, realCipher);
   bool coincide = memcmp(state, realCipher, AES_BLOCK_LEN) == 0;
   c.print(F("   ¿coincide con el cifrado real del hardware C6? "));
   c.println(coincide ? F("si") : F("no (revisa el fw)"));
@@ -204,7 +199,7 @@ static void printAttempts(Print &c) {
   uint8_t plain[AES_BLOCK_LEN], key[AES_BLOCK_LEN], cipher[AES_BLOCK_LEN];
   aesDemoGetMessageBlock(plain);
   aesDemoGetKey(key);
-  aesDemoEncrypt(key, plain, cipher);           // <- AES real
+  aesDemoEncrypt(key, plain, cipher);
 
   c.println();
   c.print(F("   mensaje cifrado con la clave correcta: \"")); c.print(aesDemoGetMessageText()); c.println('"');
@@ -217,7 +212,7 @@ static void printAttempts(Print &c) {
   for (int i = 0; i < 3; i++) {
     uint8_t wrongKey[AES_BLOCK_LEN], out[AES_BLOCK_LEN];
     aesDemoFlipKeyBits(key, bits[i], wrongKey);
-    aesDemoDecrypt(wrongKey, cipher, out);      // <- AES real, con clave incorrecta
+    aesDemoDecrypt(wrongKey, cipher, out);
 
     c.print(F("   [")); c.print(bits[i]); c.println(F(" bit(s) distinto(s)]"));
     c.print(F("     clave:      ")); hexLine(c, wrongKey, AES_BLOCK_LEN);
@@ -228,7 +223,7 @@ static void printAttempts(Print &c) {
   }
 
   uint8_t recovered[AES_BLOCK_LEN];
-  aesDemoDecrypt(key, cipher, recovered);       // <- AES real, con la clave correcta
+  aesDemoDecrypt(key, cipher, recovered);
   char t[AES_BLOCK_LEN + 1];
   memcpy(t, recovered, AES_BLOCK_LEN);
   t[AES_BLOCK_LEN] = 0;
@@ -248,7 +243,7 @@ static void printAvalanche(Print &c) {
   uint8_t plain[AES_BLOCK_LEN], key[AES_BLOCK_LEN], baseCipher[AES_BLOCK_LEN];
   aesDemoGetMessageBlock(plain);
   aesDemoGetKey(key);
-  aesDemoEncrypt(key, plain, baseCipher);       // <- AES real
+  aesDemoEncrypt(key, plain, baseCipher);
 
   c.println();
   c.print(F("   mensaje base: \"")); c.print(aesDemoGetMessageText()); c.println('"');
@@ -259,15 +254,15 @@ static void printAvalanche(Print &c) {
   uint8_t tmpMsg[AES_BLOCK_LEN], tmpKey[AES_BLOCK_LEN], cipher[AES_BLOCK_LEN];
 
   aesDemoFlipMessageBit(plain, 0, tmpMsg);
-  aesDemoEncrypt(key, tmpMsg, cipher);          // <- AES real
+  aesDemoEncrypt(key, tmpMsg, cipher);
   printVariant(c, "mensaje: 1 bit distinto", cipher, baseCipher);
 
   aesDemoFlipKeyBits(key, 1, tmpKey);
-  aesDemoEncrypt(tmpKey, plain, cipher);        // <- AES real
+  aesDemoEncrypt(tmpKey, plain, cipher);
   printVariant(c, "clave: 1 bit distinto", cipher, baseCipher);
 
   aesDemoRandomKey(tmpKey);
-  aesDemoEncrypt(tmpKey, plain, cipher);        // <- AES real
+  aesDemoEncrypt(tmpKey, plain, cipher);
   printVariant(c, "clave: al azar", cipher, baseCipher);
 
   c.println();

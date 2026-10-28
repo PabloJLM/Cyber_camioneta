@@ -3,15 +3,7 @@
 #include "aes_demo_terminal.h"
 #include <stdint.h>
 
-// Pantalla simbolica + terminal serie propia. El OLED solo anima un
-// candado (sin amontonar texto), pero esta pantalla SI escucha el puerto
-// serie: mientras esta abierta, se puede escribir "help", "msg <texto>",
-// "key 0|1|<hex>", "show", "run", "attempts", "avalanche" (sin el prefijo
-// "aes", ya que aca el contexto ya es AES) y se despachan con el mismo
-// nucleo compartido que usan las terminales de Ajustes y Remota
-// (Drivers/aes_demo_terminal), asi que el comportamiento es identico.
-
-#define AES_ANIM_MS 900   // cada cuanto el candado abre/cierra
+#define AES_ANIM_MS 900
 
 static bool termInitialized = false;
 static String lineBuffer;
@@ -47,16 +39,13 @@ static void drawLock(int cx, int top, bool closed) {
   const int w = 26, h = 18, shackleW = 14;
   int bodyY = top + 8;
 
-  // arco del candado: cerrado = completo arriba del cuerpo; abierto = un
-  // lado levantado, como si se acabara de abrir.
   int archTop = closed ? top : top - 5;
   u8g2.drawVLine(cx - shackleW / 2, archTop, bodyY - archTop);
   u8g2.drawVLine(cx + shackleW / 2, top, bodyY - top);
   u8g2.drawCircle(cx, archTop + 6, 7, U8G2_DRAW_UPPER_LEFT | U8G2_DRAW_UPPER_RIGHT);
 
-  // cuerpo
   u8g2.drawFrame(cx - w / 2, bodyY, w, h);
-  u8g2.drawBox(cx - 2, bodyY + h / 2 - 2, 4, h / 2);   // ojo de la cerradura
+  u8g2.drawBox(cx - 2, bodyY + h / 2 - 2, 4, h / 2);
 }
 
 static void printPrompt() {
@@ -76,8 +65,6 @@ static void printBanner() {
 
 }
 
-// Igual que un comando de las otras terminales, pero sin exigir el
-// prefijo "aes " porque esta pantalla ya es exclusivamente de AES.
 static void dispatchLine(const String &line) {
   if (line == "clear" || line == "cls") {
     Serial.print(F("\033[2J\033[H"));

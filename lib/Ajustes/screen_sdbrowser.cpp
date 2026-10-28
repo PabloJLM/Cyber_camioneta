@@ -14,7 +14,6 @@ static const unsigned char image_Layer_9_bits[] PROGMEM = {
   0x7e,0x7e,0x7e,0x7e
 };
 
-
 static const char* AP_SSID = "Camioneta1";
 static const char* AP_PASS = "12345678";
 
@@ -25,11 +24,9 @@ static WebServer webServer(80);
 static bool browserRunning = false;
 static File uploadFile;
 
-
 static bool sdReady() {
   return SD.begin(PIN_CD);
 }
-
 
 static bool fsReady() {
   static bool mounted = false;
@@ -41,7 +38,6 @@ static bool fsReady() {
   }
   return mounted;
 }
-
 
 static String jstr(const String& v) {
   String o = "\"";
@@ -65,7 +61,6 @@ static String joinPath(const String& dir, const String& name) {
   if (dir == "/") return "/" + name;
   return dir + "/" + name;
 }
-
 
 static const char PAGE_BROWSER_HTML[] PROGMEM = R"HTML(<!DOCTYPE html>
 <html lang="es">
@@ -249,7 +244,6 @@ static bool serveFromFS(const char* path, const char* contentType) {
   return true;
 }
 
-
 static bool serveCustom(const char* path, const char* contentType) {
   return serveFromSD(path, contentType) || serveFromFS(path, contentType);
 }
@@ -380,7 +374,6 @@ static void handleCustomUpload(const char* fsPath) {
 static void handleCustomUploadHTML() { handleCustomUpload(SDB_INDEX); }
 static void handleCustomUploadCSS()  { handleCustomUpload(SDB_CSS); }
 
-
 static void handleCustomReset() {
   bool didSomething = false;
 
@@ -395,8 +388,6 @@ static void handleCustomReset() {
 
   webServer.send(200, "text/plain", didSomething ? "OK, restaurado" : "nada que borrar");
 }
-
-
 
 static void startBrowser() {
   if (browserRunning) return;
@@ -436,8 +427,6 @@ static void stopBrowser() {
   browserRunning = false;
   Serial.println(F("SD Browser: detenido"));
 }
-
-
 
 static bool isButtonJustPressed(int pin) {
   static uint8_t lastStableState[4] = {HIGH, HIGH, HIGH, HIGH};

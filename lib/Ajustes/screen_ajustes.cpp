@@ -103,13 +103,13 @@ void screenAjustesLoop() {
     if (menuSelection < 0) menuSelection = MENU_ITEMS - 1;
     buzzerClick();
   }
-  
+
   if (isButtonJustPressed(PIN_DOWN)) {
     menuSelection++;
     if (menuSelection >= MENU_ITEMS) menuSelection = 0;
     buzzerClick();
   }
-  
+
   if (isButtonJustPressed(PIN_SELECT)) {
     buzzerBeep();
     switch(menuSelection) {
@@ -122,33 +122,33 @@ void screenAjustesLoop() {
     }
     return;
   }
-  
+
   if (isButtonJustPressed(PIN_BACK)) {
     currentScreen = SCREEN_MENU;
     buzzerClick();
     return;
   }
-  
+
   unsigned long currentTime = millis();
   if (currentTime - lastAnimTime > 150) {
     animFrame = (animFrame + 1) % 5;
     lastAnimTime = currentTime;
   }
-  
+
   u8g2.clearBuffer();
   u8g2.setFontMode(1);
   u8g2.setBitmapMode(1);
   u8g2.setFont(u8g2_font_6x10_tr);
-  
+
   u8g2.setDrawColor(1);
   u8g2.drawBox(16, 1, 96, 14);
   u8g2.setDrawColor(2);
   u8g2.drawStr(38, 11, "AJUSTES");
   u8g2.setDrawColor(1);
-  
+
   u8g2.drawXBM(0, 1, 16, 14, image_Layer_9_bits);
   u8g2.drawXBM(112, 1, 16, 14, image_Layer_9_bits);
-  
+
   const char* items[] = {"Configuracion", "SD Storage", "NEOPIXEL", "Terminal Avz.", "BT Spam", "Con. Remota"};
 
   int scrollTop = menuSelection - (VISIBLE_ITEMS - 1);
@@ -177,7 +177,7 @@ void screenAjustesLoop() {
   if (scrollTop + VISIBLE_ITEMS < MENU_ITEMS) {
     u8g2.drawTriangle(122, 54, 126, 54, 124, 57);
   }
-  
+
   switch(animFrame) {
     case 0: u8g2.drawXBM(85, 36, 32, 32, image_Layer_13_bits); break;
     case 1: u8g2.drawXBM(85, 36, 32, 32, image_Layer_15_bits); break;
@@ -185,11 +185,11 @@ void screenAjustesLoop() {
     case 3: u8g2.drawXBM(85, 36, 32, 32, image_Layer_15_bits); break;
     case 4: u8g2.drawXBM(85, 36, 32, 32, image_Layer_20_bits); break;
   }
-  
+
   int ellipseFrame = (animFrame / 2) % 3;
   if (ellipseFrame >= 0) u8g2.drawEllipse(117, 56, 1, 1);
   if (ellipseFrame >= 1) u8g2.drawEllipse(121, 56, 1, 1);
   if (ellipseFrame >= 2) u8g2.drawEllipse(125, 56, 1, 1);
-  
+
   u8g2.sendBuffer();
 }

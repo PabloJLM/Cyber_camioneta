@@ -63,8 +63,6 @@ static bool isButtonJustPressed(int pin) {
   return false;
 }
 
-// ---------- helpers compartidos ----------
-
 static void printSection(WiFiClient& c, const char* title) {
   c.println();
   c.print("== ");
@@ -224,8 +222,6 @@ static void processFloodCommand(WiFiClient& c, const String& cmd) {
     c.println(")");
   }
 }
-
-// ---------- terminal REGULAR (equivalente a PC-Mode) ----------
 
 static int noteFreq(String n) {
   n.trim();
@@ -564,8 +560,6 @@ static void handleRegularCommand(WiFiClient& c, String cmd) {
   printPromptRegular(c);
 }
 
-// ---------- terminal AVANZADA (equivalente a Ajustes Term) ----------
-
 static void showFloodMessages(WiFiClient& c) {
   printSection(c, "AP Flood: mensajes activos");
   int n = apFloodGetMessageCount();
@@ -877,8 +871,6 @@ static void handleAdvancedCommand(WiFiClient& c, String cmd) {
   printPromptAdvanced(c);
 }
 
-// ---------- seleccion de terminal ----------
-
 static void printSelectMenu(WiFiClient& c) {
   c.println();
   c.println("Elegi terminal:");
@@ -908,8 +900,6 @@ static void handleSelect(WiFiClient& c, String raw) {
     c.print("Opcion (1/2): ");
   }
 }
-
-// ---------- servicio de conexion ----------
 
 static void serviceTerminal() {
   if (!termClient || !termClient.connected()) {

@@ -8,7 +8,6 @@ static const unsigned char image_download_bits[] PROGMEM = {
   0x7e,0x7e,0x7e,0x7e
 };
 
-
 static const int TOTAL_PAGES = 5;
 static const char* PAGES[TOTAL_PAGES][4] = {
   {

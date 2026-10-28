@@ -1,6 +1,5 @@
 #include "neopixel.h"
 
-//Funciones para neos simplificadas xd 
 void neopixelInit() {
   strip.begin();
   strip.show();
@@ -49,7 +48,6 @@ void neopixelBreathe(uint8_t &brightness, int8_t &direction, unsigned long &last
       direction = 1;
     }
 
-
     for (int i = 0; i < NUM_PIXELS; i++) {
       uint8_t rr = (uint16_t)r * brightness / 255;
       uint8_t gg = (uint16_t)g * brightness / 255;
@@ -60,7 +58,6 @@ void neopixelBreathe(uint8_t &brightness, int8_t &direction, unsigned long &last
     lastTime = currentTime;
   }
 }
-
 
 void neopixelFadeOut(uint8_t r, uint8_t g, uint8_t b) {
   for (int brightness = 255; brightness >= 0; brightness -= 10) {

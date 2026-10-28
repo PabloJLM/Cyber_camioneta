@@ -3,10 +3,6 @@
 #include "mesh.h"
 #include <stdlib.h>
 
-// App "Terminal Chat": misma idea que PC-Mode/Con.Remota (dueña total
-// de la pantalla mientras esta activa), pero para chatear por ESP-NOW
-// con una o mas camionetas usando el monitor serial como interfaz.
-
 static const unsigned char image_terminal_bits[] PROGMEM = {
   0x00,0x00,0x00,0x00,0xfe,0xff,0xff,0x7f,0x02,0x00,0x00,0x40,0x02,0x00,0x00,0x40,
   0x02,0x00,0x00,0x40,0x02,0x00,0x00,0x40,0x72,0x00,0x00,0x40,0x8a,0x00,0x00,0x40,
@@ -61,8 +57,6 @@ static void printNodesList() {
   }
 }
 
-// parte el siguiente token separado por espacio de 'p'; deja *p
-// apuntando al resto de la linea.
 static void nextToken(char*& p, char* buf, size_t n) {
   while (*p == ' ') p++;
   size_t i = 0;
@@ -156,7 +150,6 @@ static void processChatCommand() {
   }
 }
 
-// Imprime en vivo lo que llega dirigido a mi/todas (mesh.cpp ya lo filtra).
 static void checkIncoming() {
   if (meshHasNewText()) {
     char from[10]; meshFormatId(meshLastTextFrom(), from, sizeof(from));
@@ -205,7 +198,7 @@ void screenMeshTermLoop() {
 
   meshLoop();
   processChatCommand();
-  if (currentScreen != SCREEN_MESHTERM) return;   // 'exit' ya nos saco
+  if (currentScreen != SCREEN_MESHTERM) return;
 
   checkIncoming();
 

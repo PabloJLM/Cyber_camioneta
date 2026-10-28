@@ -1,6 +1,6 @@
 import re, time, serial, tkinter as tk
 
-PORT = "/dev/ttyACM0"  # o "COMN" en Windows
+PORT = "/dev/ttyACM0"
 ser = serial.Serial(PORT, 115200, timeout=1)
 time.sleep(2)          
 ser.read(4096)         

@@ -9,7 +9,6 @@
 #include "aes_demo_terminal.h"
 #include <esp_system.h>
 
-
 static const unsigned char image_gear_bits[] PROGMEM = {
   0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x0f,0x00,
   0x00,0x04,0x1f,0x00,0x00,0x0f,0x0f,0x00,0x80,0x0f,0x0f,0x00,0x80,0x0f,0x0f,0x03,
@@ -77,7 +76,6 @@ static void printRow(const char* key, const String& value) {
 static void printPrompt() {
   Serial.print(F("Ajustes:~$ "));
 }
-
 
 static void processFloodCommand(const String& cmd) {
   int open  = cmd.indexOf('{');
@@ -155,7 +153,7 @@ static void showFloodMessages() {
 }
 
 static void processFloodIntervalCommand(const String& cmd) {
-  String arg = cmd.substring(16);   // largo de "apflood interval"
+  String arg = cmd.substring(16);
   arg.trim();
   if (arg.length() == 0) {
     Serial.println(F("  uso: apflood interval <ms>   (0 = lo mas rapido)"));
@@ -169,7 +167,6 @@ static void processFloodIntervalCommand(const String& cmd) {
   if (ms == 0) Serial.println(F("maximo (sin espera)"));
   else { Serial.print(ms); Serial.println(F(" ms")); }
 }
-
 
 static void processSnifNameCommand(const String& cmd) {
   String name = cmd.substring(9);
@@ -200,7 +197,7 @@ static void showSnifName() {
 }
 
 static void processSnifChannelCommand(const String& cmd) {
-  String arg = cmd.substring(15);   // largo de "sniffer channel"
+  String arg = cmd.substring(15);
   arg.trim();
   if (arg.length() == 0) {
     Serial.println(F("  uso: sniffer channel <1-13>"));
@@ -215,7 +212,6 @@ static void processSnifChannelCommand(const String& cmd) {
   Serial.print(F("  ok: canal inicial del sniffer -> "));
   Serial.println(ch);
 }
-
 
 static void processPortalSrcCommand(const String& cmd) {
   String mode = cmd.substring(10);
@@ -239,7 +235,7 @@ static void processPortalSrcCommand(const String& cmd) {
 }
 
 static void processPortalSSIDCommand(const String& cmd) {
-  String name = cmd.substring(12);   // largo de "portal ssid "
+  String name = cmd.substring(12);
   name.trim();
   if (name.length() == 0) {
     Serial.println(F("  uso: portal ssid <nombre>   (ej: portal ssid WiFi_Casa)"));
@@ -257,7 +253,6 @@ static void showPortalSrc() {
   Serial.println(F("  archivos esperados: /portal/index.html, /portal/style.css,"));
   Serial.println(F("                      /portal/success.html (SD o FS interno)"));
 }
-
 
 static void showBtSpamList() {
   printSection("BT Spam: fabricantes en rotacion");
@@ -284,7 +279,7 @@ static int findBtSpamTypeByName(const String& name) {
 }
 
 static void processBtSpamCommand(const String& cmd, bool enable) {
-  String name = cmd.substring(enable ? 14 : 15);   // "btspam enable "/"btspam disable "
+  String name = cmd.substring(enable ? 14 : 15);
   name.trim();
   if (name.length() == 0) {
     Serial.println(F("  uso: btspam enable|disable <fabricante>"));
@@ -303,9 +298,8 @@ static void processBtSpamCommand(const String& cmd, bool enable) {
   Serial.println(enable ? F(" -> activado") : F(" -> desactivado"));
 }
 
-
 static void processWifiSSIDCommand(const String& cmd) {
-  String name = cmd.substring(10);   // largo de "wifi ssid "
+  String name = cmd.substring(10);
   name.trim();
   if (name.length() == 0) {
     Serial.println(F("  uso: wifi ssid <nombre>   (red a la que se une en modo STA)"));
@@ -317,7 +311,7 @@ static void processWifiSSIDCommand(const String& cmd) {
 }
 
 static void processWifiPassCommand(const String& cmd) {
-  String pass = cmd.substring(10);   // largo de "wifi pass "
+  String pass = cmd.substring(10);
   pass.trim();
   if (pass.length() == 0) {
     Serial.println(F("  uso: wifi pass <clave>"));
@@ -328,7 +322,7 @@ static void processWifiPassCommand(const String& cmd) {
 }
 
 static void processWifiModeCommand(const String& cmd) {
-  String mode = cmd.substring(10);   // largo de "wifi mode "
+  String mode = cmd.substring(10);
   mode.trim();
   mode.toLowerCase();
   if (mode == "ap") {
@@ -343,7 +337,7 @@ static void processWifiModeCommand(const String& cmd) {
 }
 
 static void processWifiApSSIDCommand(const String& cmd) {
-  String name = cmd.substring(12);   // largo de "wifi apssid "
+  String name = cmd.substring(12);
   name.trim();
   if (name.length() == 0) {
     Serial.println(F("  uso: wifi apssid <nombre>   (SSID del AP propio de la camioneta)"));
@@ -355,7 +349,7 @@ static void processWifiApSSIDCommand(const String& cmd) {
 }
 
 static void processWifiApPassCommand(const String& cmd) {
-  String pass = cmd.substring(12);   // largo de "wifi appass "
+  String pass = cmd.substring(12);
   pass.trim();
   if (pass.length() == 0) {
     Serial.println(F("  uso: wifi appass <clave>   (min 8 caracteres)"));
@@ -398,7 +392,6 @@ static void showFree() {
   snprintf(v, sizeof(v), "%u", ESP.getMinFreeHeap());
   printRow("heap minimo", String(v) + " bytes");
 }
-
 
 static void processSerialCommand() {
   static String commandBuffer = "";

@@ -18,7 +18,6 @@ PRESET_ARDUINO = [
 ]
 PRESET_BIN_UNICO = [("0x0", "firmware.bin")]
 
-
 class FlashGUI(tk.Tk):
     def __init__(self):
         super().__init__()
@@ -35,8 +34,6 @@ class FlashGUI(tk.Tk):
 
         self.refresh_ports()
         self.after(100, self._poll_log)
-
-    # ---------- UI ----------
 
     def _build_top(self):
         top = tk.Frame(self)
@@ -96,8 +93,6 @@ class FlashGUI(tk.Tk):
         self.log.configure(yscrollcommand=scroll.set)
         scroll.pack(side="left", fill="y")
 
-    # ---------- acciones de la tabla ----------
-
     def refresh_ports(self):
         ports = [p.device for p in list_ports.comports()]
         self.port_combo["values"] = ports
@@ -138,8 +133,6 @@ class FlashGUI(tk.Tk):
             offset, path = self.tree.item(item, "values")
             rows.append((offset, path))
         return rows
-
-    # ---------- esptool ----------
 
     def _base_cmd(self):
         if not self.port_var.get():
@@ -223,7 +216,6 @@ class FlashGUI(tk.Tk):
     def _log_line(self, line):
         self.log.insert("end", line)
         self.log.see("end")
-
 
 if __name__ == "__main__":
     FlashGUI().mainloop()

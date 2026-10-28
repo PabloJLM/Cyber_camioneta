@@ -2,13 +2,6 @@
 #include "buzzer.h"
 #include "mesh.h"
 
-// App "Msj. Preescritos": manda mensajes ESP-NOW a otra(s) camioneta(s)
-// (o a todas). Primero se elige destino, y luego queda en una pantalla
-// partida: arriba un catalogo scrolleable de mensajes prehechos (SEL
-// manda), abajo el ultimo mensaje recibido (o mandado) de la red, en
-// vivo. La mensajeria (ESP-NOW) solo esta prendida mientras esta app
-// esta activa, para no chocar con el WiFi que usan otras apps.
-
 static const unsigned char image_Layer_9_bits[] PROGMEM = {
   0x7e,0x7e,0x7e,0x7e,0x99,0x99,0x99,0x99,
   0x67,0xe6,0x67,0xe6,0x18,0x18,0x18,0x18,
@@ -17,7 +10,7 @@ static const unsigned char image_Layer_9_bits[] PROGMEM = {
 };
 
 static bool meshActive = false;
-static int      msgState    = 0;   // 0 = eligiendo destino, 1 = catalogo + recepcion
+static int      msgState    = 0;
 static uint16_t msgTargetId = 0xFFFF;
 static int      listOffset  = 0;
 
@@ -123,7 +116,6 @@ void screenMsgPresetLoop() {
     if (isButtonJustPressed(PIN_SELECT)) {
       buzzerBeep();
       meshSendText(meshCannedAt(listOffset), msgTargetId);
-      // se queda en el catalogo para mandar otro rapido
     }
   }
 

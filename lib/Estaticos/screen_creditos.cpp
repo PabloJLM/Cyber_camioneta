@@ -4,7 +4,6 @@
 static const unsigned char image_Layer_9_bits[] = {0x7e,0x7e,0x7e,0x7e,0x99,0x99,0x99,0x99,0x67,0xe6,0x67,0xe6,0x18,0x18,0x18,0x18,0x67,
 0xe6,0x67,0xe6,0x99,0x99,0x99,0x99,0x7e,0x7e,0x7e,0x7e};
 
-
 static bool isButtonJustPressed(int pin) {
   static uint8_t lastStableState[4] = {HIGH, HIGH, HIGH, HIGH};
   static uint8_t lastReading[4]     = {HIGH, HIGH, HIGH, HIGH};
@@ -46,7 +45,7 @@ void screenCreditosLoop() {
     return;
   }
   u8g2.clearBuffer();
-  
+
   u8g2.setFontMode(1);
   u8g2.setBitmapMode(1);
   u8g2.setFont(u8g2_font_6x10_tr);
@@ -64,6 +63,5 @@ void screenCreditosLoop() {
   u8g2.drawStr(40, 11, "CREDITOS");
 
   u8g2.sendBuffer();
-
 
 }

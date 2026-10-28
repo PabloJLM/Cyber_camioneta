@@ -1,5 +1,5 @@
 #include "aes_demo_core.h"
-#include <Arduino.h>   // declara random(long,long); si no, mbedtls arrastra el random(void) de newlib
+#include <Arduino.h>
 #include <mbedtls/aes.h>
 #include <string.h>
 
@@ -27,7 +27,7 @@ void aesDemoPackMessage(const char *msg, uint8_t out[AES_BLOCK_LEN]) {
 void aesDemoEncrypt(const uint8_t key[AES_BLOCK_LEN], const uint8_t plain[AES_BLOCK_LEN], uint8_t cipher[AES_BLOCK_LEN]) {
   mbedtls_aes_context ctx;
   mbedtls_aes_init(&ctx);
-  mbedtls_aes_setkey_enc(&ctx, key, 128);                         // <- acelerador AES del C6
+  mbedtls_aes_setkey_enc(&ctx, key, 128);
   mbedtls_aes_crypt_ecb(&ctx, MBEDTLS_AES_ENCRYPT, plain, cipher);
   mbedtls_aes_free(&ctx);
 }
@@ -35,7 +35,7 @@ void aesDemoEncrypt(const uint8_t key[AES_BLOCK_LEN], const uint8_t plain[AES_BL
 void aesDemoDecrypt(const uint8_t key[AES_BLOCK_LEN], const uint8_t cipher[AES_BLOCK_LEN], uint8_t plain[AES_BLOCK_LEN]) {
   mbedtls_aes_context ctx;
   mbedtls_aes_init(&ctx);
-  mbedtls_aes_setkey_dec(&ctx, key, 128);                         // <- acelerador AES del C6
+  mbedtls_aes_setkey_dec(&ctx, key, 128);
   mbedtls_aes_crypt_ecb(&ctx, MBEDTLS_AES_DECRYPT, cipher, plain);
   mbedtls_aes_free(&ctx);
 }
@@ -73,8 +73,6 @@ bool aesDemoLooksLikeText(const uint8_t block[AES_BLOCK_LEN]) {
   }
   return true;
 }
-
-// ---------- estado activo (mensaje y clave) ----------
 
 static char    currentMsgText[AES_BLOCK_LEN + 1] = "HOLA TESLA LAB";
 static uint8_t currentKey[AES_BLOCK_LEN] = {

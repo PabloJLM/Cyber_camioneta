@@ -5,7 +5,6 @@
 #include <esp_wifi.h>
 #include <string.h>
 
-
 #define MESH_MAGIC    0xA5
 #define MESH_VERSION  1
 
@@ -13,9 +12,8 @@ static const uint8_t BROADCAST_MAC[6] = {0xFF,0xFF,0xFF,0xFF,0xFF,0xFF};
 
 #define HEADER_SIZE   (sizeof(MeshPacket) - MESH_MAX_PAYLOAD)
 
-#define PING_WINDOW   1500   // ms que esperamos respuestas de un ping
+#define PING_WINDOW   1500
 
-// MAC Propia
 static uint8_t  myMac[6];
 static uint16_t myId  = 0;
 static char     myName[8];
@@ -33,7 +31,6 @@ void meshFormatId(uint16_t id, char* out, size_t n) {
   snprintf(out, n, "%04X", id);
 }
 
-
 #define RXQ_SIZE 16
 typedef struct {
   MeshPacket pkt;
@@ -43,9 +40,8 @@ typedef struct {
 } RxItem;
 
 static volatile RxItem   rxq[RXQ_SIZE];
-static volatile uint8_t  rxHead = 0;   // escribe el callback
-static volatile uint8_t  rxTail = 0;   // lee meshLoop
-
+static volatile uint8_t  rxHead = 0;
+static volatile uint8_t  rxTail = 0;
 
 #define SEEN_SIZE 64
 typedef struct { uint16_t id; uint16_t seq; } SeenEntry;
@@ -64,7 +60,6 @@ static void markSeen(uint16_t id, uint16_t seq) {
   seenPos = (seenPos + 1) % SEEN_SIZE;
 }
 
-//lista de nodos
 static MeshNode nodes[MAX_NODES];
 
 static MeshNode* findNode(uint16_t id) {
@@ -73,10 +68,8 @@ static MeshNode* findNode(uint16_t id) {
   return nullptr;
 }
 static MeshNode* newNode() {
-  // primero un hueco libre
   for (int i = 0; i < MAX_NODES; i++)
     if (!nodes[i].used) return &nodes[i];
-  // si no hay, recicla el mas viejo
   MeshNode* oldest = &nodes[0];
   for (int i = 1; i < MAX_NODES; i++)
     if (nodes[i].lastSeen < oldest->lastSeen) oldest = &nodes[i];
@@ -106,21 +99,17 @@ static void updateNode(uint16_t id, const uint8_t* mac,
 
     if (now - n->lastDirect > NODE_TIMEOUT) n->direct = false;
     if (!n->direct) {
-      // guarda la ruta mas corta conocida
       if (hops < n->hops || n->hops == 0) n->hops = hops;
     }
   }
 }
 
-
 static MeshMetrics metrics;
 static uint32_t ppsWindowStart = 0;
 static uint16_t ppsCounter     = 0;
 
-
 static uint16_t txSeq = 0;
 static uint32_t lastHello = 0;
-
 
 static bool     pingActive     = false;
 static uint32_t pingStart      = 0;
@@ -128,11 +117,9 @@ static uint16_t pingNonce      = 0;
 static uint16_t pingResponders[MAX_NODES];
 static int      pingRespCount  = 0;
 
-
 static bool     pongPending    = false;
 static uint32_t pongDue        = 0;
 static uint16_t pongNonce      = 0;
-
 
 static bool     newText        = false;
 static char     lastText[MESH_MAX_PAYLOAD + 1];
@@ -140,7 +127,6 @@ static uint16_t lastTextFrom   = 0;
 
 static uint16_t lastPingFromId = 0;
 static uint32_t lastPingFromAt = 0;
-
 
 static MeshMsgItem msgHist[MSG_HIST_SIZE];
 static int         msgHistCount = 0;
@@ -157,7 +143,6 @@ static void pushHist(uint16_t from, uint16_t to, const char* text) {
   if (msgHistCount < MSG_HIST_SIZE) msgHistCount++;
 }
 
-
 static const char* CANNED_MSGS[] = {
   "Todo OK", "Necesito ayuda", "Reagrupar aqui",
   "Objetivo visto", "Retirada", "Cargando bateria"
@@ -170,7 +155,6 @@ const char* meshCannedAt(int idx) {
   return CANNED_MSGS[idx];
 }
 
-
 static void rawSend(MeshPacket* p, uint8_t payloadLen) {
   uint8_t total = HEADER_SIZE + payloadLen;
   if (total > sizeof(MeshPacket)) total = sizeof(MeshPacket);
@@ -178,7 +162,6 @@ static void rawSend(MeshPacket* p, uint8_t payloadLen) {
   metrics.tx++;
 }
 
-// Origina un paquete nuevo desde este nodo.
 static void originate(uint8_t type, uint16_t dstId,
                       const uint8_t* payload, uint8_t payloadLen) {
   MeshPacket p;
@@ -196,7 +179,7 @@ static void originate(uint8_t type, uint16_t dstId,
   p.payloadLen = payloadLen;
   if (payload && payloadLen) memcpy(p.payload, payload, payloadLen);
 
-  markSeen(p.srcId, p.seq);   // no reenviar lo nuestro
+  markSeen(p.srcId, p.seq);
   rawSend(&p, payloadLen);
 }
 
@@ -206,7 +189,7 @@ static void onRecv(const esp_now_recv_info_t* info,
   if (data[0] != MESH_MAGIC) return;
 
   uint8_t next = (rxHead + 1) % RXQ_SIZE;
-  if (next == rxTail) return;   // cola llena, descarta
+  if (next == rxTail) return;
 
   RxItem* it = (RxItem*)&rxq[rxHead];
   memcpy(&it->pkt, data, len);
@@ -216,15 +199,12 @@ static void onRecv(const esp_now_recv_info_t* info,
   rxHead = next;
 }
 
-
 static void handleApp(const MeshPacket* p);
 
 static void processPacket(RxItem* it) {
   MeshPacket* p = &it->pkt;
 
-
   if (p->srcId == myId) return;
-
 
   if (seenBefore(p->srcId, p->seq)) { metrics.dup++; return; }
   markSeen(p->srcId, p->seq);
@@ -232,7 +212,6 @@ static void processPacket(RxItem* it) {
   metrics.rx++;
   ppsCounter++;
   metrics.lastRssi = it->rssi;
-
 
   uint16_t senderId = idFromMac(it->senderMac);
 
@@ -242,9 +221,7 @@ static void processPacket(RxItem* it) {
     updateNode(p->srcId, p->srcMac, false, 0, p->hops + 1);
   }
 
-
   handleApp(p);
-
 
   if (p->ttl > 0) {
     MeshPacket fwd = *p;
@@ -319,7 +296,6 @@ static void handleApp(const MeshPacket* p) {
   }
 }
 
-
 void meshBegin() {
   if (meshRunning) return;
 
@@ -387,19 +363,16 @@ void meshLoop() {
     processPacket(&local);
   }
 
-
   if (now - lastHello >= HELLO_INTERVAL) {
     lastHello = now;
     originate(MT_HELLO, 0xFFFF, nullptr, 0);
   }
-
 
   if (pongPending && now >= pongDue) {
     pongPending = false;
     uint8_t pl[2] = { (uint8_t)(pongNonce & 0xFF), (uint8_t)(pongNonce >> 8) };
     originate(MT_PONG, 0xFFFF, pl, 2);
   }
-
 
   if (pingActive && now - pingStart > PING_WINDOW) {
     pingActive = false;

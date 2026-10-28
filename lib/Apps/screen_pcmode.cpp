@@ -83,7 +83,6 @@ static void processEchoCommand(const String& cmd) {
   Serial.println(cmd.substring(5));
 }
 
-
 void showCaptiveLog() {
   printSection("captive log (ultimos 5)");
 
@@ -103,7 +102,7 @@ void showCaptiveLog() {
   }
 
   logFile.readStringUntil('\n');
-  logFile.readStringUntil('\n'); // ignora el header xd
+  logFile.readStringUntil('\n');
 
   Serial.println(F("  time   correo                  ip"));
 
@@ -234,7 +233,6 @@ void showCaptiveStats() {
   }
 }
 
-
 static void listSD() {
   printSection("sd: contenido de /");
 
@@ -351,7 +349,6 @@ static void catFile(String path) {
   Serial.println(F("  ---- fin ----"));
 }
 
-
 static int noteFreq(String n) {
   n.trim();
   n.toUpperCase();
@@ -363,7 +360,7 @@ static int noteFreq(String n) {
   if (n == "LA")  return 440;
   if (n == "SI")  return 494;
   if (n == "DO2" || n == "DO+") return 523;
-  if (n == "-" || n == "_")     return 0;   // mudaaaa
+  if (n == "-" || n == "_")     return 0;
   return -1;
 }
 
@@ -410,7 +407,6 @@ static void processPiano(String in) {
 
   if (!played) Serial.println(F("  (nada que tocar) escribe 'help'"));
 }
-
 
 static void processFloodCommand(const String& cmd) {
   int open  = cmd.indexOf('{');
@@ -470,7 +466,6 @@ static void processFloodCommand(const String& cmd) {
     Serial.println(F(")"));
   }
 }
-
 
 void processSerialCommand() {
   static String commandBuffer = "";
@@ -671,7 +666,6 @@ void processSerialCommand() {
   }
 }
 
-
 static void printBanner() {
   Serial.println(F("                                                                                "));
   Serial.println(F("     ████████████████████████████████████         "));
@@ -704,7 +698,7 @@ static void printBanner() {
 
 void screenPCModeLoop() {
   if (!pcModeInitialized) {
-    while (Serial.available() > 0) Serial.read();  // descarta basura pendiente (USB CDC)
+    while (Serial.available() > 0) Serial.read();
     printBanner();
     printPrompt();
     pcModeInitialized = true;

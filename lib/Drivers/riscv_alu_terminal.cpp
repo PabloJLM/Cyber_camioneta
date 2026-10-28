@@ -29,7 +29,6 @@ static void printDiagram(Print &c, uint8_t a, uint8_t b, uint8_t op, const AluRe
   c.print(F("  C=")); c.println(r.carry ? 1 : 0);
 }
 
-
 static void printAsmEcho(Print &c, uint8_t a, uint8_t b, uint8_t op, const AluResult &r) {
   c.println(F("   --- riscv_alu.S ---"));
   c.print(F("   entrada   a0="));  hex2(c, a);

@@ -74,7 +74,6 @@ const char* captivePortalSourceName() {
   }
 }
 
-
 static bool sdReady() {
   return SD.begin(PIN_CD);
 }
@@ -116,7 +115,6 @@ static void logVisitor(const String& correo, const String& telefono, const Strin
   capturedCount++;
   Serial.println("log: " + correo + ", " + telefono + ", " + ip);
 }
-
 
 static const char* contentTypeFor(const String& path) {
   if (path.endsWith(".css"))  return "text/css";
@@ -338,7 +336,6 @@ bool isCaptiveRunning() {
   return captiveRunning;
 }
 
-
 static bool isButtonJustPressed(int pin) {
   static uint8_t lastStableState[4] = {HIGH, HIGH, HIGH, HIGH};
   static uint8_t lastReading[4]     = {HIGH, HIGH, HIGH, HIGH};
@@ -372,7 +369,6 @@ static bool isButtonJustPressed(int pin) {
 
   return false;
 }
-
 
 void screenCaptiveLoop() {
   if (captiveRunning) {

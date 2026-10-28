@@ -56,7 +56,7 @@ static bool isButtonJustPressed(int pin) {
   return false;
 }
 
-static const char* companyName(uint16_t id) { //https://gist.github.com/kongmunist/033a50237cdeb67af5666aa4435afd19
+static const char* companyName(uint16_t id) {
   switch (id) {
     case 0x004C: return "Apple";
     case 0x0006: return "Microsoft";

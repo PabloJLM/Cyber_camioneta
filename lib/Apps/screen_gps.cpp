@@ -19,12 +19,6 @@ static HardwareSerial GPSSerial(1);
 static TinyGPSPlus gps;
 static bool gpsStarted = false;
 
-// Satelites en vista (se llena aunque todavia no haya fix; confirma que la
-// antena si esta captando algo, sin depender del "ANTENNA OPEN/SHORT" del
-// modulo, que en esta placa no aplica (ver LNA externo AT2659 en el hardware).
-// Se escuchan todos los talkers de GSV posibles porque el modulo puede
-// mandar GPGSV, GNGSV (combinado), GLGSV, GAGSV o GBGSV segun que
-// constelaciones tenga activas - no asumimos cual usa.
 static TinyGPSCustom gpSatsInView(gps, "GPGSV", 3);
 static TinyGPSCustom gnSatsInView(gps, "GNGSV", 3);
 static TinyGPSCustom glSatsInView(gps, "GLGSV", 3);
@@ -77,15 +71,9 @@ static void gpsFeed() {
   }
 }
 
-// Mismos comandos PMTK que usa Minino (gps_hw_configure_advanced) para el
-// ATGM336H: fuerza multi-constelacion y que sentencias NMEA manda, por si el
-// modulo por default no estaba mandando GSV (de ahi que "Sats en vista" se
-// quedara en 0 aunque el UART ya estuviera recibiendo datos validos).
 static void gpsConfigure() {
-  // PMTK353: habilita GPS,GLONASS,Galileo,BeiDou,QZSS
   GPSSerial.print("$PMTK353,1,1,1,1,1,0,0,0,0*2A\r\n");
   delay(100);
-  // PMTK314: habilita GLL,RMC,VTG,GGA,GSA,GSV en cada fix (incluye GSV)
   GPSSerial.print("$PMTK314,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0*28\r\n");
   delay(100);
 }
@@ -94,8 +82,8 @@ void screenGPSLoop() {
   if (!gpsStarted) {
 
     pinMode(PIN_GPSON, OUTPUT);
-    digitalWrite(PIN_GPSON, HIGH);  // enciende el modulo GPS (antes quedaba como INPUT, nunca se energizaba)
-    delay(300);                     // da tiempo a que arranque antes de leer el UART
+    digitalWrite(PIN_GPSON, HIGH);
+    delay(300);
 
     GPSSerial.begin(GPS_BAUD, SERIAL_8N1, GPS_RX_PIN, GPS_TX_PIN);
     gpsConfigure();

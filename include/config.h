@@ -23,24 +23,17 @@
 
 #define NUM_PIXELS      9
 
-//todas DEBEN ESTAR EN EL MISMO CANAL 
 #define MESH_CHANNEL    1
-
 
 #define MESH_TTL        6
 
-
 #define HELLO_INTERVAL  2000
-
 
 #define NODE_TIMEOUT    8000
 
-
 #define MAX_NODES       24
 
-
 #define MESH_MAX_PAYLOAD  64
-
 
 #define NODE_NAME       ""
 
